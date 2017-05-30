@@ -59,9 +59,6 @@ class PlansController < ApplicationController
 
       if @plan.save
         @plan.assign_creator(current_user)
-<<<<<<< HEAD
-
-=======
 
         # pre-select org's guidance
         ggs = GuidanceGroup.where(org_id: plan_params[:org_id],
@@ -69,10 +66,10 @@ class PlansController < ApplicationController
                                                      published: true)
         if !ggs.blank? then @plan.guidance_groups << ggs end
 
->>>>>>> development
         default = Template.find_by(is_default: true)
 
         msg = "#{_('Plan was successfully created.')} "
+
 
         if !default.nil? && default == @plan.template
           # We used the generic/default template
