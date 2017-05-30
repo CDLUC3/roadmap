@@ -59,7 +59,17 @@ class PlansController < ApplicationController
 
       if @plan.save
         @plan.assign_creator(current_user)
+<<<<<<< HEAD
 
+=======
+
+        # pre-select org's guidance
+        ggs = GuidanceGroup.where(org_id: plan_params[:org_id],
+                                                     optional_subset: false,
+                                                     published: true)
+        if !ggs.blank? then @plan.guidance_groups << ggs end
+
+>>>>>>> development
         default = Template.find_by(is_default: true)
 
         msg = "#{_('Plan was successfully created.')} "
@@ -141,7 +151,7 @@ class PlansController < ApplicationController
     authorize @plan
     # If there was no phase specified use the template's 1st phase
     @phase = (params[:phase].nil? ? @plan.template.phases.first : Phase.find(params[:phase]))
-    @readonly = @plan.editable_by?(current_user.id)
+    @readonly = !@plan.editable_by?(current_user.id)
     respond_to :html
   end
 
@@ -185,6 +195,7 @@ class PlansController < ApplicationController
       end
     end
     @plan.save
+    flash[:notice] = _('Guidance choices saved.')
     redirect_to action: "show"
   end
 
@@ -474,21 +485,21 @@ class PlansController < ApplicationController
         # Load the org's template(s)
         unless org_id.nil?
           org = Org.find(org_id)
-          @templates = Template.where(published: true, org: org, customization_of: nil).to_a
+          @templates = Template.valid.where(published: true, org: org, customization_of: nil).to_a
           @msg = _("We found multiple DMP templates corresponding to the research organisation.") if @templates.count > 1
         end
 
       else
         funder = Org.find(funder_id)
         # Load the funder's template(s)
-        @templates = Template.where(published: true, org: funder).to_a
+        @templates = Template.valid.where(published: true, org: funder).to_a
 
         unless org_id.blank?
           org = Org.find(org_id)
 
           # Swap out any organisational cusotmizations of a funder template
           @templates.each do |tmplt|
-            customization = Template.find_by(published: true, org: org, customization_of: tmplt.dmptemplate_id)
+            customization = Template.valid.find_by(published: true, org: org, customization_of: tmplt.dmptemplate_id)
             unless customization.nil?
               @templates.delete(tmplt)
               @templates << customization
