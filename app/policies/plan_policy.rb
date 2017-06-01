@@ -7,13 +7,13 @@ class PlanPolicy < ApplicationPolicy
     @user = user
     @plan = plan
   end
-  
+
   def show?
     @plan.readable_by?(@user.id)
   end
 
   def edit?
-    @plan.editable_by?(@user.id)
+    @plan.readable_by?(@user.id)
   end
 
   def update_guidance_choices?
@@ -39,13 +39,17 @@ class PlanPolicy < ApplicationPolicy
   def destroy?
     @plan.editable_by?(@user.id)
   end
-  
+
   def status?
     @plan.readable_by?(@user.id)
   end
-  
+
   def possible_templates?
     @plan.id.nil?
+  end
+
+  def duplicate?
+    @plan.editable_by?(@user.id)
   end
 
 # TODO: These routes are no lonmger used

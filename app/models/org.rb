@@ -4,14 +4,19 @@ class Org < ActiveRecord::Base
   extend Dragonfly::Model::Validations
 
   ##
+  # Sort order: Name ASC
+  default_scope { order(name: :asc) }
+
+
+  ##
   # Associations
 #  belongs_to :organisation_type   # depricated, but cannot be removed until migration run
   belongs_to :language
   has_many :guidance_groups
   has_many :templates
   has_many :users
-  has_many :suggested_answers
-  
+  has_many :annotations
+
   has_and_belongs_to_many :token_permission_types, join_table: "org_token_permissions", unique: true
 
   ##
@@ -20,7 +25,7 @@ class Org < ActiveRecord::Base
 #	attr_accessible :abbreviation, :banner_text, :logo, :remove_logo,
 #                  :logo_file_name, :name, :target_url,
 #                  :organisation_type_id, :wayfless_entity, :parent_id, :sort_name,
-#                  :token_permission_type_ids, :language_id, :contact_email, 
+#                  :token_permission_type_ids, :language_id, :contact_email,
 #                  :language, :org_type, :region, :token_permission_types
 
   ##
@@ -57,7 +62,7 @@ class Org < ActiveRecord::Base
   # What do they do? do they do it efficiently, and do we need them?
 
   # Determines the locale set for the organisation
-  # @return String or nil 
+  # @return String or nil
   def get_locale
     if !self.language.nil?
       return self.language.abbreviation
@@ -128,7 +133,7 @@ class Org < ActiveRecord::Base
     end
     return children
   end
-  
+
   ##
   # returns a list of all guidance groups belonging to other organisations
   #
@@ -163,7 +168,7 @@ class Org < ActiveRecord::Base
 		end
 		return organisations_list
 	end
-  
+
   ##
   # returns a list of all sections of a given version from this organisation and it's parents
   #
@@ -180,7 +185,7 @@ class Org < ActiveRecord::Base
 			return sections.where("version_id = ? ", version_id).all + parent.all_sections(version_id)
 		end
 	end
-  
+
   ##
   # returns the guidance groups of this organisation and all of it's children
   #
@@ -192,7 +197,7 @@ class Org < ActiveRecord::Base
 		end
 		return ggs
 	end
-  
+
   ##
   # returns the highest parent organisation in the tree
   #
@@ -205,7 +210,7 @@ class Org < ActiveRecord::Base
 		end
 	end
 =end
-  
+
   ##
   # returns all published templates belonging to the organisation
   #
@@ -222,7 +227,7 @@ class Org < ActiveRecord::Base
       end
     end
   end
-  
+
   private
     ##
     # checks size of logo and resizes if necessary
@@ -233,5 +238,5 @@ class Org < ActiveRecord::Base
           self.logo = logo.thumb('x100')  # resize height and maintain aspect ratio
         end
       end
-    end 
+    end
 end
