@@ -29,17 +29,19 @@ class PhasesController < ApplicationController
     # where guidance is a hash with the text and the org name
     theme_guidance = {}
 
-    guidance_groups.each do |guidance_group|
-      guidance_group.guidances.where(published: true).each do |guidance|
-        guidance.themes.each do |theme|
-          title = theme.title
-          if !theme_guidance.has_key?(title)
-            theme_guidance[title] = Array.new
+    guidance_groups.includes(guidances:[:themes]).each do |guidance_group|
+      guidance_group.guidances.each do |guidance|
+        if guidance.published
+          guidance.themes.each do |theme|
+            title = theme.title
+            if !theme_guidance.has_key?(title)
+              theme_guidance[title] = Array.new
+            end
+            theme_guidance[title] << {
+              text: guidance.text,
+              org: guidance_group.name + ':'
+            }
           end
-          theme_guidance[title] << {
-            text: guidance.text,
-            org: guidance_group.name + ':'
-          }
         end
       end
     end
@@ -155,9 +157,9 @@ class PhasesController < ApplicationController
       @phase.template.dirty = true
       @phase.template.save!
 
-      redirect_to admin_show_phase_path(id: @phase.id, edit: 'true'), notice: _('Information was successfully created.')
+      redirect_to admin_show_phase_path(id: @phase.id, edit: 'true'), notice: success_message(_('phase'), _('created'))
     else
-      flash[:notice] = failed_create_error(@phase, _('phase'))
+      flash[:alert] = failed_create_error(@phase, _('phase'))
       @template = @phase.template
       render "admin_add"
     end
@@ -173,7 +175,7 @@ class PhasesController < ApplicationController
       @phase.template.dirty = true
       @phase.template.save!
 
-      redirect_to admin_show_phase_path(@phase), notice: _('Information was successfully updated.')
+      redirect_to admin_show_phase_path(@phase), notice: success_message(_('phase'), _('saved'))
     else
       @sections = @phase.sections
       @template = @phase.template
@@ -183,7 +185,7 @@ class PhasesController < ApplicationController
       @open = !params[:section_id].nil?
       @section_id = (params[:section_id].nil? ? nil : params[:section_id].to_i)
       @question_id = (params[:question_id].nil? ? nil : params[:question_id].to_i)
-      flash[:notice] = failed_update_error(@phase, _('phase'))
+      flash[:alert] = failed_update_error(@phase, _('phase'))
       if @phase.template.customization_of.present?
         @original_org = Template.where(dmptemplate_id: @phase.template.customization_of).first.org
       else
@@ -202,7 +204,7 @@ class PhasesController < ApplicationController
       @template.dirty = true
       @template.save!
 
-      redirect_to admin_template_template_path(@template), notice: _('Information was successfully deleted.')
+      redirect_to admin_template_template_path(@template), notice: success_message(_('phase'), _('deleted'))
     else
       @sections = @phase.sections
 
@@ -212,7 +214,7 @@ class PhasesController < ApplicationController
       @open = !params[:section_id].nil?
       @section_id = (params[:section_id].nil? ? nil : params[:section_id].to_i)
       @question_id = (params[:question_id].nil? ? nil : params[:question_id].to_i)
-      flash[:notice] = failed_destroy_error(@phase, _('phase'))
+      flash[:alert] = failed_destroy_error(@phase, _('phase'))
       if @phase.template.customization_of.present?
         @original_org = Template.where(dmptemplate_id: @phase.template.customization_of).first.org
       else

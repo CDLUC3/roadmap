@@ -1,57 +1,66 @@
 Rails.application.routes.draw do
 
   namespace :admin do
-    resources :users, only: [:new, :create, :edit, :update, :index, :show]
-    resources :orgs, only: [:new, :create, :edit, :update, :index, :show]
-    resources :perms, only: [:new, :create, :edit, :update, :index, :show]
-    resources :languages
-    resources :templates
-    resources :token_permission_types
-    resources :phases
-    resources :sections
-    resources :questions
-    resources :question_formats
-    resources :question_options
-    resources :annotations
-    resources :answers
-    resources :guidances
-    resources :guidance_groups
-    resources :themes
-    resources :notes
-    resources :plans
-    # resources :plans_guidance_groups
-    resources :identifier_schemes
-    resources :exported_plans
-    resources :regions
-    resources :roles
-    resources :splash_logs
-    resources :user_identifiers
+    resources :users,              only: [:new, :create, :edit, :update, :index, :show]
+    resources :orgs,               only: [:new, :create, :edit, :update, :index, :show]
+    resources :perms,              only: [:new, :create, :edit, :update, :index, :show]
+    resources :languages,          only: [:new, :create, :edit, :update, :index, :show]
+    resources :templates,          only: [:new, :create, :edit, :update, :index, :show]
+    resources :phases,             only: [:new, :create, :edit, :update, :index, :show]
+    resources :sections,           only: [:new, :create, :edit, :update, :index, :show]
+    resources :questions,          only: [:new, :create, :edit, :update, :index, :show]
+    resources :question_formats,   only: [:new, :create, :edit, :update, :index, :show]
+    resources :question_options,   only: [:new, :create, :edit, :update, :index, :show]
+    resources :annotations,        only: [:new, :create, :edit, :update, :index, :show]
+    resources :answers,            only: [:new, :create, :edit, :update, :index, :show]
+    resources :guidances,          only: [:new, :create, :edit, :update, :index, :show]
+    resources :guidance_groups,    only: [:new, :create, :edit, :update, :index, :show]
+    resources :themes,             only: [:new, :create, :edit, :update, :index, :show]
+    resources :notes,              only: [:new, :create, :edit, :update, :index, :show]
+    resources :plans,              only: [:new, :create, :edit, :update, :index, :show]
+    resources :identifier_schemes, only: [:new, :create, :edit, :update, :index, :show]
+    resources :exported_plans,     only: [:new, :create, :edit, :update, :index, :show]
+    resources :regions,            only: [:new, :create, :edit, :update, :index, :show]
+    resources :roles,              only: [:new, :create, :edit, :update, :index, :show]
+    resources :splash_logs,        only: [:new, :create, :edit, :update, :index, :show]
+    resources :user_identifiers,   only: [:new, :create, :edit, :update, :index, :show]
+resources :token_permission_types, only: [:new, :create, :edit, :update, :index, :show]
+#resources :plans_guidance_groups
 
     root to: "users#index"
   end
 
   devise_for :users, controllers: {
-        registrations: "registrations", 
-        passwords: 'passwords', 
-        sessions: 'sessions', 
+        registrations: "registrations",
+        passwords: 'passwords',
+        sessions: 'sessions',
         omniauth_callbacks: 'users/omniauth_callbacks'} do
-        
+
     get "/users/sign_out", :to => "devise/sessions#destroy"
   end
-  
+
   # WAYFless access point - use query param idp
   #get 'auth/shibboleth' => 'users/omniauth_shibboleth_request#redirect', :as => 'user_omniauth_shibboleth'
   #get 'auth/shibboleth/assoc' => 'users/omniauth_shibboleth_request#associate', :as => 'user_shibboleth_assoc'
   #post '/auth/:provider/callback' => 'sessions#oauth_create'
-  
+
   # fix for activeadmin signout bug
   devise_scope :user do
     delete '/users/sign_out' => 'devise/sessions#destroy'
   end
 
   delete '/users/identifiers/:id', to: 'user_identifiers#destroy', as: 'destroy_user_identifier'
-  
+
   #ActiveAdmin.routes(self)
+  get '/orgs/shibboleth', to: 'orgs#shibboleth_ds', as: 'shibboleth_ds'
+  get '/orgs/shibboleth/:org_name', to: 'orgs#shibboleth_ds_passthru'
+  post '/orgs/shibboleth', to: 'orgs#shibboleth_ds_passthru'
+
+  resources :users, path: 'users', only: [] do
+    member do
+      put 'update_email_preferences'
+    end
+  end
 
   #organisation admin area
   resources :users, :path => 'org/admin/users', only: [] do
@@ -74,13 +83,15 @@ Rails.application.routes.draw do
     get "help" => 'static_pages#help'
     get "roadmap" => 'static_pages#roadmap'
     get "terms" => 'static_pages#termsuse'
-    get "public_plans" => 'static_pages#public_plans'
-    get "public_export/:id" => 'static_pages#public_export', as: 'public_export'
+    get "public_plans" => 'public_pages#plan_index'
+    get "public_templates" => 'public_pages#template_index'
+    get "template_export/:id" => 'public_pages#template_export', as: 'template_export'
+    get "plan_export/:id" => 'public_pages#plan_export', as: 'plan_export'
     get "existing_users" => 'existing_users#index'
-  
+
     #post 'contact_form' => 'contacts', as: 'localized_contact_creation'
     #get 'contact_form' => 'contacts#new', as: 'localized_contact_form'
-    
+
     resources :orgs, :path => 'org/admin', only: [] do
       member do
         get 'children'
@@ -131,6 +142,7 @@ Rails.application.routes.draw do
         put 'admin_update'
         put 'admin_publish'
         put 'admin_unpublish'
+        put 'admin_copy'
         get 'admin_transfer_customization'
       end
     end
@@ -201,8 +213,11 @@ Rails.application.routes.draw do
         get 'section_answers'
         get 'share'
         get 'show_export'
+        post 'duplicate'
         get 'export'
         post 'invite'
+        post 'visibility', constraints: {format: [:json]}
+        post 'set_test', constraints: {format: [:json]}
       end
 
       collection do
@@ -211,35 +226,11 @@ Rails.application.routes.draw do
       end
     end
 
-#    resources :projects do
-#      resources :plans , only: [:edit, :update] do
-#        member do
-#          get 'status'
-#          get 'locked'
-#          get 'answer'
-#          #get 'edit'
-#          post 'delete_recent_locks'
-#          post 'lock_section', constraints: {format: [:html, :json]}
-#          post 'unlock_section', constraints: {format: [:html, :json]}
-#          post 'unlock_all_sections'
-#          get 'export'
-#          get 'warning'
-#          get 'section_answers'
-#        end
-#      end
-#
-#      member do
-#        get 'share'
-#        get 'export'
-#        post 'invite'
-#      end
-#      collection do
-#        get 'possible_templates'
-#        get 'possible_guidance'
-#      end
-#    end
-
-    resources :roles, only: [:create, :update, :destroy]
+    resources :roles, only: [:create, :update, :destroy] do
+      member do
+        put :deactivate
+      end
+    end
 
     namespace :settings do
       resources :plans, only: [:update]
@@ -263,57 +254,4 @@ Rails.application.routes.draw do
       end
     end
 
-    # The priority is based upon order of creation:
-    # first created -> highest priority.
-
-    # Sample of regular route:
-    #   match 'products/:id' => 'catalog#view'
-    # Keep in mind you can assign values other than :controller and :action
-
-    # Sample of named route:
-    #   match 'products/:id/purchase' => 'catalog#purchase', :as => :purchase
-    # This route can be invoked with purchase_url(:id => product.id)
-
-    # Sample resource route (maps HTTP verbs to controller actions automatically):
-    #   resources :products
-
-    # Sample resource route with options:
-    #   resources :products do
-    #     member do
-    #       get 'short'
-    #       post 'toggle'
-    #     end
-    #
-    #     collection do
-    #       get 'sold'
-    #     end
-    #   end
-
-    # Sample resource route with sub-resources:
-    #   resources :products do
-    #     resources :comments, :sales
-    #     resource :seller
-    #   end
-
-    # Sample resource route with more complex sub-resources
-    #   resources :products do
-    #     resources :comments
-    #     resources :sales do
-    #       get 'recent', :on => :collection
-    #     end
-    #   end
-
-    # Sample resource route within a namespace:
-    #   namespace :admin do
-    #     # Directs /admin/products/* to Admin::ProductsController
-    #     # (app/controllers/admin/products_controller.rb)
-    #     resources :products
-    #   end
-
-
-    # See how all your routes lay out with "rake routes"
-
-    # This is a legacy wild controller route that's not recommended for RESTful applications.
-    # Note: This route will make all actions in every controller accessible via GET requests.
-    # match ':controller(/:action(/:id))(.:format)'
 end
