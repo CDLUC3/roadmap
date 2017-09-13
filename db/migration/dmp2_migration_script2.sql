@@ -244,7 +244,7 @@ INSERT INTO `roadmaptest`.`templates`(
   `dmptemplate_id`,   `customization_of`,    `created_at`,       `updated_at`)
 SELECT
   `id`,         `institution_id`,     `name`,         `name`,       "en",    
-  `active`,         0,             0,               1,          0,      
+  `active`,         0,             0,               CASE `active` WHEN 0 THEN 0 ELSE 1 END CASE,          0,      
   SUBSTRING(UUID_SHORT(),16) as dmptemplate_id,           NULL,        `created_at`,       `updated_at`
 
 FROM `dmp2`.`requirements_templates`;
@@ -286,11 +286,13 @@ INSERT INTO `roadmaptest`.`sections` (
   `number`,           `published`,         `phase_id`,   
   `modifiable`,         `created_at`,         `updated_at` )
 SELECT
-  `id`,             `text_brief`,          CONCAT( '<p>', `text_brief` , '</p>' ),   
-  `position`,            0,            (SELECT `id` FROM `roadmaptest`.`phase` LIMIT 1) as PHASE,       
+  `id`,             `text_brief`,          NULL,   
+  `position`,            0,            (SELECT `id` FROM `roadmaptest`.`phase` WHERE `roadmaptest`.`templates`.`id` = `dmp2`.`requirements_templates`.id) as PHASE, 
     0,            `created_at`,         `updated_at` 
 
-FROM `dmp2`.`requirements` 
+FROM `dmp2`.`requirements`
+INNER JOIN `dmp2`.`requirements_templates` 
+ON `dmp2`.`requirements`.`requirements_template_id` = `dmp2`.`requirements_templates`.`id`
 WHERE ancestry IS NULL and `group` = 0;
 
 INSERT INTO `roadmaptest`.`sections` (
@@ -299,9 +301,11 @@ INSERT INTO `roadmaptest`.`sections` (
    `modifiable`,         `created_at`,         `updated_at` )
 SELECT
    `id`,            `text_brief`,          CONCAT( '<p>', `text_brief` , '</p>' ),   
-   `position`,            0,            (SELECT `id` FROM `roadmaptest`.`phase` LIMIT 1) as PHASE,       
+   `position`,            0,            (SELECT `id` FROM `roadmaptest`.`phase` WHERE `roadmaptest`.`templates`.`id` = `dmp2`.`requirements_templates`.id) as PHASE,
      0,            `created_at`,         `updated_at` 
 FROM `dmp2`.`requirements` 
+INNER JOIN `dmp2`.`requirements_templates` 
+ON `dmp2`.`requirements`.`requirements_template_id` = `dmp2`.`requirements_templates`.`id`
 WHERE ancestry IS NULL and `group` = 1;
 
 
