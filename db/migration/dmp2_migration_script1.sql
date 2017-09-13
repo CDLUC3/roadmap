@@ -1,5 +1,5 @@
 -- # create table sample plans in roadmaptest, similar to that in dmp2.
-DROP TABLE `roadmaptest`.`sample_plans`;
+DROP TABLE IF EXISTS `roadmaptest`.`sample_plans`;
 CREATE TABLE `roadmaptest`.`sample_plans`(
       id         INT,
       url        VARCHAR(255),
@@ -9,7 +9,7 @@ CREATE TABLE `roadmaptest`.`sample_plans`(
       updated_at    DATETIME);
 
 -- # create table question_format_labels in roadmaptest.
-DROP TABLE `roadmaptest`.`question_format_labels`;
+DROP TABLE IF EXISTS `roadmaptest`.`question_format_labels`;
 CREATE TABLE `roadmaptest`.`question_format_labels`(
       id         INT,
       description    VARCHAR(255),
@@ -18,13 +18,37 @@ CREATE TABLE `roadmaptest`.`question_format_labels`(
       created_at     DATETIME,
       updated_at    DATETIME);
 
+DROP PROCEDURE IF EXISTS AddColumn;
+DELIMITER //
+CREATE PROCEDURE AddColumn(IN db tinytext, IN tbl tinytext, IN col tinytext, IN typ text)
+BEGIN
+  IF EXISTS (
+    SELECT * FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE column_name = col COLLATE utf8_general_ci 
+    AND table_name = tbl COLLATE utf8_general_ci 
+    AND table_schema=db COLLATE utf8_general_ci) 
+  THEN
+    SET @drop = CONCAT('ALTER TABLE `', db, '`.`', tbl, '` DROP COLUMN `', col, '`');
+    PREPARE stmt FROM @drop;
+    EXECUTE stmt;
+
+    SET @add = CONCAT('ALTER TABLE `', db, '`.`', tbl, '` ADD `', col, '` ', typ);
+    PREPARE stmt FROM @add;
+    EXECUTE stmt;
+    END IF;
+END;//
+DELIMITER ;
+
 -- # add contact_info column to Orgs table to keep track of the relationship between user and plan in user_plans table
-ALTER TABLE `roadmaptest`.`orgs`           DROP COLUMN `contact_name`;
-ALTER TABLE `roadmaptest`.`orgs`           ADD `contact_name`             VARCHAR(255);
+call AddColumn('roadmaptest', 'orgs', 'contact_name', 'VARCHAR(255)');
+call AddColumn('roadmaptest', 'answers', 'label_id', 'VARCHAR(255)');
+
+#ALTER TABLE `roadmaptest`.`orgs`           DROP COLUMN `contact_name`;
+#ALTER TABLE `roadmaptest`.`orgs`           ADD `contact_name`             VARCHAR(255);
 
 -- # add label_id column to answers table
-ALTER TABLE `roadmaptest`.`answers`            DROP COLUMN `label_id`; 
-ALTER TABLE `roadmaptest`.`answers`            ADD `label_id`              VARCHAR(255);
+#ALTER TABLE `roadmaptest`.`answers`            DROP COLUMN `label_id`; 
+#ALTER TABLE `roadmaptest`.`answers`            ADD `label_id`              VARCHAR(255);
 
 -- *********************************************************************************************************************
 -- *********************************************************************************************************************
@@ -134,3 +158,5 @@ SET    `created_at` = `updated_at`
 WHERE  CAST(`created_at` AS CHAR(20)) = '0000-00-00 00:00:00';
 -- **********************************************************************************************************************
 -- **********************************************************************************************************************
+
+DROP PROCEDURE IF EXISTS AddColumn;
