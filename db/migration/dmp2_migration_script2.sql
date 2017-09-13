@@ -244,8 +244,8 @@ INSERT INTO `roadmaptest`.`templates`(
   `dmptemplate_id`,   `customization_of`,    `created_at`,       `updated_at`)
 SELECT
   `id`,         `institution_id`,     `name`,         `name`,       "en",    
-  `active`,         0,             0,               0,          0,      
-  Null,           NULL,        `created_at`,       `updated_at`
+  `active`,         0,             0,               1,          0,      
+  SUBSTRING(UUID_SHORT(),16) as dmptemplate_id,           NULL,        `created_at`,       `updated_at`
 
 FROM `dmp2`.`requirements_templates`;
 
@@ -265,8 +265,8 @@ INSERT into `roadmaptest`.`phases`(
      `title`,           `description`,                          `number`,     
      `template_id`,         `slug`,                            `modifiable`)
 SELECT
-    "Data Management Plan",   "<p>To produce a full Data Management Plan (DMP)</p>",      1,         
-    `id` as `template_id`,     NULL,                              0
+    "Data Management Plan",   NULL,      1,         
+    `id` as `template_id`,     NULL,                CASE `active` WHEN 0 THEN 0 ELSE 1 END CASE
     
 from `dmp2`.`requirements_templates`;
 
