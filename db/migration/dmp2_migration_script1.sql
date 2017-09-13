@@ -31,7 +31,14 @@ BEGIN
     SET @drop = CONCAT('ALTER TABLE `', db, '`.`', tbl, '` DROP COLUMN `', col, '`');
     PREPARE stmt FROM @drop;
     EXECUTE stmt;
+  END IF;
 
+  IF NOT EXISTS (
+    SELECT * FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE column_name = col COLLATE utf8_general_ci 
+    AND table_name = tbl COLLATE utf8_general_ci 
+    AND table_schema=db COLLATE utf8_general_ci) 
+  THEN
     SET @add = CONCAT('ALTER TABLE `', db, '`.`', tbl, '` ADD `', col, '` ', typ);
     PREPARE stmt FROM @add;
     EXECUTE stmt;
