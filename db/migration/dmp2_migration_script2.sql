@@ -12,7 +12,7 @@ INSERT INTO `roadmaptest`.`orgs` (
   `id`,        `name`,        `abbreviation`,    `target_url`,  `wayfless_entity`,              
   `parent_id`,    `org_type`,      `is_other`,      `sort_name`,  `banner_text`,                
   `logo_file_name`,  `logo_uid`,      `logo_name`,    `region_id`,
-  `contact_info`,   `contact_email`,   `created_at`,     `updated_at`,                  
+  `contact_name`,   `contact_email`,   `created_at`,     `updated_at`,                  
   `language_id`)                    
                           
 SELECT 

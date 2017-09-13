@@ -19,8 +19,8 @@ CREATE TABLE `roadmaptest`.`question_format_labels`(
       updated_at    DATETIME);
 
 -- # add contact_info column to Orgs table to keep track of the relationship between user and plan in user_plans table
-ALTER TABLE `roadmaptest`.`orgs`           DROP COLUMN `contact_info`;
-ALTER TABLE `roadmaptest`.`orgs`               ADD `contact_info`      VARCHAR(255);
+ALTER TABLE `roadmaptest`.`orgs`           DROP COLUMN `contact_name`;
+ALTER TABLE `roadmaptest`.`orgs`           ADD `contact_name`             VARCHAR(255);
 
 -- # add label_id column to answers table
 ALTER TABLE `roadmaptest`.`answers`            DROP COLUMN `label_id`; 
