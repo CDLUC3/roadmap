@@ -251,7 +251,7 @@ INSERT INTO `roadmaptest`.`templates`(
 SELECT
   `id`,         `institution_id`,     `name`,         `name`,       "en",    
   `active`,         0,             0,               `active`,          0,      
-  SUBSTRING(UUID_SHORT(),16) as dmptemplate_id,           NULL,        `created_at`,       `updated_at`
+  SUBSTRING(UUID_SHORT(),14) as dmptemplate_id,           NULL,        `created_at`,       `updated_at`
 
 FROM `dmp2`.`requirements_templates`;
 
@@ -287,6 +287,7 @@ ALTER TABLE `roadmaptest`.`sections` DISABLE KEYS;
 SET FOREIGN_KEY_CHECKS = 0;      
 TRUNCATE TABLE `roadmaptest`.`sections`;
 
+-- CREATE Sections that are NOT defined within the DMPTool (one question per section)
 INSERT INTO `roadmaptest`.`sections` (
   `id`,             `title`,           `description`,                
   `number`,           `published`,         `phase_id`,   
@@ -301,6 +302,7 @@ INNER JOIN `dmp2`.`requirements_templates`
 ON `dmp2`.`requirements`.`requirements_template_id` = `dmp2`.`requirements_templates`.`id`
 WHERE ancestry IS NULL and `group` = 0;
 
+-- INSERT Section that are defined within the DMPTool
 INSERT INTO `roadmaptest`.`sections` (
    `id`,             `title`,           `description`,                
    `number`,           `published`,         `phase_id`,   
@@ -312,7 +314,7 @@ SELECT
 FROM `dmp2`.`requirements` 
 INNER JOIN `dmp2`.`requirements_templates` 
 ON `dmp2`.`requirements`.`requirements_template_id` = `dmp2`.`requirements_templates`.`id`
-WHERE ancestry IS NULL and `group` = 1;
+WHERE `group` = 1;
 
 
 -- # Set a Phase id for each Section in Roadmap -- 
@@ -325,58 +327,54 @@ SET FOREIGN_KEY_CHECKS = 1;
 ALTER TABLE `roadmaptest`.`sections` ENABLE KEYS;
 -- *********************************************************************************************************************
 
-/*
+
 -- # Copy dmp2 Requirements with Ancestry under roadmaptest Questions table
 -- Disable the constraints
 ALTER TABLE `roadmaptest`.`questions` DISABLE KEYS;
 SET FOREIGN_KEY_CHECKS = 0;      
 TRUNCATE TABLE `roadmaptest`.`questions`;
 
+-- INSERT Questions that are NOT defined as parts of a Section within the DMPTool
 INSERT INTO `roadmaptest`.`questions`(
   `id`,               `text`,                                   `default_value`,       `number`, 
    `question_format_id`,                                             `option_comment_display`,   `modifiable`,       
    `section_id`,          `created_at`,                                 `updated_at`)
 
 SELECT
-  `id`,               CONCAT( '<p>', `text_brief` , `text_full`,  '</p>' ),                NULL,           `position`,    
-  (case `requirement_type` when "text" then 0 when "numeric" then 6 when "date" then 7 end) as `format_type`,        1,               0,          
-  `id`,                                                    `created_at`,         `updated_at`
-FROM `dmp2`.`requirements` 
+  r.`id`, CONCAT( '<p>', r.`text_full`,  '</p>' ), NULL, 1, 
+  (case `requirement_type` when "text" then 0 when "numeric" then 6 when "date" then 7 end) as `format_type`, 
+  1, rt.`active`, 
+  (SELECT s.id 
+   FROM `roadmaptest`.`sections` s INNER JOIN `roadmaptest`.`phases` p ON s.phase_id = p.id 
+   WHERE p.template_id = rt.id AND s.title = r.`text_brief`),
+  r.`created_at`,  r.`updated_at`
+FROM `dmp2`.`requirements` r
+INNER JOIN `dmp2`.`requirements_templates` rt
+ON r.`requirements_template_id` = rt.`id`
 WHERE ancestry IS  NULL and `group` = 0;
 
-
+-- INSERT Questions that are defined as parts of a Section within the DMPTool
 INSERT INTO `roadmaptest`.`questions` (
   `id`,               `text`,                                   `default_value`,       `number`,     
   `question_format_id`,                                             `option_comment_display`,  `modifiable`,       
   `section_id`,                                                 `created_at`,         `updated_at`)
 
 SELECT 
-  `id`,                CONCAT( '<p>', `text_brief` , `text_full`,  '</p>' ),                NULL,            `position`,    
-  (case `requirement_type` when "text" then 0 when "numeric" then 6 when "date" then 7 end) as `format_type`,        1,               0,          
-  substring_index(`ancestry`, '/', -1) as `section`,                               `created_at`,         `updated_at`
-FROM `dmp2`.`requirements`
+  r.`id`, CONCAT( '<p>', r.`text_brief`, '<br />', r.`text_full`, '</p>' ), NULL, `position`, 
+  (case `requirement_type` when "text" then 0 when "numeric" then 6 when "date" then 7 end) as `format_type`, 
+  1, rt.`active`, 
+  substring_index(`ancestry`, '/', -1) as `section`, r.`created_at`, r.`updated_at`
+FROM `dmp2`.`requirements` r
+INNER JOIN `dmp2`.`requirements_templates` rt
+ON r.`requirements_template_id` = rt.`id`
 WHERE `group` = 0 AND
-ancestry IN ( SELECT  `dmp2`.`requirements`.`id` as `SECTION_iD` FROM `dmp2`.`requirements` WHERE ancestry IS NULL and `group` = 1); 
-
-
-INSERT INTO `roadmaptest`.`questions` (
-  `id`,               `text`,                                   `default_value`,       `number`,     
-   `question_format_id`,                                             `option_comment_display`,   `modifiable`,       
-   `section_id`,                                                `created_at`,         `updated_at`)
-
-SELECT 
-  `id`,                CONCAT( '<p>', `text_brief` , `text_full`,  '</p>' ),               NULL,          `position`,    
-  (case `requirement_type` when "text" then 0 when "numeric" then 6 when "date" then 7 end) as `format_type`,         1,             0,          
-    substring_index(`ancestry`, '/', -1) as `section`,                              `created_at`,         `updated_at`
-FROM `dmp2`.`requirements`
-WHERE `group` = 1 AND
-ancestry IN ( SELECT  `dmp2`.`requirements`.`id` as `SECTION_iD` FROM `dmp2`.`requirements` WHERE ancestry IS NULL and `group` = 1);
+ancestry IN ( SELECT  `dmp2`.`requirements`.`id` as `SECTION_iD` FROM `dmp2`.`requirements` WHERE `group` = 1); 
 
 -- Enable Back the constraints
 SET FOREIGN_KEY_CHECKS = 1;
 ALTER TABLE `roadmaptest`.`questions` ENABLE KEYS;
 -- *********************************************************************************************************************
-
+/*
 ALTER TABLE `roadmaptest`.`questions` DISABLE KEYS;
 SET FOREIGN_KEY_CHECKS = 0;
 
@@ -408,7 +406,8 @@ AND `dmp2`.`requirements`.`id` = `ADDITIONAL_QUESTIONS`.`MIN_ID`;
 SET FOREIGN_KEY_CHECKS = 1;
 ALTER TABLE `roadmaptest`.`questions` ENABLE KEYS;
 -- **********************************************************************************************************************
-
+*/
+/*
 -- # Copy dmp2 Responses into roadmaptest Answers table
 -- Disable the constraints
 ALTER TABLE `roadmaptest`.`answers` DISABLE KEYS;
@@ -478,7 +477,7 @@ WHERE `enumeration_id`  IS NOT NULL;
 SET FOREIGN_KEY_CHECKS = 1;
 ALTER TABLE `roadmaptest`.`answers_question_options` ENABLE KEYS;
 -- *********************************************************************************************************************
-
+*/
 -- # Copy dmp2 Enumerations into roadmaptest Question Format labels table
 -- Disable the constraints
 ALTER TABLE `roadmaptest`.`question_format_labels` DISABLE KEYS;
@@ -496,7 +495,7 @@ FROM `dmp2`.`labels`;
 SET FOREIGN_KEY_CHECKS = 1;
 ALTER TABLE `roadmaptest`.`question_format_labels` ENABLE KEYS;
 -- *********************************************************************************************************************
-
+/*
 -- # Copy dmp2 Plans into roadmaptest Plans table where visibility is "Institutional"
 -- Disable the constraints
 ALTER TABLE `roadmaptest`.`plans` DISABLE KEYS;
