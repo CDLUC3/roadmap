@@ -676,7 +676,7 @@ SET FOREIGN_KEY_CHECKS = 1;
 ALTER TABLE `roadmaptest`.`plans` ENABLE KEYS;
 -- ALTER TABLE `roadmaptest`.`roles` DROP FOREIGN KEY `fk_rails_ab35d699f0`;
 -- **********************************************************************************************************************
-
+*/
 -- Disable the constraints
 ALTER TABLE `roadmaptest`.`sample_plans` DISABLE KEYS;
 SET FOREIGN_KEY_CHECKS = 0;      
@@ -700,52 +700,83 @@ ALTER TABLE `roadmaptest`.`annotations` DISABLE KEYS;
 SET FOREIGN_KEY_CHECKS = 0;      
 TRUNCATE TABLE `roadmaptest`.`annotations`;
 
+-- Insert Funder annotation guidance (combines any resource_type that isn't a suggested/example answer)
+/*
 INSERT INTO `roadmaptest`.`annotations` (
-    `id`,                     `text`, 
-    `question_id`,                 `org_id`, 
-    `type`,                   `created_at`,                   `updated_at`)
+  `id`, `text`, `question_id`, `org_id`, 
+  `type`, `created_at`, `updated_at`)
+SELECT
+  `resources`.`id`, 
+  CONCAT(
+    '<p>', 
+    GROUP_CONCAT(
+      CASE `resources`.`resource_type` 
+      WHEN 'actionable_url' THEN
+        CONCAT('<a href="', `resources`.`value`, '">', `resources`.`label`, '</a>')
+      ELSE
+        CONCAT(`resources`.`label`, '<br />', `resources`.`text`)
+      END
+      SEPARATOR '<br />'),
+    '</p>'
+  ) as Guidance, 
+  (SELECT `requirements`.`id` FROM `dmp2`.`requirements` WHERE `requirements`.`requirements_template_id` = `resource_contexts`.`requirements_template_id` ORDER BY `resources`.`id` LIMIT 1) as requirement_id, 
+  `requirements_templates`.`institution_id`,
+  1 as annotation_type, `resources`.`created_at`, `resources`.`updated_at`
+FROM `dmp2`.`resources`
+INNER JOIN `dmp2`.`resource_contexts` ON `resources`.`id` = `resource_contexts`.`resource_id`
+INNER JOIN `dmp2`.`requirements_templates` ON `resource_contexts`.`requirements_template_id` = `requirements_templates`.`id`
+WHERE `resource_contexts`.`id` IS NOT NULL
+AND `resource_contexts`.`requirements_template_id` IS NOT NULL
+AND `resource_contexts`.`institution_id` IS NULL
+AND `resource_contexts`.`requirement_id` IS NULL
+AND `resources`.`resource_type` NOT IN ('example_response', 'suggested_response')
+GROUP BY `resource_contexts`.`requirements_template_id`;
+*/
+
+-- Insert Funder annotation example answer
+INSERT INTO `roadmaptest`.`annotations` (
+    `id`, `text`, `question_id`, `org_id`, `type`, `created_at`, `updated_at`)
 SELECT 
-    `resources`.`id`,               CONCAT('<p>', `resources`.`label`, ': <a href="', `resources`.`value`, '">', `resources`.`value`, '</a></p>'), 
-    `resource_contexts`.`requirement_id`,      `resource_contexts`.`institution_id`,  
-     0,                       `resources`.`created_at`,             `resources`.`updated_at`
+    `resources`.`id`, CONCAT('<p>', `resources`.`label`, '<br />', `resources`.`text`, '</p>'), 
+    `resource_contexts`.`requirement_id`, `requirements_templates`.`institution_id`,
+     0, `resources`.`created_at`, `resources`.`updated_at`
 
 FROM `dmp2`.`resources`
-LEFT JOIN `dmp2`.`resource_contexts` ON `resources`.`id` = `resource_contexts`.`resource_id`
+INNER JOIN `dmp2`.`resource_contexts` ON `resources`.`id` = `resource_contexts`.`resource_id`
+INNER JOIN `dmp2`.`requirements_templates` ON `requirements_templates`.`id` = `resource_contexts`.`requirements_template_id`
 WHERE `resource_contexts`.`requirement_id` IS NOT NULL
-AND `resources`.`resource_type` = "example_response" OR `resources`.`resource_type` = "suggested_response"
-GROUP BY `resources`.`id`
+AND `resources`.`resource_type` IN ("example_response", "suggested_response")
+GROUP BY `resources`.`id`;
 
+-- Insert Funder annotation guidance
 INSERT INTO `roadmaptest`.`annotations` (
-    `id`,                     `text`, 
-    `question_id`,                 `org_id`, 
-    `type`,                   `created_at`,                   `updated_at`)
+    `id`, `text`, `question_id`, `org_id`, `type`, `created_at`, `updated_at`)
 SELECT 
-    `resources`.`id`,               CONCAT('<p>', `resources`.`label`, ': <a href="', `resources`.`value`, '">', `resources`.`value`, '</a></p>'), 
-    `resource_contexts`.`requirement_id`,       `resource_contexts`.`institution_id`,  
-     1,                      `resources`.`created_at`,             `resources`.`updated_at`
+    `resources`.`id`, CONCAT('<p>', `resources`.`label`, '<br />', `resources`.`text`, '</p>'), 
+    `resource_contexts`.`requirement_id`, `resource_contexts`.`institution_id`, 
+     1, `resources`.`created_at`, `resources`.`updated_at`
+
 FROM `dmp2`.`resources`
 LEFT JOIN `dmp2`.`resource_contexts` ON `resources`.`id` = `resource_contexts`.`resource_id`
 WHERE `resource_contexts`.`requirement_id` IS NOT NULL
 AND `resources`.`resource_type` = "help_text"
-GROUP BY `resources`.`id`
+GROUP BY `resources`.`id`;
 
+-- Insert Funder annotation URL
 INSERT INTO `roadmaptest`.`annotations` (
-    `id`,                     `text`, 
-    `question_id`,                 `org_id`, 
-    `type`,                   `created_at`,                     `updated_at`)
+    `id`, `text`, `question_id`, `org_id`, `type`, `created_at`, `updated_at`)
 SELECT 
-    `resources`.`id`,               CONCAT('<p>', `resources`.`label`, ': <a href="', `resources`.`value`, '">', `resources`.`value`, '</a></p>'), 
-    `resource_contexts`.`requirement_id`,     `resource_contexts`.`institution_id`,  
-     2,                      `resources`.`created_at`,               `resources`.`updated_at`
+    `resources`.`id`, CONCAT('<p>', `resources`.`label`, ': <a href="', `resources`.`value`, '">', `resources`.`value`, '</a></p>'), 
+    `resource_contexts`.`requirement_id`, `resource_contexts`.`institution_id`,  
+     2, `resources`.`created_at`, `resources`.`updated_at`
 
 FROM `dmp2`.`resources`
 LEFT JOIN `dmp2`.`resource_contexts` ON `resources`.`id` = `resource_contexts`.`resource_id`
 WHERE `resource_contexts`.`requirement_id` IS NOT NULL
 AND `resources`.`resource_type` = "actionable_url"
-GROUP BY `resources`.`id`
+GROUP BY `resources`.`id`;
 
 -- Enable Back the constraints
 SET FOREIGN_KEY_CHECKS = 1;
 ALTER TABLE `roadmaptest`.`annotations` ENABLE KEYS;
 -- ***********************************************************************************************************************
-*/
