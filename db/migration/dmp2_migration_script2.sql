@@ -19,9 +19,9 @@ SELECT
   `id`,        `full_name`,      `nickname`,      `url`,         NULL,                        
    NULL,            
    CASE  
-     WHEN `name` LIKE '%University%' THEN 1
-     WHEN `name` LIKE '%College%' THEN 1
-     WHEN `name` LIKE '%Library%' THEN 1
+     WHEN `full_name` LIKE '%University%' THEN 1
+     WHEN `full_name` LIKE '%College%' THEN 1
+     WHEN `full_name` LIKE '%Library%' THEN 1
      ELSE 3
    END,          NULL,         NULL,      `desc`,                
    NULL,             NULL,       NULL,         NULL,                      
