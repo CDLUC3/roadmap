@@ -17,7 +17,13 @@ INSERT INTO `roadmaptest`.`orgs` (
                           
 SELECT 
   `id`,        `full_name`,      `nickname`,      `url`,         NULL,                        
-   NULL,            1,          NULL,         NULL,      `desc`,                
+   NULL,            
+   CASE  
+     WHEN `name` LIKE '%University%' THEN 1
+     WHEN `name` LIKE '%College%' THEN 1
+     WHEN `name` LIKE '%Library%' THEN 1
+     ELSE 3
+   END,          NULL,         NULL,      `desc`,                
    NULL,             NULL,       NULL,         NULL,                      
   `contact_info`,   `contact_email`,  `created_at`,      `updated_at`,
   (SELECT `id` FROM `roadmaptest`.`languages` WHERE `roadmaptest`.`languages`.`default_language` = 1)
@@ -244,7 +250,7 @@ INSERT INTO `roadmaptest`.`templates`(
   `dmptemplate_id`,   `customization_of`,    `created_at`,       `updated_at`)
 SELECT
   `id`,         `institution_id`,     `name`,         `name`,       "en",    
-  `active`,         0,             0,               CASE `active` WHEN 0 THEN 0 ELSE 1 END CASE,          0,      
+  `active`,         0,             0,               `active`,          0,      
   SUBSTRING(UUID_SHORT(),16) as dmptemplate_id,           NULL,        `created_at`,       `updated_at`
 
 FROM `dmp2`.`requirements_templates`;
@@ -266,7 +272,7 @@ INSERT into `roadmaptest`.`phases`(
      `template_id`,         `slug`,                            `modifiable`)
 SELECT
     "Data Management Plan",   NULL,      1,         
-    `id` as `template_id`,     NULL,                CASE `active` WHEN 0 THEN 0 ELSE 1 END CASE
+    `id` as `template_id`,     NULL,                `active`
     
 from `dmp2`.`requirements_templates`;
 
@@ -286,9 +292,9 @@ INSERT INTO `roadmaptest`.`sections` (
   `number`,           `published`,         `phase_id`,   
   `modifiable`,         `created_at`,         `updated_at` )
 SELECT
-  `id`,             `text_brief`,          NULL,   
-  `position`,            0,            (SELECT `id` FROM `roadmaptest`.`phase` WHERE `roadmaptest`.`templates`.`id` = `dmp2`.`requirements_templates`.id) as PHASE, 
-    0,            `created_at`,         `updated_at` 
+  `dmp2`.`requirements`.`id`,             `text_brief`,          NULL,   
+  `position`,            0,            (SELECT `roadmaptest`.`phases`.`id` FROM `roadmaptest`.`phases` WHERE `roadmaptest`.`phases`.`template_id` = `dmp2`.`requirements_templates`.`id`) as PHASE, 
+    0,            `dmp2`.`requirements`.`created_at`,         `dmp2`.`requirements`.`updated_at` 
 
 FROM `dmp2`.`requirements`
 INNER JOIN `dmp2`.`requirements_templates` 
@@ -300,9 +306,9 @@ INSERT INTO `roadmaptest`.`sections` (
    `number`,           `published`,         `phase_id`,   
    `modifiable`,         `created_at`,         `updated_at` )
 SELECT
-   `id`,            `text_brief`,          CONCAT( '<p>', `text_brief` , '</p>' ),   
-   `position`,            0,            (SELECT `id` FROM `roadmaptest`.`phase` WHERE `roadmaptest`.`templates`.`id` = `dmp2`.`requirements_templates`.id) as PHASE,
-     0,            `created_at`,         `updated_at` 
+   `dmp2`.`requirements`.`id`,            `text_brief`,          NULL,   
+   `position`,            0,            (SELECT `roadmaptest`.`phases`.`id` FROM `roadmaptest`.`phases` WHERE `roadmaptest`.`phases`.`template_id` = `dmp2`.`requirements_templates`.`id`) as PHASE,
+     0,            `dmp2`.`requirements`.`created_at`,         `dmp2`.`requirements`.`updated_at` 
 FROM `dmp2`.`requirements` 
 INNER JOIN `dmp2`.`requirements_templates` 
 ON `dmp2`.`requirements`.`requirements_template_id` = `dmp2`.`requirements_templates`.`id`
@@ -311,14 +317,15 @@ WHERE ancestry IS NULL and `group` = 1;
 
 -- # Set a Phase id for each Section in Roadmap -- 
 -- # Here there is a similar default Phase created for every template since DMPTool doesnt have the concept of phases
-SELECT @total:= COUNT(*) from `roadmaptest`.`phases`;
-UPDATE `roadmaptest`.`sections` t1 SET t1.`phase_id` = MOD(t1.`id`, @total)
+#SELECT @total:= COUNT(*) from `roadmaptest`.`phases`;
+#UPDATE `roadmaptest`.`sections` t1 SET t1.`phase_id` = MOD(t1.`id`, @total)
 
 -- Enable Back the constraints
 SET FOREIGN_KEY_CHECKS = 1;
 ALTER TABLE `roadmaptest`.`sections` ENABLE KEYS;
 -- *********************************************************************************************************************
 
+/*
 -- # Copy dmp2 Requirements with Ancestry under roadmaptest Questions table
 -- Disable the constraints
 ALTER TABLE `roadmaptest`.`questions` DISABLE KEYS;
@@ -742,8 +749,4 @@ GROUP BY `resources`.`id`
 SET FOREIGN_KEY_CHECKS = 1;
 ALTER TABLE `roadmaptest`.`annotations` ENABLE KEYS;
 -- ***********************************************************************************************************************
-
-
-
-
-
+*/
