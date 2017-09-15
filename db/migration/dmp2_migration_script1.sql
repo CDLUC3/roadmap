@@ -166,4 +166,42 @@ WHERE  CAST(`created_at` AS CHAR(20)) = '0000-00-00 00:00:00';
 -- **********************************************************************************************************************
 -- **********************************************************************************************************************
 
+-- Seed the themes table based on the values in the project Wiki
+ALTER TABLE `roadmaptest`.`themes` DISABLE KEYS;
+SET FOREIGN_KEY_CHECKS = 0;  
+TRUNCATE TABLE `roadmaptest`.`themes`;
+
+INSERT INTO `roadmaptest`.`themes` (`title`, `created_at`, `updated_at`, `locale`) 
+VALUES ('Data description', CURDATE(), CURDATE(), 'en');
+INSERT INTO `roadmaptest`.`themes` (`title`, `created_at`, `updated_at`, `locale`) 
+VALUES ('Data format', CURDATE(), CURDATE(), 'en');
+INSERT INTO `roadmaptest`.`themes` (`title`, `created_at`, `updated_at`, `locale`) 
+VALUES ('Data volume', CURDATE(), CURDATE(), 'en');
+INSERT INTO `roadmaptest`.`themes` (`title`, `created_at`, `updated_at`, `locale`) 
+VALUES ('Data collection', CURDATE(), CURDATE(), 'en');
+INSERT INTO `roadmaptest`.`themes` (`title`, `created_at`, `updated_at`, `locale`) 
+VALUES ('Metadata & documentation', CURDATE(), CURDATE(), 'en');
+INSERT INTO `roadmaptest`.`themes` (`title`, `created_at`, `updated_at`, `locale`) 
+VALUES ('Ethics & privacy', CURDATE(), CURDATE(), 'en');
+INSERT INTO `roadmaptest`.`themes` (`title`, `created_at`, `updated_at`, `locale`) 
+VALUES ('Intellectual property rights', CURDATE(), CURDATE(), 'en');
+INSERT INTO `roadmaptest`.`themes` (`title`, `created_at`, `updated_at`, `locale`) 
+VALUES ('Storage & security', CURDATE(), CURDATE(), 'en');
+INSERT INTO `roadmaptest`.`themes` (`title`, `created_at`, `updated_at`, `locale`) 
+VALUES ('Data sharing', CURDATE(), CURDATE(), 'en');
+INSERT INTO `roadmaptest`.`themes` (`title`, `created_at`, `updated_at`, `locale`) 
+VALUES ('Data repository', CURDATE(), CURDATE(), 'en');
+INSERT INTO `roadmaptest`.`themes` (`title`, `created_at`, `updated_at`, `locale`) 
+VALUES ('Preservation', CURDATE(), CURDATE(), 'en');
+INSERT INTO `roadmaptest`.`themes` (`title`, `created_at`, `updated_at`, `locale`) 
+VALUES ('Roles & responsibilities', CURDATE(), CURDATE(), 'en');
+INSERT INTO `roadmaptest`.`themes` (`title`, `created_at`, `updated_at`, `locale`) 
+VALUES ('Budget', CURDATE(), CURDATE(), 'en');
+INSERT INTO `roadmaptest`.`themes` (`title`, `created_at`, `updated_at`, `locale`) 
+VALUES ('Related policies', CURDATE(), CURDATE(), 'en');
+
+-- Enable Back the constraints
+SET FOREIGN_KEY_CHECKS = 1;
+ALTER TABLE `roadmaptest`.`question_formats` ENABLE KEYS;
+
 DROP PROCEDURE IF EXISTS AddColumn;

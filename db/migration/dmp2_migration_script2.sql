@@ -199,6 +199,7 @@ ALTER TABLE `roadmaptest`.`perms` ENABLE KEYS;
 -- *********************************************************************************************************************
 -- # Copy dmp2 Comments into Notes tale of roadmaptest and assign the 1st response of the respective plan as answer_id for the note.
 -- Disable the constraints
+/*
 ALTER TABLE `roadmaptest`.`notes` DISABLE KEYS;
 SET FOREIGN_KEY_CHECKS = 0;      
 TRUNCATE TABLE `roadmaptest`.`notes`;
@@ -220,6 +221,7 @@ GROUP BY `dmp2`.`responses`.`plan_id`) `RESPONSE`
 ON `dmp2`.`comments`.`plan_id` = `RESPONSE`.`plan_id`
 ORDER BY `dmp2`.`comments`.`id`;
 
+
 -- ALTER TABLE `roadmaptest`.`notes` DROP FOREIGN KEY  fk_rails_907f8d48bf;  
 -- ALTER TABLE `roadmaptest`.`notes` DROP FOREIGN KEY  fk_rails_7f2323ad43;
 -- # If we dont want to have any responses as NULL values (i.e no Orphan comments) then tis is the sql query
@@ -236,6 +238,7 @@ ORDER BY `dmp2`.`comments`.`id`;
 -- Enable Back the constraints
 SET FOREIGN_KEY_CHECKS = 1;
 ALTER TABLE `roadmaptest`.`notes` ENABLE KEYS;
+*/
 -- *********************************************************************************************************************
 
 -- # Copy dmp2 Requirments Templates into Templates table of Roadmap.
@@ -370,13 +373,11 @@ ON r.`requirements_template_id` = rt.`id`
 WHERE `group` = 0 AND
 ancestry IN ( SELECT  `dmp2`.`requirements`.`id` as `SECTION_iD` FROM `dmp2`.`requirements` WHERE `group` = 1); 
 
+/*
 -- Enable Back the constraints
 SET FOREIGN_KEY_CHECKS = 1;
 ALTER TABLE `roadmaptest`.`questions` ENABLE KEYS;
 -- *********************************************************************************************************************
-/*
-ALTER TABLE `roadmaptest`.`questions` DISABLE KEYS;
-SET FOREIGN_KEY_CHECKS = 0;
 
 -- # Copy Additional Informations of dmp2 into Questions in DMP Migration
 INSERT INTO `roadmaptest`.`questions` (
@@ -407,6 +408,7 @@ SET FOREIGN_KEY_CHECKS = 1;
 ALTER TABLE `roadmaptest`.`questions` ENABLE KEYS;
 -- **********************************************************************************************************************
 */
+
 /*
 -- # Copy dmp2 Responses into roadmaptest Answers table
 -- Disable the constraints
@@ -695,88 +697,227 @@ ALTER TABLE `roadmaptest`.`sample_plans` ENABLE KEYS;
 -- ***********************************************************************************************************************
 -- # Copy Resources directly related to a Requirement from DMPTool into Roadmap Annotations.
 
+DELIMITER //
+-- Collect all of the Question level example_answers and guidance and add it to
+-- the annotations table
+DROP PROCEDURE IF EXISTS bundleQuestionLevelAnnotations;
+CREATE PROCEDURE bundleQuestionLevelAnnotations(
+  IN org_id INT, IN template_id INT, IN example_answer TEXT, IN guidance TEXT
+)
+BEGIN
+  DECLARE done INT DEFAULT 0;
+  DECLARE question_id INT;
+  DECLARE my_created_at DATETIME; 
+  DECLARE my_updated_at DATETIME;
+  DECLARE questions CURSOR FOR 
+    SELECT `id`, `created_at`, `updated_at`
+    FROM `dmp2`.`requirements` 
+    WHERE `requirements_template_id` = template_id;
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+
+  OPEN questions;
+  get_question: LOOP
+    FETCH questions INTO question_id, my_created_at, my_updated_at;
+    IF done = 1 THEN
+      LEAVE get_question;
+    END IF;
+
+    SET @example_answer = (
+      SELECT 
+        GROUP_CONCAT(
+          CONCAT(`resources`.`label`, ':<br />', `resources`.`text`)
+        SEPARATOR '<br />') as question
+      FROM `dmp2`.`resources` 
+      INNER JOIN `dmp2`.`resource_contexts` on `resources`.`id` = `resource_contexts`.`resource_id`
+      WHERE `resource_contexts`.`institution_id` IS NULL
+      AND `resource_contexts`.`requirement_id` = question_id
+      AND `resources`.`resource_type` IN ('suggested_response', 'example_response')
+      AND `resource_contexts`.`requirements_template_id` = template_id);
+  
+    SET @guidance = (
+      SELECT 
+        GROUP_CONCAT(
+          CASE `resources`.`resource_type`
+          WHEN 'actionable_url' THEN
+            CONCAT('<a href="', `resources`.`value`, '">', `resources`.`label`, '</a>')
+          ELSE
+            CONCAT(`resources`.`label`, ':<br />', `resources`.`text`)
+          END
+        SEPARATOR '<br />') as question
+      FROM `dmp2`.`resources` 
+      INNER JOIN `dmp2`.`resource_contexts` on `resources`.`id` = `resource_contexts`.`resource_id`
+      WHERE `resource_contexts`.`institution_id` IS NULL
+      AND `resource_contexts`.`requirement_id` = question_id
+      AND `resources`.`resource_type` = 'help_text'
+      AND `resource_contexts`.`requirements_template_id` = template_id);
+    
+    SET @links = (
+      SELECT 
+        GROUP_CONCAT(
+          CASE `resources`.`resource_type`
+          WHEN 'actionable_url' THEN
+            CONCAT('<a href="', `resources`.`value`, '">', `resources`.`label`, '</a>')
+          ELSE
+            CONCAT(`resources`.`label`, ':<br />', `resources`.`text`)
+          END
+        SEPARATOR '<br />') as question
+      FROM `dmp2`.`resources` 
+      INNER JOIN `dmp2`.`resource_contexts` on `resources`.`id` = `resource_contexts`.`resource_id`
+      WHERE `resource_contexts`.`institution_id` IS NULL
+      AND `resource_contexts`.`requirement_id` = question_id
+      AND `resources`.`resource_type` = 'actionable_url'
+      AND `resource_contexts`.`requirements_template_id` = template_id);
+
+    -- Combine the template level with the question level
+    IF example_answer IS NOT NULL THEN
+      SET @example_answer = CONCAT(example_answer, '<br />', @example_answer);
+    END IF;
+
+    IF @guidance IS NOT NULL AND @links IS NOT NULL THEN
+      SET @links = CONCAT('<br /><br />', @links);
+    END IF;
+    IF @links IS NOT NULL THEN
+      SET @guidance = CONCAT(@guidance, @links);
+    END IF;
+    
+    IF @example_answer IS NOT NULL THEN
+      INSERT INTO `roadmaptest`.`annotations` (
+        `text`, `question_id`, `org_id`, `type`, `created_at`, `updated_at`
+      )VALUES(
+        CONCAT('<p>', @example_answer,'</p>'), question_id, org_id, 0, my_created_at, my_updated_at
+      );
+    END IF;
+    
+    SET @val = (SELECT `text` FROM `roadmaptest`.`questions` WHERE `id` = question_id);
+    
+    -- If the question does not have any actual text then use the 
+    -- question level guidance for the question text and the template level
+    -- guidance as guidance annotation
+    IF (@val IS NULL OR @val = '<p></p>') AND @guidance IS NOT NULL THEN
+      UPDATE `roadmaptest`.`questions` SET `text` = CONCAT('<p>', @guidance, '</p>')
+      WHERE `id` = question_id;
+      
+      IF guidance IS NOT NULL THEN
+        INSERT INTO `roadmaptest`.`annotations` (
+          `text`, `question_id`, `org_id`, `type`, `created_at`, `updated_at`
+        )VALUES(
+          CONCAT('<p>', guidance, '</p>'), question_id, org_id, 1, my_created_at, my_updated_at
+        );
+      END IF;
+    ELSE
+      -- Otherwise just append everything to the question's guidance annotation
+      IF guidance IS NOT NULL THEN
+        SET @guidance = CONCAT(guidance, '<br />', @guidance);
+      END IF;
+      
+      IF @guidance IS NOT NULL THEN
+        INSERT INTO `roadmaptest`.`annotations` (
+          `text`, `question_id`, `org_id`, `type`, `created_at`, `updated_at`
+        )VALUES(
+          CONCAT('<p>', @guidance, @links, '</p>'), question_id, org_id, 1, my_created_at, my_updated_at
+        );
+       END IF;
+    END IF;
+    
+  END LOOP get_question;
+  
+  CLOSE questions;
+END//
+
+-- Collect all of the Template level example_answers and guidance
+DROP PROCEDURE IF EXISTS bundleFunderAnnotations;
+CREATE PROCEDURE bundleFunderAnnotations()
+BEGIN
+  DECLARE done INT DEFAULT 0;
+  DECLARE my_org_id INT;
+  DECLARE template_id INT;
+  DECLARE templates CURSOR FOR SELECT `org_id`, `id` FROM `roadmaptest`.`templates`;
+  DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+  
+  OPEN templates;
+  get_template: LOOP
+    FETCH templates INTO my_org_id, template_id;
+    IF done = 1 THEN
+      LEAVE get_template;
+    END IF;
+
+    SET @example_answer = (
+      SELECT 
+        GROUP_CONCAT(
+          CONCAT(`resources`.`label`, ':<br />', `resources`.`text`)
+        SEPARATOR '<br />') as question
+      FROM `dmp2`.`resources` 
+      INNER JOIN `dmp2`.`resource_contexts` on `resources`.`id` = `resource_contexts`.`resource_id`
+      WHERE `resource_contexts`.`institution_id` IS NULL
+      AND `resource_contexts`.`requirement_id` IS NULL
+      AND `resources`.`resource_type` IN ('suggested_response', 'example_response')
+      AND `resource_contexts`.`requirements_template_id` = template_id);
+  
+    SET @guidance = (
+      SELECT 
+        GROUP_CONCAT(
+          CASE `resources`.`resource_type`
+          WHEN 'actionable_url' THEN
+            CONCAT('<a href="', `resources`.`value`, '">', `resources`.`label`, '</a>')
+          ELSE
+            CONCAT(`resources`.`label`, ':<br />', `resources`.`text`)
+          END
+        SEPARATOR '<br />') as question
+      FROM `dmp2`.`resources` 
+      INNER JOIN `dmp2`.`resource_contexts` on `resources`.`id` = `resource_contexts`.`resource_id`
+      WHERE `resource_contexts`.`institution_id` IS NULL
+      AND `resource_contexts`.`requirement_id` IS NULL
+      AND `resources`.`resource_type` = 'help_text'
+      AND `resource_contexts`.`requirements_template_id` = template_id);
+  
+    SET @links = (
+      SELECT 
+        GROUP_CONCAT(
+          CASE `resources`.`resource_type`
+          WHEN 'actionable_url' THEN
+            CONCAT('<a href="', `resources`.`value`, '">', `resources`.`label`, '</a>')
+          ELSE
+            CONCAT(`resources`.`label`, ':<br />', `resources`.`text`)
+          END
+        SEPARATOR '<br />') as question
+      FROM `dmp2`.`resources` 
+      INNER JOIN `dmp2`.`resource_contexts` on `resources`.`id` = `resource_contexts`.`resource_id`
+      WHERE `resource_contexts`.`institution_id` IS NULL
+      AND `resource_contexts`.`requirement_id` IS NULL
+      AND `resources`.`resource_type` = 'actionable_url'
+      AND `resource_contexts`.`requirements_template_id` = template_id);
+
+    IF @guidance IS NOT NULL AND @links IS NOT NULL THEN
+      SET @links = CONCAT('<br /><br />', @links);
+    END IF;
+    IF @links IS NOT NULL THEN
+      SET @guidance = CONCAT(@guidance, @links);
+    END IF;
+
+    CALL bundleQuestionLevelAnnotations(my_org_id, template_id, @example_answer, @guidance);
+  
+  END LOOP get_template;
+  
+  CLOSE templates;
+END//
+DELIMITER ;
+
 -- Disable the constraints
 ALTER TABLE `roadmaptest`.`annotations` DISABLE KEYS;
 SET FOREIGN_KEY_CHECKS = 0;      
 TRUNCATE TABLE `roadmaptest`.`annotations`;
+ALTER TABLE `roadmaptest`.`annotations` MODIFY COLUMN `id` INT auto_increment;
 
--- Insert Funder annotation guidance (combines any resource_type that isn't a suggested/example answer)
-/*
-INSERT INTO `roadmaptest`.`annotations` (
-  `id`, `text`, `question_id`, `org_id`, 
-  `type`, `created_at`, `updated_at`)
-SELECT
-  `resources`.`id`, 
-  CONCAT(
-    '<p>', 
-    GROUP_CONCAT(
-      CASE `resources`.`resource_type` 
-      WHEN 'actionable_url' THEN
-        CONCAT('<a href="', `resources`.`value`, '">', `resources`.`label`, '</a>')
-      ELSE
-        CONCAT(`resources`.`label`, '<br />', `resources`.`text`)
-      END
-      SEPARATOR '<br />'),
-    '</p>'
-  ) as Guidance, 
-  (SELECT `requirements`.`id` FROM `dmp2`.`requirements` WHERE `requirements`.`requirements_template_id` = `resource_contexts`.`requirements_template_id` ORDER BY `resources`.`id` LIMIT 1) as requirement_id, 
-  `requirements_templates`.`institution_id`,
-  1 as annotation_type, `resources`.`created_at`, `resources`.`updated_at`
-FROM `dmp2`.`resources`
-INNER JOIN `dmp2`.`resource_contexts` ON `resources`.`id` = `resource_contexts`.`resource_id`
-INNER JOIN `dmp2`.`requirements_templates` ON `resource_contexts`.`requirements_template_id` = `requirements_templates`.`id`
-WHERE `resource_contexts`.`id` IS NOT NULL
-AND `resource_contexts`.`requirements_template_id` IS NOT NULL
-AND `resource_contexts`.`institution_id` IS NULL
-AND `resource_contexts`.`requirement_id` IS NULL
-AND `resources`.`resource_type` NOT IN ('example_response', 'suggested_response')
-GROUP BY `resource_contexts`.`requirements_template_id`;
-*/
+-- Insert all of the Funder Annotation
+CALL bundleFunderAnnotations();
 
--- Insert Funder annotation example answer
-INSERT INTO `roadmaptest`.`annotations` (
-    `id`, `text`, `question_id`, `org_id`, `type`, `created_at`, `updated_at`)
-SELECT 
-    `resources`.`id`, CONCAT('<p>', `resources`.`label`, '<br />', `resources`.`text`, '</p>'), 
-    `resource_contexts`.`requirement_id`, `requirements_templates`.`institution_id`,
-     0, `resources`.`created_at`, `resources`.`updated_at`
-
-FROM `dmp2`.`resources`
-INNER JOIN `dmp2`.`resource_contexts` ON `resources`.`id` = `resource_contexts`.`resource_id`
-INNER JOIN `dmp2`.`requirements_templates` ON `requirements_templates`.`id` = `resource_contexts`.`requirements_template_id`
-WHERE `resource_contexts`.`requirement_id` IS NOT NULL
-AND `resources`.`resource_type` IN ("example_response", "suggested_response")
-GROUP BY `resources`.`id`;
-
--- Insert Funder annotation guidance
-INSERT INTO `roadmaptest`.`annotations` (
-    `id`, `text`, `question_id`, `org_id`, `type`, `created_at`, `updated_at`)
-SELECT 
-    `resources`.`id`, CONCAT('<p>', `resources`.`label`, '<br />', `resources`.`text`, '</p>'), 
-    `resource_contexts`.`requirement_id`, `resource_contexts`.`institution_id`, 
-     1, `resources`.`created_at`, `resources`.`updated_at`
-
-FROM `dmp2`.`resources`
-LEFT JOIN `dmp2`.`resource_contexts` ON `resources`.`id` = `resource_contexts`.`resource_id`
-WHERE `resource_contexts`.`requirement_id` IS NOT NULL
-AND `resources`.`resource_type` = "help_text"
-GROUP BY `resources`.`id`;
-
--- Insert Funder annotation URL
-INSERT INTO `roadmaptest`.`annotations` (
-    `id`, `text`, `question_id`, `org_id`, `type`, `created_at`, `updated_at`)
-SELECT 
-    `resources`.`id`, CONCAT('<p>', `resources`.`label`, ': <a href="', `resources`.`value`, '">', `resources`.`value`, '</a></p>'), 
-    `resource_contexts`.`requirement_id`, `resource_contexts`.`institution_id`,  
-     2, `resources`.`created_at`, `resources`.`updated_at`
-
-FROM `dmp2`.`resources`
-LEFT JOIN `dmp2`.`resource_contexts` ON `resources`.`id` = `resource_contexts`.`resource_id`
-WHERE `resource_contexts`.`requirement_id` IS NOT NULL
-AND `resources`.`resource_type` = "actionable_url"
-GROUP BY `resources`.`id`;
+DELETE FROM `roadmaptest`.`annotations` WHERE `text` IS NULL;
 
 -- Enable Back the constraints
+ALTER TABLE `roadmaptest`.`annotations` MODIFY COLUMN `id` INT;
 SET FOREIGN_KEY_CHECKS = 1;
 ALTER TABLE `roadmaptest`.`annotations` ENABLE KEYS;
 -- ***********************************************************************************************************************
+
+DROP PROCEDURE bundleQuestionLevelAnnotations;
+DROP PROCEDURE bundleFunderAnnotations;
