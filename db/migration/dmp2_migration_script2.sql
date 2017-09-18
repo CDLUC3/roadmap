@@ -253,7 +253,7 @@ INSERT INTO `roadmaptest`.`templates`(
   `dmptemplate_id`,   `customization_of`,    `created_at`,       `updated_at`)
 SELECT
   `id`,         `institution_id`,     `name`,         `name`,       "en",    
-  `active`,         0,             0,               `active`,          0,      
+  `active`,         0,             0,               0,          0,      
   SUBSTRING(UUID_SHORT(),14) as dmptemplate_id,           NULL,        `created_at`,       `updated_at`
 
 FROM `dmp2`.`requirements_templates`;
@@ -345,7 +345,7 @@ INSERT INTO `roadmaptest`.`questions`(
 
 SELECT
   r.`id`, CONCAT( '<p>', r.`text_full`,  '</p>' ), NULL, 1, 
-  (case `requirement_type` when "text" then 0 when "numeric" then 6 when "date" then 7 end) as `format_type`, 
+  (case `requirement_type` when "text" then 1 when "numeric" then 6 when "date" then 7 end) as `format_type`, 
   1, rt.`active`, 
   (SELECT s.id 
    FROM `roadmaptest`.`sections` s INNER JOIN `roadmaptest`.`phases` p ON s.phase_id = p.id 
@@ -364,7 +364,7 @@ INSERT INTO `roadmaptest`.`questions` (
 
 SELECT 
   r.`id`, CONCAT( '<p>', r.`text_brief`, '<br />', r.`text_full`, '</p>' ), NULL, `position`, 
-  (case `requirement_type` when "text" then 0 when "numeric" then 6 when "date" then 7 end) as `format_type`, 
+  (case `requirement_type` when "text" then 1 when "numeric" then 6 when "date" then 7 end) as `format_type`, 
   1, rt.`active`, 
   substring_index(`ancestry`, '/', -1) as `section`, r.`created_at`, r.`updated_at`
 FROM `dmp2`.`requirements` r
