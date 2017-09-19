@@ -745,6 +745,9 @@ TRUNCATE TABLE `roadmaptest`.`annotations`;
 -- Insert all of the Funder Annotation
 CALL bundleFunderAnnotations();
 
+-- Remove any tabs and new line characters from the imported annotations
+UPDATE `roadmaptest`.`annotations` SET `text` = REPLACE(REPLACE(REPLACE(`text`, '\n', '<br />'), '\r', ''), '\t', '  ');
+
 DELETE FROM `roadmaptest`.`annotations` WHERE `text` IS NULL;
 
 -- Enable Back the constraints
@@ -967,7 +970,7 @@ BEGIN
         '</p>'),
         CONCAT(
           '<p style="font-size: .75rem">Used on the following templates:<ul>',
-           GROUP_CONCAT(DISTINCT '<li>', `institutions`.`full_name`, ': "', `requirements_templates`.`name`, '"</li>'),
+           GROUP_CONCAT(DISTINCT '<li>', `institutions`.`full_name`, ': ', `requirements_templates`.`name`, '</li>' SEPARATOR ''),
           '</ul></p>'),
       MIN(`resources`.`created_at`), MAX(`resources`.`updated_at`)
     FROM `dmp2`.`resources` 
@@ -1019,6 +1022,9 @@ END//
 DELIMITER ;
 
 call institutionalGuidance;
+
+-- Remove any tabs and new line characters from the imported guidance
+UPDATE `roadmaptest`.`guidances` SET `text` = REPLACE(REPLACE(REPLACE(`text`, '\n', '<br />'), '\r', ''), '\t', '  ');
 
 -- Enable Back the constraints
 SET FOREIGN_KEY_CHECKS = 1;
