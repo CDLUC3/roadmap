@@ -197,49 +197,6 @@ SET FOREIGN_KEY_CHECKS = 1;
 ALTER TABLE `roadmaptest`.`perms` ENABLE KEYS;
 
 -- *********************************************************************************************************************
--- # Copy dmp2 Comments into Notes tale of roadmaptest and assign the 1st response of the respective plan as answer_id for the note.
--- Disable the constraints
-/*
-ALTER TABLE `roadmaptest`.`notes` DISABLE KEYS;
-SET FOREIGN_KEY_CHECKS = 0;      
-TRUNCATE TABLE `roadmaptest`.`notes`;
-        
-INSERT INTO `roadmaptest`.`notes` ( 
-  `id`,                `user_id`,                `text`,    
-  `archived`,             `archived_by`,    
-  `created_at`,             `updated_at`,               `answer_id`)
-
-SELECT   
-  `dmp2`.`comments`.`id`,       `dmp2`.`comments`.`user_id`,       `dmp2`.`comments`.`value`, 
-    0,                  NULL , 
-   `dmp2`.`comments`.`created_at`,   `dmp2`.`comments`.`updated_at`,     `RESPONSE`.`minresponse`
-
-FROM `dmp2`.`comments`
-LEFT JOIN (SELECT `dmp2`.`responses`.`plan_id`, MIN(`dmp2`.`responses`.`id`) as `minresponse`
-FROM `dmp2`.`responses`
-GROUP BY `dmp2`.`responses`.`plan_id`) `RESPONSE` 
-ON `dmp2`.`comments`.`plan_id` = `RESPONSE`.`plan_id`
-ORDER BY `dmp2`.`comments`.`id`;
-
-
--- ALTER TABLE `roadmaptest`.`notes` DROP FOREIGN KEY  fk_rails_907f8d48bf;  
--- ALTER TABLE `roadmaptest`.`notes` DROP FOREIGN KEY  fk_rails_7f2323ad43;
--- # If we dont want to have any responses as NULL values (i.e no Orphan comments) then tis is the sql query
--- INSERT INTO `roadmaptest`.`notes` ( 
---   `id`,  `user_id`,  `text`,    `archived`,   `archived_by`,    `created_at`,     `updated_at`,     `answer_id`)
--- SELECT   `dmp2`.`comments`.`id`, `dmp2`.`comments`.`user_id`, `dmp2`.`comments`.`value`,  0, NULL , `dmp2`.`comments`.`created_at`, `dmp2`.`comments`.`updated_at`, `RESPONSE`.`minresponse`
--- FROM `dmp2`.`comments`
--- INNER JOIN (SELECT    `dmp2`.`responses`.`plan_id`, MIN(`dmp2`.`responses`.`id`) as `minresponse`
--- FROM `dmp2`.`responses`
--- GROUP BY `dmp2`.`responses`.`plan_id`) `RESPONSE` 
--- ON `dmp2`.`comments`.`plan_id` = `RESPONSE`.`plan_id`
--- ORDER BY `dmp2`.`comments`.`id`
-
--- Enable Back the constraints
-SET FOREIGN_KEY_CHECKS = 1;
-ALTER TABLE `roadmaptest`.`notes` ENABLE KEYS;
-*/
--- *********************************************************************************************************************
 
 -- # Copy dmp2 Requirments Templates into Templates table of Roadmap.
 -- Disable the constraints
@@ -375,113 +332,7 @@ ON r.`requirements_template_id` = rt.`id`
 WHERE `group` = 0 AND
 ancestry IN ( SELECT  `dmp2`.`requirements`.`id` as `SECTION_iD` FROM `dmp2`.`requirements` WHERE `group` = 1); 
 
-/*
--- Enable Back the constraints
-SET FOREIGN_KEY_CHECKS = 1;
-ALTER TABLE `roadmaptest`.`questions` ENABLE KEYS;
 -- *********************************************************************************************************************
-
--- # Copy Additional Informations of dmp2 into Questions in DMP Migration
-INSERT INTO `roadmaptest`.`questions` (
-  `text`,     
-  `section_id`,                   `number`,                       
-  `question_format_id`,   
-  `default_value`,                 `option_comment_display`,               `modifiable`,     
-  `created_at`,                   `updated_at`)
-
-SELECT
-  CONCAT( '{', `additional_informations`.`label`, '}:', '{', `additional_informations`.`url`, '}' ), 
-  `dmp2`.`requirements`.`id` as `section_id`,   `dmp2`.`requirements`.`position`,
-   NULL,      
-   NULL,                        1,                             0,  
-  `additional_informations`.`created_at`,     `additional_informations`.`updated_at`
-
-FROM `dmp2`.`additional_informations`
-LEFT JOIN `dmp2`.`requirements`
-ON  `additional_informations`.`requirements_template_id` = `requirements`.`requirements_template_id`
-INNER JOIN (SELECT `dmp2`.`requirements`.`requirements_template_id`, MIN(`dmp2`.`requirements`.`id`) as `MIN_ID`
-from `dmp2`.`requirements` 
-GROUP BY `dmp2`.`requirements`.`requirements_template_id`) as `ADDITIONAL_QUESTIONS`
-ON `dmp2`.`requirements`.`requirements_template_id` = `ADDITIONAL_QUESTIONS`.`requirements_template_id`
-AND `dmp2`.`requirements`.`id` = `ADDITIONAL_QUESTIONS`.`MIN_ID`;
-
--- Enable Back the constraints
-SET FOREIGN_KEY_CHECKS = 1;
-ALTER TABLE `roadmaptest`.`questions` ENABLE KEYS;
--- **********************************************************************************************************************
-*/
-
-/*
--- # Copy dmp2 Responses into roadmaptest Answers table
--- Disable the constraints
-ALTER TABLE `roadmaptest`.`answers` DISABLE KEYS;
-SET FOREIGN_KEY_CHECKS = 0;      
-TRUNCATE TABLE `roadmaptest`.`answers`;
-
-INSERT INTO `roadmaptest`.`answers` (
-  `id`,                     `plan_id`,                 
-
-  `text`,                                       
-  
-  `question_id`,                 `lock_version`,            `user_id`,
-
-  `label_id`,                                     `created_at`,                              `updated_at`)
-
-SELECT
-  `dmp2`.`responses`.`id`,           `dmp2`.`responses`.`plan_id`,    
-
-  COALESCE(`dmp2`.`responses`.`text_value`,  `dmp2`.`responses`.`numeric_value`,   `dmp2`.`responses`.`date_value`),  
-  
-  `dmp2`.`responses`.`requirement_id`,     `dmp2`.`responses`.`lock_version`,   `userplan`.`user_id`,
-
-  `dmp2`.`responses`.`label_id`,         `dmp2`.`responses`.`created_at`,   `dmp2`.`responses`.`updated_at`
-
-FROM `dmp2`.`responses`
-LEFT JOIN (select `user_id`, `plan_id` from `dmp2`.`user_plans` where `dmp2`.`user_plans`.`owner` = 1) `USERPLAN`
-ON `dmp2`.`responses`.`plan_id` = `USERPLAN`.`plan_id`;
-
--- Enable Back the constraints
-SET FOREIGN_KEY_CHECKS = 1;
-ALTER TABLE `roadmaptest`.`answers` ENABLE KEYS;
--- *********************************************************************************************************************
-
--- # Copy dmp2 Enumerations into roadmaptest Question Options table
--- Disable the constraints
-ALTER TABLE `roadmaptest`.`question_options` DISABLE KEYS;
-SET FOREIGN_KEY_CHECKS = 0;      
-TRUNCATE TABLE `roadmaptest`.`question_options`;
-
-INSERT INTO `roadmaptest`.`question_options`(
-   `id`,  `question_id`,    `text`,    `number`,    `is_default`,  `created_at`,  `updated_at`)
- 
-SELECT 
-  `id`,   `requirement_id`,   `value`,   `position`,    `default`,     `created_at`,   `updated_at`
-FROM `dmp2`.`enumerations`;
-
--- Enable Back the constraints
-SET FOREIGN_KEY_CHECKS = 1;
-ALTER TABLE `roadmaptest`.`question_options` ENABLE KEYS;
--- #*********************************************************************************************************************
-
--- # Copy Enumeration ID of Responses into Answer Question Options table.
--- Disable the constraints
-ALTER TABLE `roadmaptest`.`answers_question_options` DISABLE KEYS;
-SET FOREIGN_KEY_CHECKS = 0;      
-TRUNCATE TABLE `roadmaptest`.`answers_question_options`;
-
-INSERT INTO `roadmaptest`.`answers_question_options`(
-    `answer_id`,     `question_option_id`)
-
-SELECT 
-    `id`,         `enumeration_id`  
-FROM  `dmp2`.`responses` 
-WHERE `enumeration_id`  IS NOT NULL;
-
--- Enable Back the constraints
-SET FOREIGN_KEY_CHECKS = 1;
-ALTER TABLE `roadmaptest`.`answers_question_options` ENABLE KEYS;
--- *********************************************************************************************************************
-*/
 -- # Copy dmp2 Enumerations into roadmaptest Question Format labels table
 -- Disable the constraints
 ALTER TABLE `roadmaptest`.`question_format_labels` DISABLE KEYS;
@@ -933,9 +784,122 @@ WHERE `owner` = 1;
 
 -- Enable Back the constraints
 SET FOREIGN_KEY_CHECKS = 1;
-ALTER TABLE `roadmaptest`.`plans` ENABLE KEYS;
+ALTER TABLE `roadmaptest`.`roles` ENABLE KEYS;
 -- ALTER TABLE `roadmaptest`.`roles` DROP FOREIGN KEY `fk_rails_ab35d699f0`;
 -- **********************************************************************************************************************
+
+-- # Copy dmp2 Responses into roadmaptest Answers table
+-- Disable the constraints
+ALTER TABLE `roadmaptest`.`answers` DISABLE KEYS;
+SET FOREIGN_KEY_CHECKS = 0;      
+TRUNCATE TABLE `roadmaptest`.`answers`;
+
+INSERT INTO `roadmaptest`.`answers` (
+  `id`,                     `plan_id`,                 
+
+  `text`,                                       
+  
+  `question_id`,                 `lock_version`,            `user_id`,
+
+  `label_id`,                                     `created_at`,                              `updated_at`)
+
+SELECT
+  `dmp2`.`responses`.`id`,           `dmp2`.`responses`.`plan_id`,    
+
+  COALESCE(`dmp2`.`responses`.`text_value`,  `dmp2`.`responses`.`numeric_value`,   `dmp2`.`responses`.`date_value`),  
+  
+  `dmp2`.`responses`.`requirement_id`,     `dmp2`.`responses`.`lock_version`,   `userplan`.`user_id`,
+
+  `dmp2`.`responses`.`label_id`,         `dmp2`.`responses`.`created_at`,   `dmp2`.`responses`.`updated_at`
+
+FROM `dmp2`.`responses`
+LEFT JOIN (select `user_id`, `plan_id` from `dmp2`.`user_plans` where `dmp2`.`user_plans`.`owner` = 1) `USERPLAN`
+ON `dmp2`.`responses`.`plan_id` = `USERPLAN`.`plan_id`;
+
+-- Enable Back the constraints
+SET FOREIGN_KEY_CHECKS = 1;
+ALTER TABLE `roadmaptest`.`answers` ENABLE KEYS;
+-- *********************************************************************************************************************
+
+-- # Copy dmp2 Enumerations into roadmaptest Question Options table
+-- Disable the constraints
+ALTER TABLE `roadmaptest`.`question_options` DISABLE KEYS;
+SET FOREIGN_KEY_CHECKS = 0;      
+TRUNCATE TABLE `roadmaptest`.`question_options`;
+
+INSERT INTO `roadmaptest`.`question_options`(
+   `id`,  `question_id`,    `text`,    `number`,    `is_default`,  `created_at`,  `updated_at`)
+ 
+SELECT 
+  `id`,   `requirement_id`,   `value`,   `position`,    `default`,     `created_at`,   `updated_at`
+FROM `dmp2`.`enumerations`;
+
+-- Enable Back the constraints
+SET FOREIGN_KEY_CHECKS = 1;
+ALTER TABLE `roadmaptest`.`question_options` ENABLE KEYS;
+-- #*********************************************************************************************************************
+
+-- # Copy Enumeration ID of Responses into Answer Question Options table.
+-- Disable the constraints
+ALTER TABLE `roadmaptest`.`answers_question_options` DISABLE KEYS;
+SET FOREIGN_KEY_CHECKS = 0;      
+TRUNCATE TABLE `roadmaptest`.`answers_question_options`;
+
+INSERT INTO `roadmaptest`.`answers_question_options`(
+    `answer_id`,     `question_option_id`)
+
+SELECT 
+    `id`,         `enumeration_id`  
+FROM  `dmp2`.`responses` 
+WHERE `enumeration_id`  IS NOT NULL;
+
+-- Enable Back the constraints
+SET FOREIGN_KEY_CHECKS = 1;
+ALTER TABLE `roadmaptest`.`answers_question_options` ENABLE KEYS;
+-- **********************************************************************************************************************
+
+-- # Copy dmp2 Comments into Notes tale of roadmaptest and assign the 1st response of the respective plan as answer_id for the note.
+-- Disable the constraints
+
+ALTER TABLE `roadmaptest`.`notes` DISABLE KEYS;
+SET FOREIGN_KEY_CHECKS = 0;      
+TRUNCATE TABLE `roadmaptest`.`notes`;
+        
+INSERT INTO `roadmaptest`.`notes` ( 
+  `id`,                `user_id`,                `text`,    
+  `archived`,             `archived_by`,    
+  `created_at`,             `updated_at`,               `answer_id`)
+
+SELECT   
+  `dmp2`.`comments`.`id`,       `dmp2`.`comments`.`user_id`,       `dmp2`.`comments`.`value`, 
+    0,                  NULL , 
+   `dmp2`.`comments`.`created_at`,   `dmp2`.`comments`.`updated_at`,     `RESPONSE`.`minresponse`
+
+FROM `dmp2`.`comments`
+LEFT JOIN (SELECT `dmp2`.`responses`.`plan_id`, MIN(`dmp2`.`responses`.`id`) as `minresponse`
+FROM `dmp2`.`responses`
+GROUP BY `dmp2`.`responses`.`plan_id`) `RESPONSE` 
+ON `dmp2`.`comments`.`plan_id` = `RESPONSE`.`plan_id`
+ORDER BY `dmp2`.`comments`.`id`;
+
+
+-- ALTER TABLE `roadmaptest`.`notes` DROP FOREIGN KEY  fk_rails_907f8d48bf;  
+-- ALTER TABLE `roadmaptest`.`notes` DROP FOREIGN KEY  fk_rails_7f2323ad43;
+-- # If we dont want to have any responses as NULL values (i.e no Orphan comments) then tis is the sql query
+-- INSERT INTO `roadmaptest`.`notes` ( 
+--   `id`,  `user_id`,  `text`,    `archived`,   `archived_by`,    `created_at`,     `updated_at`,     `answer_id`)
+-- SELECT   `dmp2`.`comments`.`id`, `dmp2`.`comments`.`user_id`, `dmp2`.`comments`.`value`,  0, NULL , `dmp2`.`comments`.`created_at`, `dmp2`.`comments`.`updated_at`, `RESPONSE`.`minresponse`
+-- FROM `dmp2`.`comments`
+-- INNER JOIN (SELECT    `dmp2`.`responses`.`plan_id`, MIN(`dmp2`.`responses`.`id`) as `minresponse`
+-- FROM `dmp2`.`responses`
+-- GROUP BY `dmp2`.`responses`.`plan_id`) `RESPONSE` 
+-- ON `dmp2`.`comments`.`plan_id` = `RESPONSE`.`plan_id`
+-- ORDER BY `dmp2`.`comments`.`id`
+
+-- Enable Back the constraints
+SET FOREIGN_KEY_CHECKS = 1;
+ALTER TABLE `roadmaptest`.`notes` ENABLE KEYS;
+-- *********************************************************************************************************************
 
 -- # Copy user_plans of dmp2 into Roles in DMP Migration
 -- Disable the constraints
