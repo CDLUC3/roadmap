@@ -574,12 +574,21 @@ BEGIN
       AND `resources`.`resource_type` = 'actionable_url'
       AND `resource_contexts`.`requirements_template_id` = template_id);
 
---    IF @guidance IS NOT NULL AND @links IS NOT NULL THEN
---      SET @links = CONCAT('<br /><br />', @links);
---    END IF;
---    IF @links IS NOT NULL THEN
---      SET @guidance = CONCAT(COALESCE(@guidance, ''), @links);
---    END IF;
+    SET @additional = (
+      SELECT 
+        GROUP_CONCAT(
+          '<a href="', `additional_informations`.`url`, '">', `additional_informations`.`label`, '</a>'
+        SEPARATOR '<br />')
+      FROM `dmp2`.`additional_informations` 
+      WHERE `additional_informations`.`requirements_template_id` = question_id);
+
+    IF @links IS NOT NULL THEN
+      IF @additional IS NOT NULL THEN
+        SET @links = CONCAT(@links, '<br />', @additional);
+      END IF;
+    ELSE
+      SET @links = @additional;
+    END IF;
 
     CALL bundleQuestionLevelAnnotations(my_org_id, template_id, @example_answer, @guidance, @links);
   
@@ -922,7 +931,7 @@ BEGIN
 
   DECLARE guidances CURSOR FOR 
     SELECT DISTINCT 
-      CONCAT(DISTINCT
+      CONCAT(
         '<p>',
         CASE `resources`.`resource_type` 
           WHEN 'actionable_url' THEN
