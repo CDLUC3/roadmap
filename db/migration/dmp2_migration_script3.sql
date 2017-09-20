@@ -434,6 +434,100 @@ INSERT INTO `roadmaptest`.`themes_in_guidance` (`guidance_id`, `theme_id`) (
   WHERE LCASE(`text`) LIKE '% buget%'
 );
 
+
+-- ******************************************************************************
+-- ******************************************************************************
+-- ******************************************************************************
+
+
+-- Auto-theme questions based on keywords
+INSERT INTO `roadmaptest`.`questions_themes` (`question_id`, `theme_id`) (
+  SELECT `id`, 
+    (SELECT `id` FROM `roadmaptest`.`themes` WHERE `title` = 'Data format')
+  FROM `roadmaptest`.`questions` 
+  WHERE LCASE(`text`) LIKE '%data format%'
+);
+INSERT INTO `roadmaptest`.`questions_themes` (`question_id`, `theme_id`) (
+  SELECT `id`, 
+    (SELECT `id` FROM `roadmaptest`.`themes` WHERE `title` = 'Data volume')
+  FROM `roadmaptest`.`questions` 
+  WHERE LCASE(`text`) LIKE '% volume%'
+);
+INSERT INTO `roadmaptest`.`questions_themes` (`question_id`, `theme_id`) (
+  SELECT `id`, 
+    (SELECT `id` FROM `roadmaptest`.`themes` WHERE `title` = 'Data collection')
+  FROM `roadmaptest`.`questions` 
+  WHERE LCASE(`text`) LIKE '% collection%'
+  OR LCASE(`text`) LIKE '% gather%'
+);
+INSERT INTO `roadmaptest`.`questions_themes` (`question_id`, `theme_id`) (
+  SELECT `id`, 
+    (SELECT `id` FROM `roadmaptest`.`themes` WHERE title = 'Metadata & documentation')
+  FROM `roadmaptest`.`questions` 
+  WHERE LCASE(`text`) LIKE '% metadata%'
+  OR LCASE(`text`) LIKE '% documentation%'
+);
+INSERT INTO `roadmaptest`.`questions_themes` (`question_id`, `theme_id`) (
+  SELECT `id`, 
+    (SELECT `id` FROM `roadmaptest`.`themes` WHERE title = 'Ethics & privacy')
+  FROM `roadmaptest`.`questions` 
+  WHERE LCASE(`text`) LIKE '% ethic%'
+  OR LCASE(`text`) LIKE '% privacy%'
+  OR LCASE(`text`) LIKE '% hippa%'
+  OR LCASE(`text`) LIKE '% sensitiv%'
+);
+INSERT INTO `roadmaptest`.`questions_themes` (`question_id`, `theme_id`) (
+  SELECT `id`, 
+    (SELECT `id` FROM `roadmaptest`.`themes` WHERE title = 'Intellectual property rights')
+  FROM `roadmaptest`.`questions` 
+  WHERE LCASE(`text`) LIKE '% rights%'
+  OR LCASE(`text`) LIKE '% copyright%'
+);
+INSERT INTO `roadmaptest`.`questions_themes` (`question_id`, `theme_id`) (
+  SELECT `id`, 
+    (SELECT `id` FROM `roadmaptest`.`themes` WHERE title = 'Storage & security')
+  FROM `roadmaptest`.`questions` 
+  WHERE LCASE(`text`) LIKE '% storage%'
+  OR LCASE(`text`) LIKE '% security%'
+);
+INSERT INTO `roadmaptest`.`questions_themes` (`question_id`, `theme_id`) (
+  SELECT `id`, 
+    (SELECT `id` FROM `roadmaptest`.`themes` WHERE title = 'Data sharing')
+  FROM `roadmaptest`.`questions` 
+  WHERE LCASE(`text`) LIKE '% sharing%'
+  OR LCASE(`text`) LIKE '%public access%'
+  OR LCASE(`text`) LIKE '% publish%'
+);
+INSERT INTO `roadmaptest`.`questions_themes` (`question_id`, `theme_id`) (
+  SELECT `id`, 
+    (SELECT `id` FROM `roadmaptest`.`themes` WHERE title = 'Data repository')
+  FROM `roadmaptest`.`questions` 
+  WHERE LCASE(`text`) LIKE '% repositor%'
+);
+INSERT INTO `roadmaptest`.`questions_themes` (`question_id`, `theme_id`) (
+  SELECT `id`, 
+    (SELECT `id` FROM `roadmaptest`.`themes` WHERE title = 'Preservation')
+  FROM `roadmaptest`.`questions` 
+  WHERE LCASE(`text`) LIKE '% preserv%'
+  OR LCASE(`text`) LIKE '% archiv%'
+  OR LCASE(`text`) LIKE '% long-term%'
+  OR LCASE(`text`) LIKE '% long term%'
+);
+INSERT INTO `roadmaptest`.`questions_themes` (`question_id`, `theme_id`) (
+  SELECT `id`, 
+    (SELECT `id` FROM `roadmaptest`.`themes` WHERE title = 'Roles & responsibilities')
+  FROM `roadmaptest`.`questions` 
+  WHERE LCASE(`text`) LIKE '% role%'
+  OR LCASE(`text`) LIKE '% responsibilit%'
+);
+INSERT INTO `roadmaptest`.`questions_themes` (`question_id`, `theme_id`) (
+  SELECT `id`, 
+    (SELECT `id` FROM `roadmaptest`.`themes` WHERE title = 'Budget')
+  FROM `roadmaptest`.`questions` 
+  WHERE LCASE(`text`) LIKE '% buget%'
+);
+
+
 -- ******************************************************************************
 -- ******************************************************************************
 -- ******************************************************************************
