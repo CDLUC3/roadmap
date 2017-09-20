@@ -580,7 +580,7 @@ BEGIN
           '<a href="', `additional_informations`.`url`, '">', `additional_informations`.`label`, '</a>'
         SEPARATOR '<br />')
       FROM `dmp2`.`additional_informations` 
-      WHERE `additional_informations`.`requirements_template_id` = question_id);
+      WHERE `additional_informations`.`requirements_template_id` = template_id);
 
     IF @links IS NOT NULL THEN
       IF @additional IS NOT NULL THEN
