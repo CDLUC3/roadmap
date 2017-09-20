@@ -24,9 +24,9 @@ CREATE PROCEDURE AddColumn(IN db tinytext, IN tbl tinytext, IN col tinytext, IN 
 BEGIN
   IF EXISTS (
     SELECT * FROM INFORMATION_SCHEMA.COLUMNS
-    WHERE column_name = col COLLATE utf8_general_ci 
-    AND table_name = tbl COLLATE utf8_general_ci 
-    AND table_schema=db COLLATE utf8_general_ci) 
+    WHERE column_name = col 
+    AND table_name = tbl 
+    AND table_schema=db 
   THEN
     SET @drop = CONCAT('ALTER TABLE `', db, '`.`', tbl, '` DROP COLUMN `', col, '`');
     PREPARE stmt FROM @drop;
@@ -35,9 +35,9 @@ BEGIN
 
   IF NOT EXISTS (
     SELECT * FROM INFORMATION_SCHEMA.COLUMNS
-    WHERE column_name = col COLLATE utf8_general_ci 
-    AND table_name = tbl COLLATE utf8_general_ci 
-    AND table_schema=db COLLATE utf8_general_ci) 
+    WHERE column_name = col 
+    AND table_name = tbl 
+    AND table_schema=db) 
   THEN
     SET @add = CONCAT('ALTER TABLE `', db, '`.`', tbl, '` ADD `', col, '` ', typ);
     PREPARE stmt FROM @add;
