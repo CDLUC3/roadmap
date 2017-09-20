@@ -928,11 +928,10 @@ BEGIN
           WHEN 'actionable_url' THEN
             CONCAT('<a href="', `resources`.`value`, '">', `resources`.`label`, '</a>')
           ELSE
-            IF `resources`.`text` LIKE (`resources`.`label` + '%') THEN
-              REPLACE(`resources`.`text`, '  ', '')
-            ELSE
+            IF(`resources`.`text` LIKE (`resources`.`label` + '%'),
+              REPLACE(`resources`.`text`, '  ', ''),
               CONCAT(`resources`.`label`, ':<br />', REPLACE(`resources`.`text`, '  ', ''))
-            END
+            )
         END,
         '</p>'),
       MIN(`resources`.`created_at`), MAX(`resources`.`updated_at`)
@@ -941,7 +940,7 @@ BEGIN
     INNER JOIN `dmp2`.`requirements_templates` ON `resource_contexts`.`requirements_template_id` = `requirements_templates`.`id`
     INNER JOIN `dmp2`.`institutions` ON `requirements_templates`.`institution_id` = `institutions`.`id`
     WHERE `resource_contexts`.`institution_id` = institution_id
-    GROUP BY `resources`.`resource_type`, `resources`.`label`, `resources`.`value`, `resources`.`text`;
+    GROUP BY `resources`.`resource_type`, `resources`.`label`, `resources`.`value`;
   DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
 
   OPEN guidances;
