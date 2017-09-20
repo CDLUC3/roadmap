@@ -308,7 +308,7 @@ SELECT
   1, rt.`active`, 
   (SELECT s.id 
    FROM `roadmaptest`.`sections` s INNER JOIN `roadmaptest`.`phases` p ON s.phase_id = p.id 
-   WHERE p.template_id = rt.id AND s.title = r.`text_brief`),
+   WHERE p.template_id = rt.id AND s.title = r.`text_brief` COLLATE utf8mb4_general_ci),
   r.`created_at`,  r.`updated_at`
 FROM `dmp2`.`requirements` r
 INNER JOIN `dmp2`.`requirements_templates` rt
@@ -917,7 +917,6 @@ CREATE PROCEDURE bundleInstitutionalGuidance(
 BEGIN
   DECLARE done INT DEFAULT 0;
   DECLARE my_guidance TEXT;
-  DECLARE my_usage TEXT;
   DECLARE my_created DATETIME;
   DECLARE my_updated DATETIME;
 
@@ -932,10 +931,6 @@ BEGIN
             CONCAT(`resources`.`label`, ':<br />', `resources`.`text`)
         END,
         '</p>'),
-        CONCAT(
-          '<p style="font-size: .75rem">Used on the following templates:<ul>',
-           GROUP_CONCAT(DISTINCT '<li>', `institutions`.`full_name`, ': ', `requirements_templates`.`name`, '</li>' SEPARATOR ''),
-          '</ul></p>'),
       MIN(`resources`.`created_at`), MAX(`resources`.`updated_at`)
     FROM `dmp2`.`resources` 
     INNER JOIN `dmp2`.`resource_contexts` ON `resources`.`id` = `resource_contexts`.`resource_id` 
@@ -947,7 +942,7 @@ BEGIN
 
   OPEN guidances;
   get_guidance: LOOP
-    FETCH guidances INTO my_guidance, my_usage, my_created, my_updated;
+    FETCH guidances INTO my_guidance, my_created, my_updated;
     IF done = 1 THEN
       LEAVE get_guidance;
     END IF;
@@ -955,7 +950,7 @@ BEGIN
     SET @group = (SELECT `id` FROM `roadmaptest`.`guidance_groups` WHERE `org_id` = institution_id);
 
     INSERT INTO `roadmaptest`.`guidances` (`text`, `guidance_group_id`, `created_at`, `updated_at`, `published`)
-    VALUES (CONCAT(COALESCE(my_guidance, ''), COALESCE(my_usage, '')), @group, my_created, my_updated, 1);    
+    VALUES (my_guidance, @group, my_created, my_updated, 1);    
   END LOOP get_guidance;
   
   CLOSE guidances;

@@ -26,7 +26,7 @@ BEGIN
     SELECT * FROM INFORMATION_SCHEMA.COLUMNS
     WHERE column_name = col 
     AND table_name = tbl 
-    AND table_schema=db)
+    AND table_schema=db) 
   THEN
     SET @drop = CONCAT('ALTER TABLE `', db, '`.`', tbl, '` DROP COLUMN `', col, '`');
     PREPARE stmt FROM @drop;
@@ -160,9 +160,9 @@ ALTER TABLE `roadmaptest`.`regions` ENABLE KEYS;
 -- **********************************************************************************************************************
 
 -- Set proper datetime for the responses where the created_at is set as '0000-00-00 00:00:00' -- set same as updated_at
-UPDATE `dmp2`.`responses` 
-SET    `created_at` = `updated_at`
-WHERE  CAST(`created_at` AS CHAR(20)) = '0000-00-00 00:00:00';
+-- UPDATE `dmp2`.`responses` 
+-- SET    `created_at` = `updated_at`
+-- WHERE  CAST(`created_at` AS CHAR(20)) = '0000-00-00 00:00:00';
 -- **********************************************************************************************************************
 -- **********************************************************************************************************************
 
