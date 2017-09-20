@@ -441,7 +441,7 @@ INSERT INTO `roadmaptest`.`plans_guidance_groups` (`plan_id`, `guidance_group_id
 -- ******************************************************************************
 
 -- Insert all of the schema migrations so that they do not try to run during the next deploy!
-TRUNCATE TABLE `roadmaptest`.`schema_migrations`
+TRUNCATE TABLE `roadmaptest`.`schema_migrations`;
 
 INSERT INTO `roadmaptest`.`schema_migrations` (`version`) VALUES ('20130603140800');
 INSERT INTO `roadmaptest`.`schema_migrations` (`version`) VALUES ('20130603143109');
