@@ -534,13 +534,19 @@ INSERT INTO `roadmaptest`.`questions_themes` (`question_id`, `theme_id`) (
 
 -- Attach Each plan to the DCC/UC3 default guidance group and the insitution's guidance group (Exclude 'Non-Partner Institution')
 INSERT INTO `roadmaptest`.`plans_guidance_groups` (`plan_id`, `guidance_group_id`) 
-(SELECT `plans`.`id`, `guidance_groups`.`id`
+(SELECT DISTINCT `plans`.`id`, `guidance_groups`.`id`
  FROM `roadmaptest`.`plans`
  INNER JOIN `roadmaptest`.`roles` ON `plans`.`id` = `roles`.`plan_id`
  INNER JOIN `roadmaptest`.`users` ON `roles`.`user_id` = `users`.`id`
  INNER JOIN `roadmaptest`.`guidance_groups` ON `users`.`org_id` = `guidance_groups`.`org_id`
  WHERE `users`.`org_id` > 0
 );
+
+-- Attach the default DCC/UC3 guidance to each plan by default
+SET @dcc_gg = (SELECT `guidance_groups`.`id` FROM `roadmaptest`.`guidance_groups` INNER JOIN `roadmaptest`.`orgs` ON `guidance_groups`.`org_id` = `orgs`.`id` WHERE `abbreviation` = 'DCC');
+INSERT INTO `roadmaptest`.`plans_guidance_groups` (`plan_id`, `guidance_group_id`) 
+(SELECT DISTINCT `plans`.`id`, @dcc_gg
+ FROM `roadmaptest`.`plans`);
 
 -- ******************************************************************************
 -- ******************************************************************************
