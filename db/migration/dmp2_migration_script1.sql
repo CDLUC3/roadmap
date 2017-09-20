@@ -26,7 +26,7 @@ BEGIN
     SELECT * FROM INFORMATION_SCHEMA.COLUMNS
     WHERE column_name = col 
     AND table_name = tbl 
-    AND table_schema=db 
+    AND table_schema=db)
   THEN
     SET @drop = CONCAT('ALTER TABLE `', db, '`.`', tbl, '` DROP COLUMN `', col, '`');
     PREPARE stmt FROM @drop;
