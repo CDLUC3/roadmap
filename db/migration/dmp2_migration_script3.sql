@@ -351,75 +351,87 @@ INSERT INTO `roadmaptest`.`themes_in_guidance` (`theme_id`, `guidance_id`) (SELE
 INSERT INTO `roadmaptest`.`themes_in_guidance` (`guidance_id`, `theme_id`) (
   SELECT `id`, 
     (SELECT `id` FROM `roadmaptest`.`themes` WHERE `title` = 'Data format')
-  FROM `roadmaptest`.`guidances` WHERE LCASE(SUBSTRING(`text`, 1, INSTR(`text`, '<p style="font-size: .75rem">'))) LIKE '%data format%'
+  FROM `roadmaptest`.`guidances` 
+  WHERE LCASE(`text`) LIKE '%data format%'
 );
 INSERT INTO `roadmaptest`.`themes_in_guidance` (`guidance_id`, `theme_id`) (
   SELECT `id`, 
     (SELECT `id` FROM `roadmaptest`.`themes` WHERE `title` = 'Data volume')
-  FROM `roadmaptest`.`guidances` WHERE LCASE(SUBSTRING(`text`, 1, INSTR(`text`, '<p style="font-size: .75rem">'))) LIKE '% volume%'
+  FROM `roadmaptest`.`guidances` 
+  WHERE LCASE(`text`) LIKE '% volume%'
 );
 INSERT INTO `roadmaptest`.`themes_in_guidance` (`guidance_id`, `theme_id`) (
   SELECT `id`, 
     (SELECT `id` FROM `roadmaptest`.`themes` WHERE `title` = 'Data collection')
-  FROM `roadmaptest`.`guidances` WHERE LCASE(SUBSTRING(`text`, 1, INSTR(`text`, '<p style="font-size: .75rem">'))) LIKE '% collection%'
-  OR LCASE(SUBSTRING(`text`, 1, INSTR(`text`, '<p style="font-size: .75rem">'))) LIKE '% gather%'
+  FROM `roadmaptest`.`guidances` 
+  WHERE LCASE(`text`) LIKE '% collection%'
+  OR LCASE(`text`) LIKE '% gather%'
 );
 INSERT INTO `roadmaptest`.`themes_in_guidance` (`guidance_id`, `theme_id`) (
   SELECT `id`, 
     (SELECT `id` FROM `roadmaptest`.`themes` WHERE title = 'Metadata & documentation')
-  FROM `roadmaptest`.`guidances` WHERE LCASE(SUBSTRING(`text`, 1, INSTR(`text`, '<p style="font-size: .75rem">'))) LIKE '% metadata%'
-  OR LCASE(SUBSTRING(`text`, 1, INSTR(`text`, '<p style="font-size: .75rem">'))) LIKE '% documentation%'
+  FROM `roadmaptest`.`guidances` 
+  WHERE LCASE(`text`) LIKE '% metadata%'
+  OR LCASE(`text`) LIKE '% documentation%'
 );
 INSERT INTO `roadmaptest`.`themes_in_guidance` (`guidance_id`, `theme_id`) (
   SELECT `id`, 
     (SELECT `id` FROM `roadmaptest`.`themes` WHERE title = 'Ethics & privacy')
-  FROM `roadmaptest`.`guidances` WHERE LCASE(SUBSTRING(`text`, 1, INSTR(`text`, '<p style="font-size: .75rem">'))) LIKE '% ethic%'
-  OR LCASE(SUBSTRING(`text`, 1, INSTR(`text`, '<p style="font-size: .75rem">'))) LIKE '% privacy%'
-  OR LCASE(SUBSTRING(`text`, 1, INSTR(`text`, '<p style="font-size: .75rem">'))) LIKE '% hippa%'
-  OR LCASE(SUBSTRING(`text`, 1, INSTR(`text`, '<p style="font-size: .75rem">'))) LIKE '% sensitiv%'
+  FROM `roadmaptest`.`guidances` 
+  WHERE LCASE(`text`) LIKE '% ethic%'
+  OR LCASE(`text`) LIKE '% privacy%'
+  OR LCASE(`text`) LIKE '% hippa%'
+  OR LCASE(`text`) LIKE '% sensitiv%'
 );
 INSERT INTO `roadmaptest`.`themes_in_guidance` (`guidance_id`, `theme_id`) (
   SELECT `id`, 
     (SELECT `id` FROM `roadmaptest`.`themes` WHERE title = 'Intellectual property rights')
-  FROM `roadmaptest`.`guidances` WHERE LCASE(SUBSTRING(`text`, 1, INSTR(`text`, '<p style="font-size: .75rem">'))) LIKE '% rights%'
-  OR LCASE(SUBSTRING(`text`, 1, INSTR(`text`, '<p style="font-size: .75rem">'))) LIKE '% copyright%'
+  FROM `roadmaptest`.`guidances` 
+  WHERE LCASE(`text`) LIKE '% rights%'
+  OR LCASE(`text`) LIKE '% copyright%'
 );
 INSERT INTO `roadmaptest`.`themes_in_guidance` (`guidance_id`, `theme_id`) (
   SELECT `id`, 
     (SELECT `id` FROM `roadmaptest`.`themes` WHERE title = 'Storage & security')
-  FROM `roadmaptest`.`guidances` WHERE LCASE(SUBSTRING(`text`, 1, INSTR(`text`, '<p style="font-size: .75rem">'))) LIKE '% storage%'
-  OR LCASE(SUBSTRING(`text`, 1, INSTR(`text`, '<p style="font-size: .75rem">'))) LIKE '% security%'
+  FROM `roadmaptest`.`guidances` 
+  WHERE LCASE(`text`) LIKE '% storage%'
+  OR LCASE(`text`) LIKE '% security%'
 );
 INSERT INTO `roadmaptest`.`themes_in_guidance` (`guidance_id`, `theme_id`) (
   SELECT `id`, 
     (SELECT `id` FROM `roadmaptest`.`themes` WHERE title = 'Data sharing')
-  FROM `roadmaptest`.`guidances` WHERE LCASE(SUBSTRING(`text`, 1, INSTR(`text`, '<p style="font-size: .75rem">'))) LIKE '% sharing%'
-  OR LCASE(SUBSTRING(`text`, 1, INSTR(`text`, '<p style="font-size: .75rem">'))) LIKE '%public access%'
-  OR LCASE(SUBSTRING(`text`, 1, INSTR(`text`, '<p style="font-size: .75rem">'))) LIKE '% publish%'
+  FROM `roadmaptest`.`guidances` 
+  WHERE LCASE(`text`) LIKE '% sharing%'
+  OR LCASE(`text`) LIKE '%public access%'
+  OR LCASE(`text`) LIKE '% publish%'
 );
 INSERT INTO `roadmaptest`.`themes_in_guidance` (`guidance_id`, `theme_id`) (
   SELECT `id`, 
     (SELECT `id` FROM `roadmaptest`.`themes` WHERE title = 'Data repository')
-  FROM `roadmaptest`.`guidances` WHERE LCASE(SUBSTRING(`text`, 1, INSTR(`text`, '<p style="font-size: .75rem">'))) LIKE '% repositor%'
+  FROM `roadmaptest`.`guidances` 
+  WHERE LCASE(`text`) LIKE '% repositor%'
 );
 INSERT INTO `roadmaptest`.`themes_in_guidance` (`guidance_id`, `theme_id`) (
   SELECT `id`, 
     (SELECT `id` FROM `roadmaptest`.`themes` WHERE title = 'Preservation')
-  FROM `roadmaptest`.`guidances` WHERE LCASE(SUBSTRING(`text`, 1, INSTR(`text`, '<p style="font-size: .75rem">'))) LIKE '% preserv%'
-  OR LCASE(SUBSTRING(`text`, 1, INSTR(`text`, '<p style="font-size: .75rem">'))) LIKE '% archiv%'
-  OR LCASE(SUBSTRING(`text`, 1, INSTR(`text`, '<p style="font-size: .75rem">'))) LIKE '% long-term%'
-  OR LCASE(SUBSTRING(`text`, 1, INSTR(`text`, '<p style="font-size: .75rem">'))) LIKE '% long term%'
+  FROM `roadmaptest`.`guidances` 
+  WHERE LCASE(`text`) LIKE '% preserv%'
+  OR LCASE(`text`) LIKE '% archiv%'
+  OR LCASE(`text`) LIKE '% long-term%'
+  OR LCASE(`text`) LIKE '% long term%'
 );
 INSERT INTO `roadmaptest`.`themes_in_guidance` (`guidance_id`, `theme_id`) (
   SELECT `id`, 
     (SELECT `id` FROM `roadmaptest`.`themes` WHERE title = 'Roles & responsibilities')
-  FROM `roadmaptest`.`guidances` WHERE LCASE(SUBSTRING(`text`, 1, INSTR(`text`, '<p style="font-size: .75rem">'))) LIKE '% role%'
-  OR LCASE(SUBSTRING(`text`, 1, INSTR(`text`, '<p style="font-size: .75rem">'))) LIKE '% responsibilit%'
+  FROM `roadmaptest`.`guidances` 
+  WHERE LCASE(`text`) LIKE '% role%'
+  OR LCASE(`text`) LIKE '% responsibilit%'
 );
 INSERT INTO `roadmaptest`.`themes_in_guidance` (`guidance_id`, `theme_id`) (
   SELECT `id`, 
     (SELECT `id` FROM `roadmaptest`.`themes` WHERE title = 'Budget')
-  FROM `roadmaptest`.`guidances` WHERE LCASE(SUBSTRING(`text`, 1, INSTR(`text`, '<p style="font-size: .75rem">'))) LIKE '% buget%'
+  FROM `roadmaptest`.`guidances` 
+  WHERE LCASE(`text`) LIKE '% buget%'
 );
 
 -- ******************************************************************************
