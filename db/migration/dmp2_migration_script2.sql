@@ -922,13 +922,13 @@ BEGIN
 
   DECLARE guidances CURSOR FOR 
     SELECT DISTINCT 
-      CONCAT(
+      CONCAT(DISTINCT
         '<p>',
         CASE `resources`.`resource_type` 
           WHEN 'actionable_url' THEN
             CONCAT('<a href="', `resources`.`value`, '">', `resources`.`label`, '</a>')
           ELSE
-            CONCAT(`resources`.`label`, ':<br />', `resources`.`text`)
+            CONCAT(`resources`.`label`, ':<br />', REPLACE(`resources`.`text`, '  ', ''))
         END,
         '</p>'),
       MIN(`resources`.`created_at`), MAX(`resources`.`updated_at`)
