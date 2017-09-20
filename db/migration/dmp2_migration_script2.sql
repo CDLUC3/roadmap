@@ -928,7 +928,11 @@ BEGIN
           WHEN 'actionable_url' THEN
             CONCAT('<a href="', `resources`.`value`, '">', `resources`.`label`, '</a>')
           ELSE
-            CONCAT(`resources`.`label`, ':<br />', REPLACE(`resources`.`text`, '  ', ''))
+            IF `resources`.`text` LIKE (`resources`.`label` + '%') THEN
+              REPLACE(`resources`.`text`, '  ', '')
+            ELSE
+              CONCAT(`resources`.`label`, ':<br />', REPLACE(`resources`.`text`, '  ', ''))
+            END
         END,
         '</p>'),
       MIN(`resources`.`created_at`), MAX(`resources`.`updated_at`)
