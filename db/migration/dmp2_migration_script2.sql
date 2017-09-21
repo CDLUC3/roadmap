@@ -304,7 +304,7 @@ INSERT INTO `roadmaptest`.`questions`(
 
 SELECT
   r.`id`, CONCAT( '<p>', r.`text_full`,  '</p>' ), NULL, 1, 
-  (case `requirement_type` when "text" then 1 when "numeric" then 6 when "date" then 7 end) as `format_type`, 
+  (case `requirement_type` when "numeric" then 6 when "date" then 7 else 1 end) as `format_type`, 
   1, rt.`active`, 
   (SELECT s.id 
    FROM `roadmaptest`.`sections` s INNER JOIN `roadmaptest`.`phases` p ON s.phase_id = p.id 
@@ -323,7 +323,7 @@ INSERT INTO `roadmaptest`.`questions` (
 
 SELECT 
   r.`id`, CONCAT( '<p>', r.`text_brief`, '<br />', r.`text_full`, '</p>' ), NULL, `position`, 
-  (case `requirement_type` when "text" then 1 when "numeric" then 6 when "date" then 7 end) as `format_type`, 
+  (case `requirement_type` when "numeric" then 6 when "date" then 7 else 1 end) as `format_type`, 
   1, rt.`active`, 
   substring_index(`ancestry`, '/', -1) as `section`, r.`created_at`, r.`updated_at`
 FROM `dmp2`.`requirements` r
