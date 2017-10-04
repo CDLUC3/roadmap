@@ -482,6 +482,10 @@ BEGIN
     
     SET @val = (SELECT `text` FROM `roadmaptest`.`questions` WHERE `id` = question_id);
     
+IF org_id = 139 and template_id = 62 THEN
+SELECT template_id, question_id, @guidance, @links, @example_answer FROM DUAL;
+END IF;
+
     -- If the question does not have any actual text then use the 
     -- question level guidance for the question text and the template level
     -- guidance as guidance annotation
@@ -631,7 +635,7 @@ INSERT INTO `roadmaptest`.`plans`(
 
 SELECT   
   `id`,            `name`,                  `requirements_template_id`,     NULL,      `solicitation_identifier`,
-  `name`,             NULL,                   NULL,                  0,  
+   NULL,             NULL,                   NULL,                  0,  
    NULL,              NULL,                   NULL,
    NULL,             NULL,                      NULL,  
   `created_at`,        `updated_at`
@@ -649,7 +653,7 @@ INSERT INTO `roadmaptest`.`plans`(
 
 SELECT   
   `id`,            `name`,                  `requirements_template_id`,      NULL,      `solicitation_identifier`,
-  `name`,              NULL,                   NULL,                  1,  
+   NULL,              NULL,                   NULL,                  1,  
    NULL,              NULL,                   NULL,
    NULL,              NULL,                   NULL,  
   `created_at`,        `updated_at`
@@ -667,7 +671,7 @@ INSERT INTO `roadmaptest`.`plans`(
 
 SELECT   
   `id`,            `name`,                  `requirements_template_id`,     NULL,      `solicitation_identifier`,
-  `name`,             NULL,                   NULL,                  2,  
+   NULL,             NULL,                   NULL,                  2,  
    NULL,              NULL,                   NULL,
    NULL,              NULL,                   NULL,  
   `created_at`,        `updated_at`
@@ -685,7 +689,7 @@ INSERT INTO `roadmaptest`.`plans`(
 
 SELECT   
   `id`,            `name`,                  `requirements_template_id`,      NULL,      `solicitation_identifier`,
-  `name`,             NULL,                    NULL,                3,  
+   NULL,             NULL,                    NULL,                3,  
    NULL,             NULL,                     NULL,
    NULL,             NULL,                    NULL,  
   `created_at`,        `updated_at`
@@ -703,7 +707,7 @@ INSERT INTO `roadmaptest`.`plans`(
 
 SELECT   
   `id`,            SUBSTRING_INDEX(`name`, ' ', 6),    `requirements_template_id`,      NULL,      `solicitation_identifier`,
-  `name`,             NULL,                    NULL,                3,  
+   NULL,             NULL,                    NULL,                3,  
    NULL,             NULL,                     NULL,
    NULL,             NULL,                    NULL,  
   `created_at`,        `updated_at`
@@ -720,7 +724,7 @@ INSERT INTO `roadmaptest`.`plans`(
 
 SELECT   
   `id`,            SUBSTRING_INDEX(`name`, ' ', 6),    `requirements_template_id`,      NULL,      `solicitation_identifier`,
-  `name`,             NULL,                    NULL,                2,  
+   NULL,             NULL,                    NULL,                2,  
    NULL,             NULL,                     NULL,
    NULL,             NULL,                    NULL,  
   `created_at`,        `updated_at`
@@ -737,7 +741,7 @@ INSERT INTO `roadmaptest`.`plans`(
 
 SELECT   
   `id`,            SUBSTRING_INDEX(`name`, ' ', 6),    `requirements_template_id`,      NULL,      `solicitation_identifier`,
-  `name`,             NULL,                    NULL,                1,  
+   NULL,             NULL,                    NULL,                1,  
    NULL,             NULL,                     NULL,
    NULL,             NULL,                    NULL,  
   `created_at`,        `updated_at`
@@ -754,7 +758,7 @@ INSERT INTO `roadmaptest`.`plans`(
 
 SELECT   
   `id`,            SUBSTRING_INDEX(`name`, ' ', 6),    `requirements_template_id`,      NULL,      `solicitation_identifier`,
-  `name`,             NULL,                    NULL,                0,  
+   NULL,             NULL,                    NULL,                0,  
    NULL,             NULL,                     NULL,
    NULL,             NULL,                    NULL,  
   `created_at`,        `updated_at`
