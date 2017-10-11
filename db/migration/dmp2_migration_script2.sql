@@ -93,7 +93,7 @@ SELECT
   NULL,          NULL,            NULL,                    
   NULL,          NULL,            `created_at`,                    
   NULL,           NULL,            NULL,      NULL,                    
-  NULL,          NULL,            NULL,      NULL,                  
+  NULL,          `created_at`,            NULL,      NULL,                  
   NULL,          NULL,            NULL,      NULL,                  
   NULL,          0,              `auth_token`,                    
   NULL,          NULL,            NULL,        NULL,                    
