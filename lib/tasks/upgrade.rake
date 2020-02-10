@@ -8,9 +8,11 @@ namespace :upgrade do
     Rake::Task["upgrade:contextualize_identifier_schemes"].execute
     Rake::Task["upgrade:convert_user_identifiers"].execute
     Rake::Task["upgrade:convert_org_identifiers"].execute
+    Rake::Task["upgrade:convert_grant_numbers_to_identifiers"].execute
     Rake::Task["upgrade:default_orgs_to_managed"].execute
     Rake::Task["upgrade:migrate_other_organisation_to_org"].execute
     Rake::Task["upgrade:retrieve_ror_fundref_ids"].execute
+    Rake::Task["upgrade:migrate_contributors"].execute
   end
 
   desc "Upgrade to v2.1.3"
@@ -708,22 +710,20 @@ namespace :upgrade do
     Role.reviewer.destroy_all
   end
 
-  desc "add the Fundref and ROR identifier schemes"
-  task add_fundref_and_ror: :environment do
+  desc "add the ROR and Fundref identifier schemes"
+  task add_new_identifier_schemes: :environment do
     unless IdentifierScheme.where(name: "fundref").any?
       IdentifierScheme.create(
         name: "fundref",
         description: "Crossref Funder Registry (FundRef)",
-        active: true,
-        user_landing_url: "https://search.crossref.org/funding?q="
+        active: true
       )
     end
     unless IdentifierScheme.where(name: "ror").any?
       IdentifierScheme.create(
         name: "ror",
         description: "Research Organization Registry (ROR)",
-        active: true,
-        user_landing_url: "https://ror.org"
+        active: true
       )
     end
   end
@@ -738,17 +738,30 @@ namespace :upgrade do
 
   desc "Contextualize the Identifier Schemes (e.g. which ones are for orgs, etc."
   task contextualize_identifier_schemes: :environment do
-    IdentifierScheme.where(name: "shibboleth")
-                    .update_all(for_orgs: true, for_users: true, for_auth: true)
+    # Identifier schemes for multiple uses
+    shib = IdentifierScheme.find_or_initialize_by(name: "shibboleth")
+    shib.for_users = true
+    shib.for_orgs = true
+    shib.for_authentication = true
+    shib.save
 
-    IdentifierScheme.where(name: "orcid")
-                    .update_all(for_users: true, for_auth: true)
+    orcid = IdentifierScheme.find_or_initialize_by(name: "orcid")
+    orcid.for_users = true
+    orcid.for_contributors = true
+    orcid.for_authentication = true
+    orcid.identifier_prefix = "https://orcid.org/"
+    orcid.save
 
-    IdentifierScheme.where(name: %w[ror fundref])
-                    .update_all(for_orgs: true)
+    # Org identifier schemes
+    ror = IdentifierScheme.find_or_initialize_by(name: "ror")
+    ror.for_orgs = true
+    ror.identifier_prefix = "https://ror.org/"
+    ror.save
 
-    IdentifierScheme.where(name: "doi")
-                    .update_all(for_plans: true)
+    fundref = IdentifierScheme.find_or_initialize_by(name: "fundref")
+    fundref.for_orgs = true
+    fundref.identifier_prefix = "https://api.crossref.org/funders/"
+    fundref.save
   end
 
   desc "migrate the old user_identifiers over to the polymorphic identifiers table"
@@ -761,6 +774,7 @@ namespace :upgrade do
       ui.user.identifiers << Identifier.new(
         identifier_scheme: ui.identifier_scheme,
         value: ui.identifier,
+        type: (ui.identifier_scheme.name == "orcid" ? "url" : "other"),
         attrs: {}.to_json
       )
     end
@@ -773,11 +787,31 @@ namespace :upgrade do
     OrgIdentifier.joins(:org, :identifier_scheme)
                  .includes(:org, :identifier_scheme).all.each do |ui|
 
+      val = ui.identifier
+      val = "https://orcid.org/#{val}" if ui.identifier_scheme.name == "orcid" && !val.starts_with?("http")
+
       ui.org.identifiers << Identifier.new(
         identifier_scheme: ui.identifier_scheme,
-        value: ui.identifier,
+        value: val,
+        type: (ui.identifier_scheme.name == "orcid" ? "url" : "other"),
         attrs: ui.attrs
       )
+    end
+  end
+
+  desc "migrate the old grant_number to identifiers"
+  task convert_grant_numbers_to_identifiers: :environment do
+    p "Transferring existing grant_number information over to the Identifiers table"
+    Plan.includes(:identifiers)
+        .where("grant_number IS NOT NULL AND grant_id IS NULL").each do |plan|
+      next unless plan.grant_number.present?
+
+      existing = plan.identifiers.select { |i| i.value == plan.grant_number && i.identifier_scheme == nil }
+      next unless existing.empty?
+
+      identifier = Identifier.create(identifiable: plan, value: plan.grant_number)
+      plan.update(grant_id: identifier.id)
+      p "  created identifier: '#{plan.grant_number}' for plan #{plan.id}"
     end
   end
 
@@ -810,7 +844,7 @@ namespace :upgrade do
     end
   end
 
-  desc "adds ROR as a identifier_scheme and then retrieves ROR ids for each of the Orgs defined in the database"
+  desc "retrieves ROR ids for each of the Orgs defined in the database"
   task retrieve_ror_fundref_ids: :environment do
     ror = IdentifierScheme.find_by(name: "ror")
     fundref = IdentifierScheme.find_by(name: "fundref")
@@ -824,31 +858,45 @@ namespace :upgrade do
         p "The CSV file contains the Org name stored in your DB next to the ROR org name that was matched. Use these 2 values to determine if the match was valid."
         p "You can use the ROR search page to find the correct match for any organizations that need to be corrected: https://ror.org/search"
         p ""
-        Org.includes(org_identifiers: :identifier_scheme)
+        Org.includes(identifiers: :identifier_scheme)
            .where(is_other: false).each do |org|
 
           # If the Org already has a ROR identifier skip it
-          next if org.identifier_schemes.include?(ror)
+          next if org.identifiers.select { |id| id.identifier_scheme_id == ror.id }.any?
 
           # The abbreviation sometimes causes weird results so strip it off
           # in this instance
           org_name = org.name.gsub(" (#{org.abbreviation})", "")
-          rslts = ExternalApis::RorService.search(name: org_name)
+          rslts = OrgSelection::SearchService.search_externally(search_term: org_name)
           next unless rslts.any?
 
-          # Just use the first match
-          rslt = rslts.first
-          next if rslt.is_a?(Org)
+          # Just use the first match that contains the search term
+          rslt = rslts.select { |rslt| rslt[:weight] <= 1 }.first
+          next unless rslt.present?
 
-          add_org_identifier(org_id: org.id, scheme_id: ror.id, id: rslt[:id],
-                             attrs: { "name": rslt[:name] })
-          p "    #{org.name} -> ROR: #{rslt[:id]}, #{rslt[:name]}"
-          csv << [org.id, org.name, rslt[:name], rslt[:id], rslt[:fundref_id]]
-          next unless rslt[:fundref_id].present?
+          ror_id = rslt[:ror]
+          fundref_id = rslt[:fundref]
 
-          add_org_identifier(org_id: org.id, scheme_id: fundref.id,
-                               id: rslt[:fundref_id], attrs: { "provenance": "ROR" })
-          p "                         FUNDREF: #{rslt[:fundref_id]}"
+          if ror_id.present?
+            ror_ident = Identifier.find_or_initialize_by(identifiable: org,
+                                                         identifier_scheme: ror)
+            ror_ident.url!
+            ror_ident.value = "#{ror.identifier_prefix}#{ror_id}"
+            ror_ident.save
+            p "    #{org.name} -> ROR: #{ror_ident.value}, #{rslt[:name]}"
+          end
+          if fundref_id.present?
+            fr_ident = Identifier.find_or_initialize_by(identifiable: org,
+                                                         identifier_scheme: fundref)
+            fr_ident.url!
+            fr_ident.value = "#{fundref.identifier_prefix}#{fundref_id}"
+            fr_ident.save
+            p "    #{org.name} -> FUNDRF: #{fr_ident.value}, #{rslt[:name]}"
+          end
+
+          if ror_id.present? || fundref_id.present?
+            csv << [org.id, org.name, rslt[:name], ror_ident&.value, fundref_ident&.value]
+          end
         end
       else
         p "ROR appears to be offline or your configuration is invalid. Heartbeat check failed. Refer to the log for more information."
@@ -859,6 +907,69 @@ namespace :upgrade do
       file = File.open("tmp/ror_fundref_ids.csv", "w")
       file.puts out
       file.close
+    end
+  end
+
+  desc "migrates any data_contact/principal_investigator information from plans table to contributors"
+  task migrate_contributors: :environment do
+    orcid = IdentifierScheme.find_by(name: "orcid")
+
+    # Loop through the plans and convert the Data Contact, owners and PI
+    # into Contributors
+    Plan.includes(:contributors, roles: :user).joins(roles: :user).each do |plan|
+      next if plan.contributors.any?
+
+      p "--------------------------------------------------"
+      p "Processing Plan: '#{plan.id} - #{plan.title}'"
+
+      owner = plan.owner
+
+      # Either use the Data Contact specified on the plan
+      if plan.data_contact_email.present? || plan.data_contact.present?
+        contact, contact_id = to_contributor(plan, plan.data_contact,
+                                             plan.data_contact_email,
+                                             plan.data_contact_phone, nil, nil)
+
+      elsif owner.present?
+        contact, contact_id = to_contributor(plan, owner.name(false),
+          owner.email, nil, owner.identifier_for(orcid)&.first&.value, owner.org_id)
+      end
+      # Add the DMP Data Contact
+      if contact.present?
+        contact.save
+        contact.data_curation = true
+        p "    adding contact: #{contact.name} #{contact.email} (#{contact_id&.value})"
+        contact.save
+        contact_id.save if contact_id.present?
+      end
+
+      # Get the PI
+      pi, pi_id = to_contributor(plan, plan.principal_investigator,
+                                 plan.principal_investigator_email,
+                                 plan.principal_investigator_phone,
+                                 plan.principal_investigator_identifier, nil)
+      # Add the Principal Investigator
+      if pi.present?
+        pi.save
+        pi.investigation = true
+        p "    adding PI:      #{pi.name} #{pi.email} (#{pi_id&.value})"
+        pi.save
+        pi_id.save if pi_id.present?
+      end
+
+      # Add the authors
+      unless owner == contact
+        user, id = to_contributor(plan, owner.name(false),
+          owner.email, nil, owner.identifier_for(orcid)&.first&.value, owner.org_id)
+
+        if user.present?
+          user.save
+          user.data_curation = true
+          p "    adding author:  #{user.name} #{user.email} (#{id&.value})"
+          user.save
+          id.save if id.present?
+        end
+      end
     end
   end
 
@@ -876,6 +987,45 @@ namespace :upgrade do
               gem install #{libname}"
       exit 1
     end
+  end
+
+  # Converts the names, email and phone into a Contributor and an
+  # Identifier model
+  def to_contributor(plan, name, email, phone, identifier, org)
+    return nil, nil unless names.present? || email.present?
+
+    # If the name is not an array already split it up
+    orcid = IdentifierScheme.find_by(name: "orcid")
+
+    # If no Org and/or identifier were nil try to look them up in the User table
+    user = User.includes(:identifiers).where(email: email).first
+    if user.present?
+      org = user.org_id unless org.present?
+
+      unless identifier.present?
+        ident = user.identifiers.select { |i| i.identifier_scheme == orcid }.first
+        identifier = ident.value if ident.present?
+      end
+    end
+
+    contributor = Contributor.where("plan_id = ? AND (LOWER(email) = LOWER(?) OR (LOWER(surname) = LOWER(?) AND LOWER(firstname) = LOWER(?)))", plan.id, email, names&.last, names&.first).first
+    unless contributor.present?
+      contributor = Contributor.new(email: email, plan: plan)
+      contributor.name = name
+      contributor.phone = phone
+      contributor.org_id = org
+    end
+    return contributor, nil if identifier.nil?
+
+    # Get the ORCID id from the string
+    matched = identifier.match(/([0-9]{4}-?){4}/)
+    orcid_id = matched[0] if matched.present?
+    return contributor, nil unless orcid_id.present?
+
+    id = Identifier.find_or_initialize_by(identifiable: contributor,
+                                          identifier_scheme: orcid)
+    id.value = orcid_id
+    return contributor, id
   end
 
 end
