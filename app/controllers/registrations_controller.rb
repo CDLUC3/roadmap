@@ -290,29 +290,14 @@ class RegistrationsController < Devise::RegistrationsController
   def handle_org(attrs:)
     return attrs unless attrs.present? && attrs[:org_id].present?
 
-    # See if the user selected a new Org via the Org Lookup and
-    # convert it into an Org
-    lookup = org_from_params(params_in: attrs)
-    return attrs unless lookup.present?
-
-    # If this is a new Org we need to save it first before attaching
-    # it to the user
-    if lookup.new_record?
-      lookup.save
-      identifiers_from_params(params_in: attrs).each do |identifier|
-        next unless identifier.value.present?
-
-        identifier.identifiable = lookup
-        identifier.save
-      end
-      lookup.reload
-    end
+    org = org_from_params(params_in: attrs, allow_create: true)
 
     # Remove the extraneous Org Selector hidden fields
     attrs = remove_org_selection_params(params_in: attrs)
+    return attrs unless org.present?
 
     # reattach the org_id but with the Org id instead of the hash
-    attrs[:org_id] = lookup.id
+    attrs[:org_id] = org.id
     attrs
   end
 
