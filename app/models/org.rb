@@ -38,6 +38,8 @@ class Org < ActiveRecord::Base
   include FeedbacksHelper
   include GlobalHelpers
   include FlagShihTzu
+  include Identifiable
+
   extend Dragonfly::Model::Validations
   validates_with OrgLinksValidator
 
@@ -77,8 +79,6 @@ class Org < ActiveRecord::Base
   has_and_belongs_to_many :token_permission_types,
                           join_table: "org_token_permissions",
                           unique: true
-
-  has_many :identifiers, as: :identifiable, dependent: :destroy
 
   has_many :departments
 
@@ -168,21 +168,6 @@ class Org < ActiveRecord::Base
       .select("orgs.*,
               count(distinct templates.family_id) as template_count,
               count(users.id) as user_count")
-  }
-
-  # Scope that retrieves the Org based on the Identifiers passed in
-  scope :from_identifiers, ->(identifiers) {
-    return [] unless identifiers.present? && identifiers.is_a?(Array)
-
-    out = []
-    identifiers.each do |id|
-      # Stop once we find the first match
-      break if out.any?
-
-      out << Identifier.where(identifier_scheme: id.identifier_scheme,
-                              value: id.value, identifiable_type: "Org").first
-    end
-    out.compact.map { |identifier| find_by(id: identifier.identifiable_id) }
   }
 
   before_validation :set_default_feedback_email_subject

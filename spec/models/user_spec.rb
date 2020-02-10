@@ -542,7 +542,8 @@ RSpec.describe User, type: :model do
     let!(:auth) do
       OpenStruct.new(provider: Faker::Lorem.word, uid: Faker::Lorem.word)
     end
-    let!(:scheme) { create(:identifier_scheme, name: auth[:provider]) }
+    let!(:scheme) { create(:identifier_scheme, name: auth[:provider],
+                                               identifier_prefix: nil) }
 
     subject { User.from_omniauth(auth) }
 
