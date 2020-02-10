@@ -76,7 +76,7 @@ module ExternalApis
 
       # Retrieves the application name from branding.yml or uses the App name
       def app_name
-        config.fetch(:application, {}).fetch(:name, Rails.application.class.name)
+        ApplicationService.application_name
       end
 
       # Retrieves the helpdesk email from branding.yml or uses the contact page url

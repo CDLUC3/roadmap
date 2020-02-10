@@ -27,8 +27,9 @@ class IdentifierPresenter
     return _("None defined") if id.new_record? || id.value.blank?
     return id.value unless scheme.user_landing_url.present?
 
-    link = "#{scheme.user_landing_url}/#{id.value}"
-    "<a href=\"#{link}\" class=\"has-new-window-popup-info\"> " +
+    base = scheme.user_landing_url
+    base += "/" unless base.ends_with?("/")
+    "<a href=\"#{base}#{id.value}\" class=\"has-new-window-popup-info\"> " +
       "#{scheme.description}: #{id.value}</a>"
   end
 
