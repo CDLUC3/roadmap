@@ -21,13 +21,18 @@
 #  created_at                        :datetime
 #  updated_at                        :datetime
 #  template_id                       :integer
+#  ethical_issues                    :integer
+#  ethical_issues_description        :text
+#  ethical_issues_report             :string
 #  org_id                            :integer
 #  funder_id                         :integer
+#  grant_id                          :integer
 #
 # Indexes
 #
 #  index_plans_on_template_id  (template_id)
 #  index_plans_on_funder_id    (funder_id)
+#  index_plans_on_grant_id     (grant_id)
 #
 # Foreign Keys
 #
@@ -41,6 +46,8 @@ FactoryBot.define do
     template
     org
     #funder
+    # TODO: Drop this column once the funder_id has been back filled
+    #       and we're removing the is_other org stuff
     grant_number { SecureRandom.rand(1_000) }
     identifier { SecureRandom.hex }
     description { Faker::Lorem.paragraph }
@@ -52,6 +59,12 @@ FactoryBot.define do
     principal_investigator_email { Faker::Internet.safe_email }
     feedback_requested { false }
     complete { false }
+    ethical_issues { [0, 1, nil].sample }
+    ethical_issues_description { Faker::Lorem.sentence }
+    ethical_issues_report { Faker::Internet.url }
+    start_date { Time.now }
+    end_date { start_date + 2.years }
+
     transient do
       phases { 0 }
       answers { 0 }

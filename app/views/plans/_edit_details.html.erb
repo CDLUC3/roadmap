@@ -60,19 +60,37 @@
       </div>
 
       <div class="form-group"><!-- grant_number -->
-        <div class="col-md-12">
-          <%= label_tag(:plan_grant_number_name, _('Grant number'), class: 'control-label') %>
-        </div>
+        <% if Rails.configuration.x.open_aire.active %>
+          <!-- Using the research_project.json source for typeahead -->
+          <div class="col-md-12">
+            <%= label_tag(:plan_grant_number_name, _('Grant number'), class: 'control-label') %>
+          </div>
 
-        <div class="col-md-8">
-          <%= text_field_tag(:plan_grant_number_name, '',
-              class: "grant-id-typeahead form-control",
-              autocomplete: "off",
-              aria: { required: false }) %>
-          <%= f.hidden_field(:grant_number) %>
-          <span class="text-muted" id="grant_number_info">Grant number: <%= @plan.grant_number %></span>
-        </div>
+          <div class="col-md-8">
+            <%= text_field_tag(:plan_grant_number_name, '',
+                class: "grant-id-typeahead form-control",
+                autocomplete: "off",
+                aria: { required: false }) %>
+            <%= f.hidden_field(:grant_number) %>
+            <span class="text-muted" id="grant_number_info">Grant number: <%= @plan.grant_number %></span>
+          </div>
+
+        <% else %>
+          <!-- Using the new maDMP grant_id Identifier -->
+          <%= fields_for :grant, @plan.grant do |grant_fields| %>
+            <div class="col-md-12">
+              <%= grant_fields.label(:value, _("Grant number/url"),
+                                                  class: "control-label") %>
+            </div>
+            <div class="col-md-8">
+              <%= grant_fields.text_field(:value, aria: { required: false },
+                                        class: "grant-id-typeahead form-control") %>
+              <%= grant_fields.hidden_field :id %>
+            </div>
+          <% end %>
+        <% end %>
       </div>
+
       <div class="form-group"><!-- description -->
         <div class="col-md-12">
           <%= f.label(:description, _('Project abstract'), class: 'control-label') %>

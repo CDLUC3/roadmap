@@ -47,8 +47,9 @@ describe Plan do
 
     it { is_expected.to have_many :setting_objects }
 
-    it { is_expected.to have_many(:identifiers) }
+    it { is_expected.to have_many :contributors }
 
+    it { is_expected.to have_many(:identifiers) }
   end
 
   describe ".publicly_visible" do
@@ -1421,6 +1422,20 @@ describe Plan do
 
       it { is_expected.to eql(false) }
 
+    end
+  end
+
+  describe "#grant" do
+    let!(:plan) { create(:plan, :creator) }
+    let!(:grant) { create(:identifier, identifiable: plan, identifier_scheme: nil) }
+
+    it "returns nil if no grant_id is defined" do
+      expect(plan.grant).to eql(nil)
+    end
+    it "returns the grant as an Identifier" do
+      plan.update(grant_id: grant.id)
+      plan.reload
+      expect(plan.grant).to eql(grant)
     end
   end
 

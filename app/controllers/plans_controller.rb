@@ -146,7 +146,7 @@ class PlansController < ApplicationController
 
         # Set new identifier to plan id by default on create.
         # (This may be changed by user.)
-        @plan.add_identifier!(@plan.id.to_s)
+        @plan.identifier = @plan.id.to_s
 
         respond_to do |format|
           flash[:notice] = msg
