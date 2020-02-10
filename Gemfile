@@ -84,6 +84,9 @@ gem "devise", ">= 4.7.1"
 # (https://github.com/scambra/devise_invitable)
 gem "devise_invitable"
 
+# A ruby implementation of the RFC 7519 OAuth JSON Web Token (JWT) standard.
+gem 'jwt'
+
 # A generalized Rack framework for multiple-provider authentication.
 # (https://github.com/omniauth/omniauth)
 gem "omniauth"
@@ -243,6 +246,11 @@ group :development, :test do
 
   # Guard gem for RSpec (https://github.com/guard/guard-rspec)
   gem "guard-rspec"
+
+  # Swagger tooling for Rails API's. Generate beautiful API documentation,
+  # including a UI to explore and test operations, directly from your rspec
+  # integration tests.
+  gem "rswag"
 end
 
 group :test do
@@ -356,3 +364,4 @@ group :development do
   # TomDoc for YARD (http://rubyworks.github.com/yard-tomdoc)
   gem "yard-tomdoc"
 end
+

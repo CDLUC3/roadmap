@@ -34,3 +34,4 @@ You may also find the following resources handy:
 == Copyright
 
 The Roadmap project uses an MIT License. The full text of the license can be found at: https://github.com/DMPRoadmap/roadmap/blob/master/LICENSE.md
+

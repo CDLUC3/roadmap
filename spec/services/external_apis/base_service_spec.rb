@@ -54,12 +54,12 @@ RSpec.describe ExternalApis::BaseService do
     context "#app_name" do
       it "defaults to the Rails.application.class.name" do
         Rails.configuration.branding[:application].delete(:name)
-        expected = Rails.application.class.name
+        expected = ApplicationService.application_name
         expect(described_class.send(:app_name)).to eql(expected)
       end
       it "returns the application name defined in branding.yml" do
         Rails.configuration.branding[:application][:name] = "Foo"
-        expect(described_class.send(:app_name)).to eql("Foo")
+        expect(described_class.send(:app_name)).to eql("foo")
       end
     end
     context "#app_email" do
