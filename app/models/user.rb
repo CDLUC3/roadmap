@@ -58,6 +58,8 @@ class User < ActiveRecord::Base
   include ConditionalUserMailer
   include ValidationMessages
   include ValidationValues
+  include Identifiable
+
   extend UniqueRandom
 
   ##

@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20200203190734) do
+ActiveRecord::Schema.define(version: 20200323213847) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -48,6 +48,35 @@ ActiveRecord::Schema.define(version: 20200203190734) do
   end
 
   add_index "answers_question_options", ["answer_id"], name: "index_answers_question_options_on_answer_id", using: :btree
+
+  create_table "api_clients", force: :cascade do |t|
+    t.string   "name",                      null: false
+    t.string   "description"
+    t.string   "homepage"
+    t.string   "contact_name"
+    t.string   "contact_email",             null: false
+    t.string   "client_id",                 null: false
+    t.string   "client_secret",             null: false
+    t.date     "last_access"
+    t.datetime "created_at",                null: false
+    t.datetime "updated_at",                null: false
+  end
+
+  add_index "api_clients", ["name"], name: "index_api_clients_on_name", using: :btree
+
+  create_table "contributors", force: :cascade do |t|
+    t.string   "name"
+    t.string   "email"
+    t.string   "phone"
+    t.integer  "roles",                     null: false
+    t.integer  "org_id"
+    t.integer  "plan_id",                   null: false
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "contributors", ["email"], name: "index_contributors_on_email", using: :btree
+  add_index "contributors", ["org_id"], name: "index_contributors_on_org_id", using: :btree
 
   create_table "departments", force: :cascade do |t|
     t.string   "name"
@@ -96,17 +125,16 @@ ActiveRecord::Schema.define(version: 20200203190734) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.text     "logo_url"
-    t.text     "user_landing_url"
-    t.boolean  "for_auth",                     default: false
-    t.boolean  "for_orgs",                     default: false
-    t.boolean  "for_plans",                    default: false
-    t.boolean  "for_users",                    default: false
+    t.string   "identifier_prefix"
+    t.integer  "context"
   end
 
-    create_table "identifiers", force: :cascade do |t|
+  add_index "identifier_schemes", ["context"], name: "index_identifier_schemes_on_context", using: :btree
+
+  create_table "identifiers", force: :cascade do |t|
     t.string   "value",                null: false
     t.text     "attrs"
-    t.integer  "identifier_scheme_id", null: false
+    t.integer  "identifier_scheme_id"
     t.integer  "identifiable_id"
     t.string   "identifiable_type"
     t.datetime "created_at"
@@ -238,12 +266,17 @@ ActiveRecord::Schema.define(version: 20200203190734) do
     t.string   "principal_investigator_phone"
     t.boolean  "feedback_requested",                default: false
     t.boolean  "complete",                          default: false
-    t.integer  "org_id",                            limit: 4
-    t.integer  "funder_id",                         limit: 4
+    t.datetime "start_date"
+    t.datetime "end_date"
+    t.integer  "org_id"
+    t.integer  "funder_id"
+    t.integer  "grant_id"
+    t.integer  "api_client_id"
   end
 
   add_index "plans", ["template_id"], name: "index_plans_on_template_id", using: :btree
   add_index "plans", ["funder_id"], name: "index_plans_on_funder_id", using: :btree
+  add_index "plans", ["grant_id"], name: "index_plans_on_grant_id", using: :btree
 
   create_table "plans_guidance_groups", force: :cascade do |t|
     t.integer "guidance_group_id"
@@ -449,6 +482,7 @@ ActiveRecord::Schema.define(version: 20200203190734) do
     t.string   "recovery_email"
     t.boolean  "active",                            default: true
     t.integer  "department_id"
+    t.datetime "last_api_access"
   end
 
   add_index "users", ["email"], name: "index_users_on_email", unique: true, using: :btree
@@ -468,6 +502,8 @@ ActiveRecord::Schema.define(version: 20200203190734) do
   add_foreign_key "answers", "users"
   add_foreign_key "answers_question_options", "answers"
   add_foreign_key "answers_question_options", "question_options"
+  add_foreign_key "contributors", "orgs"
+  add_foreign_key "contributors", "plans"
   add_foreign_key "guidance_groups", "orgs"
   add_foreign_key "guidances", "guidance_groups"
   add_foreign_key "notes", "answers"
