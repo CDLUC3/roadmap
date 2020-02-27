@@ -70,4 +70,16 @@ RSpec.describe Api::ConversionService do
     end
   end
 
+  describe "#application_name" do
+    it "returns the application name defined in the config/branding.yml" do
+      Rails.application.config.branding[:application][:name] = "foo"
+      expect(described_class.application_name).to eql("foo")
+    end
+    it "returns the Rails application name if no config/branding.yml entry" do
+      Rails.application.config.branding[:application].delete(:name)
+      expected = Rails.application.class.name.split('::').first
+      expect(described_class.application_name).to eql(expected)
+    end
+  end
+
 end

@@ -52,7 +52,6 @@ describe Plan do
     it { is_expected.to have_many :contributors }
 
     it { is_expected.to have_many(:identifiers) }
-
   end
 
   describe ".publicly_visible" do

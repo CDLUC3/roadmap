@@ -37,6 +37,8 @@ module Api
 
       private
 
+      attr_accessor :json
+
       # ==========================
       # CALLBACKS
       # ==========================
@@ -55,7 +57,7 @@ module Api
 
       # Set the generic application and caller variables used in all responses
       def base_response_content
-        @application = application_name
+        @application = ConversionService.application_name
         @caller = caller_name
       end
 
@@ -74,10 +76,13 @@ module Api
         begin
           @json = JSON.parse(request.body.read)
 
+          # Validate the JSON
+          errors = validate_json
+          render_error(errors: errors, status: :bad_request) if errors.any?
+          errors.empty?
+
         rescue JSON::ParserError => pe
-          Rails.logger.error "JSON Parse error on #{request.path} -> #{pe.message}"
-          Rails.logger.error request.headers
-          Rails.logger.error request.body
+          render_error(errors: _("Invalid JSON format"), status: :bad_request)
           return false
         end
       end
@@ -93,13 +98,6 @@ module Api
         true
       end
 
-      # Returns either the name specified in config/branding.yml or
-      # the Rails application name
-      def application_name
-        Rails.application.config.branding[:application]
-          .fetch(:name, Rails.application.class.name.split('::').first)
-      end
-
       # Returns either the User name or the ApiClient name
       def caller_name
         obj = client
@@ -112,6 +110,63 @@ module Api
         results = results.page(@page).per(@per_page)
         @total_items = results.total_count
         results
+      end
+
+      def validate_json
+        # Minimum acceptable DMP json:
+        #
+        # "dmp": {
+        #   "title": "My Minimal DMP",
+        #   "contact": {
+        #     "name": "Charlie Chaplin",
+        #     "mbox": "cc@example.com"
+        #   }
+        # }
+        # And a DOI or DMPTool id when updating:
+        #   "dmp_ids": [
+        #     { "type": "doi", "identifier": "123abc/12e" }
+        #     { "type": "dmptool", "identifier": "123" }
+        #   ]
+        #
+        # Or a template_id when creating:
+        #
+        errors = []
+        @json = @json.with_indifferent_access
+
+        @json.fetch(:items, []).each_with_index do |item, idx|
+          if item.is_a?(Hash)
+            dmp = item[:dmp]
+            if dmp.present?
+              if dmp.fetch(:title, "").blank?
+                errors << _("Expected item #{idx + 1} to have a {'dmp':{'title'}}!")
+              end
+
+              if dmp[:contact].present?
+                unless dmp[:contact][:mbox].present?
+                  errors << _("Expected item #{idx + 1} to have a {'dmp':{'contact':{'mbox'}}}!")
+                end
+              else
+                errors << _("Expected item #{idx + 1} to have a {'dmp':{'contact'}}!")
+              end
+
+              # Either the plan id or template id must be present
+              app = ConversionService.application_name.downcase
+              id = dmp.fetch(:dmp_ids, []).select { |id| ["doi", app].include?(id.fetch(:type, "").downcase) }
+              template = dmp.fetch(:extended_attributes, {}).fetch(:"#{app}", {})[:template_id]
+
+              unless id.present? || template.present?
+                errors << _("Expected item #{idx + 1} to have either a {'dmp':{'dmp_ids':[{'type':'#{app}','identifier'}]}} when updating or a {'dmp':{'extended_attributes':{'#{app}':{'template_id'}}}} if creating!")
+              end
+            else
+              errors << _("Expected item #{idx + 1} to be {'dmp':{}}")
+            end
+
+          else
+            errors << _("Expected 'items' to be an array!")
+          end
+        end
+
+        errors
       end
 
       # =========================

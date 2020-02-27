@@ -28,12 +28,119 @@ RSpec.describe Api::V1::BaseApiController, type: :request do
   end
 
   context "private methods" do
+    include Mocks::ApiJsonSamples
+
     before(:each) do
       @controller = described_class.new
     end
 
     # See the plans_controller_spec.rb for tests of most of this method's
     # callbacks since this controller's only endpoint, :heartbeat, skips them
+
+    describe "#validate_json" do
+      before(:each) do
+        @controller.stubs(:render_error).returns(true)
+      end
+
+      context "minimal JSON for updating" do
+        before(:each) do
+          @json = JSON.parse(minimal_update_json)
+        end
+
+        it "is valid" do
+          @controller.send(:json=, @json)
+          expect(@controller.send(:validate_json).empty?).to eql(true)
+        end
+        it "fails if items is not an Array" do
+          json = { items: { dmp: { title: Faker::Lorem.word } } }
+          @controller.send(:json=, json)
+          errs = @controller.send(:validate_json)
+          expect(errs.first.include?("'items'")).to eql(true)
+        end
+        it "fails if item is not a DMP" do
+          json = { items: [{ org: { name: Faker::Lorem.word } }] }
+          @controller.send(:json=, json)
+          errs = @controller.send(:validate_json)
+          expect(errs.first.include?("'dmp':{}")).to eql(true)
+        end
+        it "fails if no title is present" do
+          @json["items"].first["dmp"]["title"] = ""
+          @controller.send(:json=, @json)
+          errs = @controller.send(:validate_json)
+          expect(errs.first.include?("title")).to eql(true)
+        end
+        it "fails if no contact is present" do
+          @json["items"].first["dmp"]["contact"] = {}
+          @controller.send(:json=, @json)
+          errs = @controller.send(:validate_json)
+          expect(errs.first.include?("contact")).to eql(true)
+        end
+        it "fails if no contact is present" do
+          @json["items"].first["dmp"]["contact"]["mbox"] = ""
+          @controller.send(:json=, @json)
+          errs = @controller.send(:validate_json)
+          expect(errs.first.include?("mbox")).to eql(true)
+        end
+        it "fails if no dmp_ids are present" do
+          @json["items"].first["dmp"]["dmp_ids"] = []
+          @controller.send(:json=, @json)
+          errs = @controller.send(:validate_json)
+          expect(errs.first.include?("dmp_ids")).to eql(true)
+        end
+        it "fails if dmp_ids are not a local DB id or a doi" do
+          @json["items"].first["dmp"]["dmp_ids"] = [{
+            "#{Faker::Lorem.word}": SecureRandom.uuid
+          }]
+          @controller.send(:json=, @json)
+          errs = @controller.send(:validate_json)
+          expect(errs.first.include?("dmp_ids")).to eql(true)
+        end
+      end
+
+      context "minimal JSON for creating" do
+        before(:each) do
+          create(:template)
+          @app = Api::ConversionService.application_name
+          @json = JSON.parse(minimal_create_json)
+        end
+
+        it "is valid" do
+          @controller.send(:json=, @json)
+          expect(@controller.send(:validate_json).empty?).to eql(true)
+        end
+        it "fails if no extended_attributes are present" do
+          @json["items"].first["dmp"]["extended_attributes"] = {}
+          @controller.send(:json=, @json)
+          errs = @controller.send(:validate_json)
+          expect(errs.first.include?("template_id")).to eql(true)
+        end
+        it "fails if no extended_attributes does not include an application area" do
+          @json["items"].first["dmp"]["extended_attributes"][@app] = {}
+          @controller.send(:json=, @json)
+          errs = @controller.send(:validate_json)
+          expect(errs.first.include?("template_id")).to eql(true)
+        end
+        it "fails if no extended_attributes - application area does not have a template_id" do
+          @json["items"].first["dmp"]["extended_attributes"][@app]["template_id"] = ""
+          @controller.send(:json=, @json)
+          errs = @controller.send(:validate_json)
+          expect(errs.first.include?("template_id")).to eql(true)
+        end
+      end
+
+      context "complete JSON for creating" do
+        before(:each) do
+          create(:template)
+          @app = Api::ConversionService.application_name
+          @json = JSON.parse(complete_create_json)
+        end
+
+        it "is valid" do
+          @controller.send(:json=, @json)
+          expect(@controller.send(:validate_json).empty?).to eql(true)
+        end
+      end
+    end
 
     describe "#authorize_request" do
       before(:each) do
@@ -106,18 +213,6 @@ RSpec.describe Api::V1::BaseApiController, type: :request do
         @client = create(:api_client)
         @controller.expects(:client).returns(@client)
         expect(@controller.send(:caller_name)).to eql(@client.name)
-      end
-    end
-
-    describe "#application_name" do
-      it "returns the application name defined in the config/branding.yml" do
-        Rails.application.config.branding[:application][:name] = "foo"
-        expect(@controller.send(:application_name)).to eql("foo")
-      end
-      it "returns the Rails application name if no config/branding.yml entry" do
-        Rails.application.config.branding[:application].delete(:name)
-        expected = Rails.application.class.name.split('::').first
-        expect(@controller.send(:application_name)).to eql(expected)
       end
     end
 
