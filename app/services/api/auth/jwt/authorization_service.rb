@@ -27,7 +27,7 @@ module Api
 
           token = decoded_auth_token
           # If the token is missing or invalid then set the client to nil
-          errors[:token] = "Invalid token" unless token.present?
+          errors[:token] = _("Invalid token") unless token.present?
           @api_client = nil unless token.present? && token[:client_id].present?
           return @api_client unless token.present? && token[:client_id].present?
 
@@ -42,14 +42,14 @@ module Api
           @token
 
         rescue JWT::ExpiredSignature
-          errors[:token] = "Token expired"
+          errors[:token] = _("Token expired")
           nil
         end
 
         # Extract the token from the Authorization header
         def http_auth_header
           hdr = @headers[:Authorization]
-          errors[:token] = "Missing token" unless hdr.present?
+          errors[:token] = _("Missing token") unless hdr.present?
           return nil unless hdr.present?
 
           hdr.split.last

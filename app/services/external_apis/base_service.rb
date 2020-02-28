@@ -76,7 +76,7 @@ module ExternalApis
 
       # Retrieves the application name from branding.yml or uses the App name
       def app_name
-        Api::ConversionService.application_name
+        ApplicationService.application_name
       end
 
       # Retrieves the helpdesk email from branding.yml or uses the contact page url

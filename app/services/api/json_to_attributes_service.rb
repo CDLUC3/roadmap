@@ -11,19 +11,27 @@ module Api
 
       # Convert the incoming JSON into an Identifier
       def identifier_from_json(json: {})
+        return nil unless json.present?
+
+        json = json.with_indifferent_access
         return nil unless json[:identifier].present? && json[:type].present?
 
         scheme = IdentifierScheme.by_name(json[:type].downcase).first
+        return nil unless scheme.present?
 
         # Extract the landing page URL for the scheme so that we only save
         # the identifier in the event that the URL ever changes
-        value = json[:identifier].downcase.gsub(scheme.user_landing_url.downcase, "")
+        value = json[:identifier].to_s.downcase.gsub(scheme.user_landing_url.downcase, "")
 
         Identifier.find_or_initialize_by(identifier_scheme: scheme, value: value)
       end
 
       # Convert the incoming JSON into an Org
       def org_from_json(json: {})
+        return nil unless json.present?
+
+        json = json.with_indifferent_access
+
         affiliation_ids = json.fetch(:affiliation_ids, json.fetch(:funder_ids, []))
         return nil unless json[:name].present? || affiliation_ids.any?
 
@@ -34,20 +42,23 @@ module Api
         org = Org.from_identifiers(array: array)
 
         # Otherwise try to find it by name (local DB, external API or a new one)
-        org = org_search_by_name(name: json) unless org.present?
+        org = org_search_by_name(json: json) unless org.present?
         return nil unless org.present?
 
         # If found combine existing identifiers with new ones
-        org.consolidate_identifiers(
-          identifiers: identifiers_from_json(array: affiliation_ids))
+        org.consolidate_identifiers!(
+          array: identifiers_from_json(array: affiliation_ids))
 
         org
       end
 
       # Convert the incoming JSON into a Contributor
       def contributor_from_json(json: {})
+        return nil unless json.present?
+
+        json = json.with_indifferent_access
         contributor_ids = json.fetch(:contributor_ids, [])
-        return nil unless json[:email].present? ||
+        return nil unless json[:mbox].present? ||
                           json[:surname].present? ||
                           contributor_ids.any?
 
@@ -61,28 +72,50 @@ module Api
         end
         contrib = Contributor.from_identifiers(array: array)
 
+        # Search by email if available and not found above
+        if !contrib.present? && json[:mbox].present?
+          contrib = Contributor.find_by(email: json[:mbox])
+        end
+
         # Otherwise create a new one
         contrib = Contributor.new(firstname: json[:firstname],
                                   surname: json[:surname],
                                   email: json[:mbox]) unless contrib.present?
 
+        # Attach the org affiliation unless its already defined
+        contrib.org = org unless contrib.org.present?
+
         # If found combine existing identifiers with new ones
-        contrib.consolidate_identifiers(
-          identifiers: identifiers_from_json(array: contributor_ids))
+        contrib.consolidate_identifiers!(
+          array: identifiers_from_json(array: contributor_ids))
 
         contrib
       end
 
-      def plan_from_json(json: {})
-        dmp_ids = json.fetch(:dmp_ids, [])
-        return nil unless json[:title].pressent? && json[:contact].present? &&
-                          json[:project].present? # && json[:datasets].any?
+      # Convert the incoming JSON into a PlansContributor
+      def plans_contributor_from_json(plan:, json: {})
+        return nil unless json.present? && plan.present?
 
-        # Process Contributors and Data Contact
-        contact = contributor_from_json(json: json[:contact])
-        contributors = json.fetch(:contributors, []).map do |hash|
-          contributor_from_json(json: hash)
-        end
+        json = json.with_indifferent_access
+        contributor = contributor_from_json(json: json)
+        return nil unless contributor.present?
+
+        role = translate_role(role: json[:role])
+        rec = PlansContributor.find_or_initialize_by(plan: plan,
+                                                     contributor: contributor)
+        # Add the role
+        rec.send(:"#{role}=", true)
+        rec
+      end
+
+      # Convert the incoming JSON into a Plan
+      def plan_from_json(json: {})
+        return nil unless json.present?
+
+        json = json.with_indifferent_access
+        dmp_ids = json.fetch(:dmp_ids, [])
+        return nil unless json[:title].present? && json[:contact].present? &&
+                          json[:project].present? # && json[:datasets].any?
 
         # Process Funder
         funder_affil = json[:project].fetch(:funding, []).first
@@ -90,17 +123,15 @@ module Api
 
         # First try to find the plan by any identifiers
         array = dmp_ids.map { |id| { name: id[:type], value: id[:identifier] } }
-
-        # If one of the identifiers is a DMPTool Plan id
-        id = array.select { |i| i[:name] == Api::ConversionService.application_name }
-        plan = Plan.find_by(id: id) if id.present?
+        id = array.select { |i| i[:name] == ApplicationService.application_name }.first
+        plan = Plan.find_by(id: id[:value]) if id.present? && id[:value].present?
 
         plan = Plan.from_identifiers(array: array) unless plan.present?
 
         # If this is not an existing Plan, then initialize a new one
         # for the specified template (or the default template if none specified)
         template_id = json.fetch(:extended_attributes, {}).fetch(:dmptool, {})
-                          .fetch(:template_id, Template.default.pluck(:id))
+                          .fetch(:template_id, Template.default.id)
         plan = Plan.new(template_id: template_id) unless plan.present?
 
         plan.title = json[:title]
@@ -108,23 +139,30 @@ module Api
         plan.start_date = json[:project][:start_on]
         plan.end_date = json[:project][:end_on]
 
-        plan.ethical_issues = ConversionService.yes_no_unknown_to_boolean(
-          json:[:ethical_issues_exist])
+        plan.ethical_issues = Api::ConversionService.yes_no_unknown_to_boolean(
+          json[:ethical_issues_exist])
         plan.ethical_issues_description = json[:ethical_issues_description]
         plan.ethical_issues_report = json[:ethical_issues_report]
 
+        # Process Contributors and Data Contact
+        contact = plans_contributor_from_json(plan: plan, json: json[:contact])
+        contact.data_curation = true
+
+        contributors = json.fetch(:contributors, []).map do |hash|
+          plans_contributor_from_json(plan: plan, json: hash)
+        end
+        plan.plans_contributors = contributors if contributors.any?
+        plan.plans_contributors << contact if contact.present?
+
         # Attach the Funder and Contact's org
         plan.funder = funder
-
-        # Attach the contributors
-        plan.contributors = contributors if contributors.any?
-        plan.contributors << contact if contact.present?
+        plan.org = contact.contributor.org
 
         # Attach any grant ids to the plan
         grants = funder_affil.fetch(:grant_ids, []).map do |hash|
           identifier_from_json(json: hash)
         end
-        plan.identifiers + grants if grants.any?
+        plan.identifiers << grants if grants.any?
 
         plan
       end
@@ -163,6 +201,17 @@ module Api
          # If no good result was found just use the specified name
         result = { name: name } unless result
         OrgSelection::HashToOrgService.to_org(hash: result)
+      end
+
+      # Translates the role in the json to a PlansContributor role
+      def translate_role(role:)
+        url = PlansContributor::CREDIT_TAXONOMY_URI_BASE
+        # Strip off the URL if present
+        role = role.gsub("#{url}/", "").downcase if role.include?(url)
+        # Return the role if its a valid one otherwise defualt
+        return role if PlansContributor.new.respond_to?(role.downcase.to_sym)
+
+        "writing_original_draft"
       end
 
     end

@@ -36,7 +36,7 @@ module Api
 
           if @client_id.nil? || @client_secret.nil? ||
               !%w[client_credentials authorization_code].include?(type)
-            @errors[:client_authentication] = "Invalid grant type"
+            @errors[:client_authentication] = _("Invalid grant type")
           end
         end
 
@@ -75,7 +75,7 @@ module Api
           return @api_client if @api_client.present?
 
           # Record an error if no ApiClient or User was authenticated
-          @errors[:client_authentication] = "Invalid credentials"
+          @errors[:client_authentication] = _("Invalid credentials")
           nil
         end
 

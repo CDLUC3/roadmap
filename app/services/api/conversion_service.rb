@@ -17,9 +17,9 @@ module Api
 
       # Converts a [yes, no, unknown] field to boolean (or nil)
       def yes_no_unknown_to_boolean(value)
-        return true if value == 'yes'
+        return true if value.downcase == 'yes'
 
-        return nil if value.blank? || value == 'unknown'
+        return nil if value.blank? || value.downcase == 'unknown'
 
         false
       end
@@ -32,19 +32,6 @@ module Api
 
         scheme = IdentifierScheme.new(name: context)
         Identifier.new(value: value, identifier_scheme: scheme)
-      end
-
-      # Gets the default language
-      def default_language
-        lang = Language.where(default_language: true).first
-        lang.present? ? lang.abbreviation : "en"
-      end
-
-      # Returns either the name specified in config/branding.yml or
-      # the Rails application name
-      def application_name
-        Rails.application.config.branding[:application]
-          .fetch(:name, Rails.application.class.name.split('::').first).downcase
       end
 
     end

@@ -7,7 +7,7 @@ presenter = Api::PlanPresenter.new(plan: plan)
 # RDA Common Standard format
 json.title plan.title
 json.description plan.description
-json.language Api::ConversionService.default_language
+json.language ApplicationService.default_language
 json.created plan.created_at.utc.to_s
 json.modified plan.updated_at.utc.to_s
 

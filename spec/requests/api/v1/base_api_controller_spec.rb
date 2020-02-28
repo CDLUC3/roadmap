@@ -100,7 +100,7 @@ RSpec.describe Api::V1::BaseApiController, type: :request do
       context "minimal JSON for creating" do
         before(:each) do
           create(:template)
-          @app = Api::ConversionService.application_name
+          @app = ApplicationService.application_name
           @json = JSON.parse(minimal_create_json)
         end
 
@@ -131,7 +131,7 @@ RSpec.describe Api::V1::BaseApiController, type: :request do
       context "complete JSON for creating" do
         before(:each) do
           create(:template)
-          @app = Api::ConversionService.application_name
+          @app = ApplicationService.application_name
           @json = JSON.parse(complete_create_json)
         end
 

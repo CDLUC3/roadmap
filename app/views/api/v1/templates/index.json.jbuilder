@@ -4,8 +4,10 @@ json.partial! "api/v1/standard_response", total_items: @total_items
 
 json.items @items do |template|
 
+  presenter = Api::TemplatePresenter.new(template: template)
+
   json.dmp_template do
-    json.title template.title
+    json.title presenter.title
     json.description template.description
     json.version template.version
     json.created template.created_at.utc.to_s

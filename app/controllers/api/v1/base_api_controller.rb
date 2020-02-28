@@ -19,7 +19,7 @@ module Api
       before_action :pagination_params, except: %i[heartbeat]
 
       # Parse the incoming JSON
-      before_action :parse_request, except: %i[heartbeat index]
+      before_action :parse_request, only: %i[create update]
 
       attr_reader :client
 
@@ -57,7 +57,7 @@ module Api
 
       # Set the generic application and caller variables used in all responses
       def base_response_content
-        @application = ConversionService.application_name
+        @application = ApplicationService.application_name
         @caller = caller_name
       end
 
@@ -150,7 +150,7 @@ module Api
               end
 
               # Either the plan id or template id must be present
-              app = ConversionService.application_name.downcase
+              app = ApplicationService.application_name
               id = dmp.fetch(:dmp_ids, []).select { |id| ["doi", app].include?(id.fetch(:type, "").downcase) }
               template = dmp.fetch(:extended_attributes, {}).fetch(:"#{app}", {})[:template_id]
 

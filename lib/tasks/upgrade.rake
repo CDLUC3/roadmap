@@ -762,6 +762,11 @@ namespace :upgrade do
     doi = IdentifierScheme.find_or_initialize_by(name: "doi")
     doi.for_plans = true
     doi.save
+
+    # Catchall scheme to collect grant numbers
+    ror = IdentifierScheme.find_or_initialize_by(name: "grant")
+    ror.for_plans = true
+    ror.save
   end
 
   desc "migrate the old user_identifiers over to the polymorphic identifiers table"

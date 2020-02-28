@@ -8,6 +8,12 @@ module Mocks
     ROLES = %w[Investigation Project_administration Writing_original_draft].freeze
 
 
+    def mock_identifier_schemes
+      create(:identifier_scheme, name: "ror")
+      create(:identifier_scheme, name: "orcid")
+      create(:identifier_scheme, name: "grant")
+    end
+
     def minimal_update_json
       {
         "total_items": 1,
@@ -21,7 +27,7 @@ module Mocks
               },
               "dmp_ids": [
                 {
-                  "type": "#{Api::ConversionService.application_name}",
+                  "type": "#{ApplicationService.application_name}",
                   "identifier": SecureRandom.uuid
                 }
               ]
@@ -43,7 +49,7 @@ module Mocks
                 "mbox": Faker::Internet.email
               },
               "extended_attributes": {
-                "#{Api::ConversionService.application_name}": {
+                "#{ApplicationService.application_name}": {
                   "template_id": Template.last.id
                 }
               }
@@ -122,7 +128,7 @@ module Mocks
                 }]
               },
               "extended_attributes": {
-                "#{Api::ConversionService.application_name}": {
+                "#{ApplicationService.application_name}": {
                   "template_id": Template.last.id
                 }
               }
