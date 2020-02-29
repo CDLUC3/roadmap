@@ -26,15 +26,25 @@
 #  created_at                        :datetime
 #  updated_at                        :datetime
 #  template_id                       :integer
+#  ethical_issues                    :integer
+#  ethical_issues_description        :text
+#  ethical_issues_report             :string
+#  org_id                            :integer
+#  funder_id                         :integer
 #
 # Indexes
 #
 #  index_plans_on_template_id  (template_id)
+#  index_plans_on_funder_id    (funder_id)
 #
 # Foreign Keys
 #
 #  fk_rails_...  (template_id => templates.id)
+#  fk_rails_...  (org_id => orgs.id)
 #
+
+# TODO: Drop the funder_name column once the funder_id has been back
+#       filled and we're removing the is_other org stuff
 
 class Plan < ActiveRecord::Base
 
@@ -42,11 +52,11 @@ class Plan < ActiveRecord::Base
   include ExportablePlan
   include ValidationMessages
   include ValidationValues
+  include Identifiable
 
   # =============
   # = Constants =
   # =============
-
 
   # Returns visibility message given a Symbol type visibility passed, otherwise
   # nil
@@ -65,15 +75,17 @@ class Plan < ActiveRecord::Base
   enum visibility: %i[organisationally_visible publicly_visible
                       is_test privately_visible]
 
-
   alias_attribute :name, :title
-
 
   # ================
   # = Associations =
   # ================
 
   belongs_to :template
+
+  belongs_to :org
+
+  belongs_to :funder, class_name: "Org"
 
   has_many :phases, through: :template
 
@@ -104,6 +116,9 @@ class Plan < ActiveRecord::Base
 
   has_many :roles
 
+  has_many :plans_contributors, dependent: :destroy
+
+  has_many :contributors, through: :plans_contributors
 
   # =====================
   # = Nested Attributes =
@@ -113,6 +128,7 @@ class Plan < ActiveRecord::Base
 
   accepts_nested_attributes_for :roles
 
+  accepts_nested_attributes_for :plans_contributors
 
   # ===============
   # = Validations =
@@ -126,13 +142,11 @@ class Plan < ActiveRecord::Base
 
   validates :complete, inclusion: { in: BOOLEAN_VALUES }
 
-
   # =============
   # = Callbacks =
   # =============
 
   before_validation :set_creation_defaults
-
 
   # ==========
   # = Scopes =
@@ -183,7 +197,6 @@ class Plan < ActiveRecord::Base
     s.key :export, defaults: Settings::Template::DEFAULT_SETTINGS
   end
   alias super_settings settings
-
 
   # =================
   # = Class methods =
@@ -408,7 +421,7 @@ class Plan < ActiveRecord::Base
                   .administrator
                   .order(:created_at)
                   .pluck(:user_id).first
-    User.find(usr_id)
+    usr_id.present? ? User.find(usr_id) : nil
   end
 
   # Creates a role for the specified user (will update the user's
@@ -441,14 +454,6 @@ class Plan < ActiveRecord::Base
     else
       false
     end
-  end
-
-  ## Update plan identifier.
-  #
-  # Returns Boolean
-  def add_identifier!(identifier)
-    self.update(identifier: identifier)
-    save!
   end
 
   ##
@@ -553,7 +558,6 @@ class Plan < ActiveRecord::Base
       false
     end
   end
-
 
   private
 

@@ -1,0 +1,28 @@
+# frozen_string_literal: true
+
+# == Schema Information
+#
+# Table name: api_clients
+#
+#  id             :integer          not null, primary key
+#  name           :string,          not null
+#  contact_email  :string,          not null
+#  client_id      :string,          not null
+#  client_secret  :string,          not null
+#  last_access    :datetime
+#  created_at     :datetime
+#  updated_at     :datetime
+#
+# Indexes
+#
+#  index_api_clients_on_name     (name)
+#
+
+FactoryBot.define do
+  factory :api_client do
+    name { Faker::Lorem.unique.word }
+    contact_email { Faker::Internet.email }
+    client_id { SecureRandom.uuid }
+    client_secret { SecureRandom.uuid }
+  end
+end

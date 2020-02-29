@@ -10,7 +10,7 @@ Rails.application.routes.draw do
     get "/users/sign_out", :to => "devise/sessions#destroy"
   end
 
-  delete '/users/identifiers/:id', to: 'user_identifiers#destroy', as: 'destroy_user_identifier'
+  delete '/users/identifiers/:id', to: 'identifiers#destroy', as: 'destroy_user_identifier'
 
   get '/orgs/shibboleth', to: 'orgs#shibboleth_ds', as: 'shibboleth_ds'
   get '/orgs/shibboleth/:org_name', to: 'orgs#shibboleth_ds_passthru'
@@ -77,6 +77,9 @@ Rails.application.routes.draw do
 
   #post 'contact_form' => 'contacts', as: 'localized_contact_creation'
   #get 'contact_form' => 'contacts#new', as: 'localized_contact_form'
+
+  # AJAX call used to search for Orgs based on user input into autocompletes
+  post "orgs" => "orgs#search", as: "orgs_search"
 
   resources :orgs, :path => 'org/admin', only: [] do
     member do
@@ -178,6 +181,14 @@ Rails.application.routes.draw do
           get :plans
         end
       end
+    end
+
+    namespace :v1 do
+      get :heartbeat, controller: "base_api"
+      post :authenticate, controller: "authentication"
+
+      resources :plans, only: [:create, :show]
+      resources :templates, only: [:index]
     end
   end
 
@@ -308,7 +319,4 @@ Rails.application.routes.draw do
   get "research_projects/(:type)", action: "index",
                                    controller: "research_projects",
                                    constraints: { format: "json" }
-
-
-
 end

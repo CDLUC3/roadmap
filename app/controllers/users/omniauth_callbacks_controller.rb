@@ -7,7 +7,7 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
   ##
   # Dynamically build a handler for each omniauth provider
   # -------------------------------------------------------------
-  IdentifierScheme.where(active: true).each do |scheme|
+  IdentifierScheme.authenticatable.each do |scheme|
     define_method(scheme.name.downcase) do
       handle_omniauth(scheme)
     end
