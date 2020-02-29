@@ -10,6 +10,7 @@ module Mocks
 
     def mock_identifier_schemes
       create(:identifier_scheme, name: "ror")
+      create(:identifier_scheme, name: "fundref")
       create(:identifier_scheme, name: "orcid")
       create(:identifier_scheme, name: "grant")
     end
@@ -24,6 +25,9 @@ module Mocks
               "contact": {
                 "name": Faker::TvShows::Simpsons.character,
                 "mbox": Faker::Internet.email
+              },
+              "project": {
+                "title": Faker::Lorem.sentence
               },
               "dmp_ids": [
                 {
@@ -47,6 +51,9 @@ module Mocks
               "contact": {
                 "name": Faker::TvShows::Simpsons.character,
                 "mbox": Faker::Internet.email
+              },
+              "project": {
+                "title": Faker::Lorem.sentence
               },
               "extended_attributes": {
                 "#{ApplicationService.application_name}": {
@@ -102,7 +109,11 @@ module Mocks
                 "mbox": Faker::Internet.email,
                 "affiliations": [{
                   "name": Faker::Movies::StarWars.planet,
-                  "abbreviation": Faker::Lorem.word.upcase
+                  "abbreviation": Faker::Lorem.word.upcase,
+                  "affiliation_ids": [{
+                    "type": "ror",
+                    "identifier": SecureRandom.uuid
+                  }]
                 }],
                 "contributor_ids": [{
                   "type": "orcid",
@@ -117,7 +128,7 @@ module Mocks
                 "funding": [{
                   "name": Faker::Movies::StarWars.droid,
                   "funder_ids": [{
-                    "type": Faker::Lorem.word,
+                    "type": "fundref",
                     "identifier": Faker::Number.number
                   }],
                   "grant_ids": [{

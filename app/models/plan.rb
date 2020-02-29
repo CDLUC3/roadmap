@@ -116,8 +116,6 @@ class Plan < ActiveRecord::Base
 
   has_many :roles
 
-  has_many :identifiers, as: :identifiable
-
   has_many :plans_contributors, dependent: :destroy
 
   has_many :contributors, through: :plans_contributors
@@ -456,14 +454,6 @@ class Plan < ActiveRecord::Base
     else
       false
     end
-  end
-
-  ## Update plan identifier.
-  #
-  # Returns Boolean
-  def add_identifier!(identifier)
-    self.update(identifier: identifier)
-    save!
   end
 
   ##

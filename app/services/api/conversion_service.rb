@@ -17,9 +17,9 @@ module Api
 
       # Converts a [yes, no, unknown] field to boolean (or nil)
       def yes_no_unknown_to_boolean(value)
-        return true if value.downcase == 'yes'
+        return true if value&.downcase == 'yes'
 
-        return nil if value.blank? || value.downcase == 'unknown'
+        return nil if value.blank? || value&.downcase == 'unknown'
 
         false
       end

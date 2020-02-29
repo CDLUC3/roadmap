@@ -49,6 +49,9 @@ module Api
         org.consolidate_identifiers!(
           array: identifiers_from_json(array: affiliation_ids))
 
+        # Org model requires a language sso just use the default for now
+        org.language = Language.find_by(default_language: true)
+        org.abbreviation = json[:abbreviation] if json[:abbreviation].present?
         org
       end
 
@@ -117,10 +120,6 @@ module Api
         return nil unless json[:title].present? && json[:contact].present? &&
                           json[:project].present? # && json[:datasets].any?
 
-        # Process Funder
-        funder_affil = json[:project].fetch(:funding, []).first
-        funder = org_from_json(json: funder_affil) if funder_affil.present?
-
         # First try to find the plan by any identifiers
         array = dmp_ids.map { |id| { name: id[:type], value: id[:identifier] } }
         id = array.select { |i| i[:name] == ApplicationService.application_name }.first
@@ -147,6 +146,7 @@ module Api
         # Process Contributors and Data Contact
         contact = plans_contributor_from_json(plan: plan, json: json[:contact])
         contact.data_curation = true
+        contact.writing_original_draft = true
 
         contributors = json.fetch(:contributors, []).map do |hash|
           plans_contributor_from_json(plan: plan, json: hash)
@@ -154,15 +154,20 @@ module Api
         plan.plans_contributors = contributors if contributors.any?
         plan.plans_contributors << contact if contact.present?
 
+        # Process Funder
+        funder_affil = json[:project].fetch(:funding, []).first
+        funder = org_from_json(json: funder_affil) if funder_affil.present?
+
         # Attach the Funder and Contact's org
         plan.funder = funder
         plan.org = contact.contributor.org
 
         # Attach any grant ids to the plan
-        grants = funder_affil.fetch(:grant_ids, []).map do |hash|
-          identifier_from_json(json: hash)
+        if funder_affil.present?
+          grant_ids = funder_affil.fetch(:grant_ids, [])
+          plan.consolidate_identifiers!(
+            array: identifiers_from_json(array: grant_ids)) if grant_ids.any?
         end
-        plan.identifiers << grants if grants.any?
 
         plan
       end
@@ -205,13 +210,16 @@ module Api
 
       # Translates the role in the json to a PlansContributor role
       def translate_role(role:)
+        default = "writing_original_draft"
+        return default unless role.present?
+
         url = PlansContributor::CREDIT_TAXONOMY_URI_BASE
         # Strip off the URL if present
         role = role.gsub("#{url}/", "").downcase if role.include?(url)
         # Return the role if its a valid one otherwise defualt
         return role if PlansContributor.new.respond_to?(role.downcase.to_sym)
 
-        "writing_original_draft"
+        default
       end
 
     end

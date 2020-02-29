@@ -40,7 +40,11 @@ class Contributor < ActiveRecord::Base
 
   has_many :plans, through: :plans_contributors
 
-  has_many :identifiers, as: :identifiable, dependent: :destroy
+  # =====================
+  # = Nested attributes =
+  # =====================
+
+  accepts_nested_attributes_for :org
 
   # ===============
   # = Validations =

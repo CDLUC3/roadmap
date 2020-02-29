@@ -40,17 +40,6 @@ module Api
 
         if plan.present?
           if plan.new_record?
-
-p "PLAN:"
-p plan.inspect
-p plan.identifiers.inspect
-p "-----------------------------------"
-p "FUNDER:"
-p plan.funder.inspect
-p plan.funder.identifiers.inspect
-
-            # Handle all the identifiers until accepts_attributes_for is working
-
             if plan.save
               @items = [plan]
 

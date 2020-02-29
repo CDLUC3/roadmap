@@ -6,14 +6,11 @@ module Identifiable
 
     has_many :identifiers, as: :identifiable, dependent: :destroy
 
-    # TODO: For some reason accepts_nested_atributes_for does not work for
-    #       polymorphic relationships, so using this instead. Reevaluate
-    #       post Rails 5 upgrade
-    #
-    #       Once its working we can likely jettison the save and consolidate
-    #       methods below
-    #
-    # accepts_nested_attributes_for :identifiers
+    # =====================
+    # = Nested Attributes =
+    # =====================
+
+    accepts_nested_attributes_for :identifiers
 
     # =================
     # = Class Methods =
@@ -62,6 +59,7 @@ module Identifiable
         next if current.present?
 
         # Otherwise add it
+        id.identifiable = self
         identifiers << id
       end
       true
