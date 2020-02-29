@@ -5,7 +5,8 @@
 #  id               :integer          not null, primary key
 #  active           :boolean
 #  description      :string
-#  logo_url         :string
+#  context          :integer
+#  logo_url         :text
 #  name             :string
 #  user_landing_url :string
 #  created_at       :datetime
@@ -19,5 +20,15 @@ FactoryBot.define do
     logo_url { Faker::Internet.url }
     user_landing_url { Faker::Internet.url }
     active { true }
+
+    transient do
+      context_count { 1 }
+    end
+
+    after(:create) do |identifier_scheme, evaluator|
+      (0..evaluator.context_count - 1).each do |idx|
+        identifier_scheme.update("#{identifier_scheme.all_context[idx]}": true)
+      end
+    end
   end
 end
