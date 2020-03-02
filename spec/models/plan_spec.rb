@@ -47,8 +47,6 @@ describe Plan do
 
     it { is_expected.to have_many :setting_objects }
 
-    it { is_expected.to have_many :plans_contributors }
-
     it { is_expected.to have_many :contributors }
 
     it { is_expected.to have_many(:identifiers) }

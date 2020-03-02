@@ -116,9 +116,7 @@ class Plan < ActiveRecord::Base
 
   has_many :roles
 
-  has_many :plans_contributors, dependent: :destroy
-
-  has_many :contributors, through: :plans_contributors
+  has_many :contributors, dependent: :destroy
 
   # =====================
   # = Nested Attributes =
@@ -128,7 +126,7 @@ class Plan < ActiveRecord::Base
 
   accepts_nested_attributes_for :roles
 
-  accepts_nested_attributes_for :plans_contributors
+  accepts_nested_attributes_for :contributors
 
   # ===============
   # = Validations =

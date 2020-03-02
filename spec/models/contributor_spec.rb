@@ -12,9 +12,7 @@ RSpec.describe Contributor, type: :model do
 
   context "associations" do
     it { is_expected.to belong_to(:org) }
-
-    it { is_expected.to have_many(:plans_contributors) }
-    it { is_expected.to have_many(:plans) }
+    it { is_expected.to belong_to(:plan) }
     it { is_expected.to have_many(:identifiers) }
   end
 

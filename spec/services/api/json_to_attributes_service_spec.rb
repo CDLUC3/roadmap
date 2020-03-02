@@ -90,85 +90,59 @@ RSpec.describe Api::JsonToAttributesService do
 
   describe "#contributor_from_json(json: {})" do
     before(:each) do
-      @contributor = create(:contributor)
+      @plan = create(:plan)
+      @contributor = create(:contributor, plan: @plan, investigation: true)
       @json = { mbox: @contributor.email }
     end
 
     it "returns nil when json is not present" do
-      expect(described_class.contributor_from_json(json: nil)).to eql(nil)
+      result = described_class.contributor_from_json(plan: @plan, json: nil)
+      expect(result).to eql(nil)
     end
     it "returns nil when json[:mbox] sand json[:surname] and ids are not present" do
       json = { firstname: Faker::Lorem.word }
-      expect(described_class.contributor_from_json(json: json)).to eql(nil)
+      result = described_class.contributor_from_json(plan: @plan, json: json)
+      expect(result).to eql(nil)
     end
     it "returns the contributor when the Contributor is found by an identifier" do
       Contributor.stubs(:from_identifiers).returns(@contributor)
-      result = described_class.contributor_from_json(json: @json)
+      result = described_class.contributor_from_json(plan: @plan, json: @json)
       expect(result).to eql(@contributor)
     end
     it "returns the contributor when found by email" do
-      result = described_class.contributor_from_json(json: @json)
+      result = described_class.contributor_from_json(plan: @plan, json: @json)
       expect(result).to eql(@contributor)
     end
     it "initializes a Contributor if one is not found by identifier or email" do
       json = { mbox: Faker::Internet.email }
-      result = described_class.contributor_from_json(json: json)
+      result = described_class.contributor_from_json(plan: @plan, json: json)
       expect(result.new_record?).to eql(true)
       expect(result.email).to eql(json[:mbox])
     end
     it "attaches the Org if an affiliation was in the json" do
       described_class.stubs(:org_from_json).returns(@contributor.org)
       Contributor.stubs(:from_identifiers).returns(@contributor)
-      result = described_class.contributor_from_json(json: @json)
+      result = described_class.contributor_from_json(plan: @plan, json: @json)
       expect(result.org).to eql(@contributor.org)
     end
     it "sets the firstname" do
       json = { firstname: Faker::Lorem.word, mbox: Faker::Internet.email }
-      result = described_class.contributor_from_json(json: json)
+      result = described_class.contributor_from_json(plan: @plan, json: json)
       expect(result.firstname).to eql(json[:firstname])
     end
     it "sets the surname" do
       json = { firstname: Faker::Lorem.word, surname: Faker::Lorem.word }
-      result = described_class.contributor_from_json(json: json)
+      result = described_class.contributor_from_json(plan: @plan, json: json)
       expect(result.surname).to eql(json[:surname])
     end
     it "sets the email" do
       json = { mbox: Faker::Internet.email }
-      result = described_class.contributor_from_json(json: json)
+      result = described_class.contributor_from_json(plan: @plan, json: json)
       expect(result.email).to eql(json[:mbox])
     end
-  end
-
-  describe "#plans_contributor_from_json(json: {})" do
-    before(:each) do
-      @plan = create(:plan)
-      @contributor = create(:contributor)
-      @plans_contributor = create(:plans_contributor, plan: @plan,
-                                                      contributor: @contributor)
-      @json = { role: "investigation" }
-    end
-
-    it "returns nil when json is not present" do
-      result = described_class.plans_contributor_from_json(plan: @plan, json: nil)
-      expect(result).to eql(nil)
-    end
-    it "returns nil when plan is nil" do
-      result = described_class.plans_contributor_from_json(plan: nil, json: @json)
-      expect(result).to eql(nil)
-    end
-    it "returns nil if contributor was nil" do
-      described_class.stubs(:contributor_from_json).returns(nil)
-      result = described_class.plans_contributor_from_json(plan: @plan, json: @json)
-      expect(result).to eql(nil)
-    end
-    it "returns the existing plans_contributor record" do
+    it "adds the new role" do
       described_class.stubs(:contributor_from_json).returns(@contributor)
-      result = described_class.plans_contributor_from_json(plan: @plan, json: @json)
-      expect(result).to eql(@plans_contributor)
-    end
-    it "adds the new role to the plans_contributor record" do
-      described_class.stubs(:contributor_from_json).returns(@contributor)
-      result = described_class.plans_contributor_from_json(plan: @plan, json: @json)
+      result = described_class.contributor_from_json(plan: @plan, json: @json)
       expect(result.investigation?).to eql(true)
     end
   end
@@ -211,14 +185,14 @@ RSpec.describe Api::JsonToAttributesService do
       Plan.stubs(:from_identifiers).returns(@plan)
       expect(described_class.plan_from_json(json: @json)).to eql(@plan)
     end
-    it "attaches the PlansContributor if a contact was in the json" do
+    it "attaches the Contributor if a contact was in the json" do
       result = described_class.plan_from_json(json: @json)
-      contacts = result.plans_contributors.select { |pc| pc.data_curation? }
+      contacts = result.contributors.select { |c| c.data_curation? }
       expect(contacts.length).to eql(1)
     end
     it "attaches the Contributors if they were in the json" do
       result = described_class.plan_from_json(json: @json)
-      expect(result.plans_contributors.length).to eql(2)
+      expect(result.contributors.length).to eql(2)
     end
     it "attaches the Funder if it was defined in the json" do
       result = described_class.plan_from_json(json: @json)
@@ -230,8 +204,8 @@ RSpec.describe Api::JsonToAttributesService do
     end
     it "attaches the Org if it was defined on the contact" do
       result = described_class.plan_from_json(json: @json)
-      contacts = result.plans_contributors.select { |pc| pc.data_curation? }
-      expect(result.org).to eql(contacts.first.contributor.org)
+      contacts = result.contributors.select { |c| c.data_curation? }
+      expect(result.org).to eql(contacts.first.org)
     end
     it "attaches the Grant number if it was defined in the json" do
       result = described_class.plan_from_json(json: @json)

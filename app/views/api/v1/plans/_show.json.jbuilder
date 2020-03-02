@@ -30,10 +30,10 @@ if presenter.data_contact.present?
 end
 
 if presenter.contributors.any?
-  json.contributors presenter.contributors do |plans_contributor|
-    plans_contributor.selected_roles.each do |role|
+  json.contributors presenter.contributors do |contributor|
+    contributor.selected_roles.each do |role|
       json.partial! "api/v1/contributors/show",
-                    contributor: plans_contributor.contributor, role: role
+        contributor: contributor, role: role
     end
   end
 end

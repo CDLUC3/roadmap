@@ -7,13 +7,10 @@ RSpec.describe Api::PlanPresenter do
   describe "#initialize(plan:)" do
     before(:each) do
       plan = build(:plan)
-      @data_contact = build(:contributor)
-      @pi = build(:contributor)
-      plan.plans_contributors = [
-        build(:plans_contributor, data_curation: true, writing_original_draft: true,
-                                  contributor: @data_contact),
-        build(:plans_contributor, investigation: true, contributor: @pi)
-      ]
+      @data_contact = build(:contributor, writing_original_draft: true,
+                                          data_curation: true)
+      @pi = build(:contributor, investigation: true)
+      plan.contributors = [@data_contact, @pi]
       @presenter = described_class.new(plan: plan)
     end
 
@@ -24,7 +21,7 @@ RSpec.describe Api::PlanPresenter do
     end
     it "sets contributors to empty array if plan has no contributors" do
       plan = build(:plan)
-      plan.plans_contributors = []
+      plan.contributors = []
       presenter = described_class.new(plan: plan)
       expect(presenter.data_contact).to eql(nil)
       expect(presenter.contributors).to eql([])
@@ -34,7 +31,7 @@ RSpec.describe Api::PlanPresenter do
     end
     it "sets other contributors (without the data_contact)" do
       expect(@presenter.contributors.length).to eql(1)
-      expect(@presenter.contributors.first.contributor).to eql(@pi)
+      expect(@presenter.contributors.first).to eql(@pi)
     end
   end
 

@@ -2,7 +2,7 @@
 
 module Api
 
-  class PlansContributorPresenter
+  class ContributorPresenter
 
     class << self
 
@@ -10,7 +10,7 @@ module Api
       def role_as_uri(role:)
         return nil unless role.present?
 
-        "#{PlansContributor::CREDIT_TAXONOMY_URI_BASE}/#{role.to_s.capitalize}"
+        "#{Contributor::CREDIT_TAXONOMY_URI_BASE}/#{role.to_s.capitalize}"
       end
 
     end

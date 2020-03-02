@@ -56,8 +56,8 @@ module Api
       end
 
       # Convert the incoming JSON into a Contributor
-      def contributor_from_json(json: {})
-        return nil unless json.present?
+      def contributor_from_json(plan:, json: {})
+        return nil unless json.present? && plan.present?
 
         json = json.with_indifferent_access
         contributor_ids = json.fetch(:contributor_ids, [])
@@ -73,15 +73,17 @@ module Api
         array = contributor_ids.map do |id|
           { name: id[:type], value: id[:identifier] }
         end
-        contrib = Contributor.from_identifiers(array: array)
+        contrib = Contributor.where(plan_id: plan.id)
+                             &.from_identifiers(array: array)
 
         # Search by email if available and not found above
         if !contrib.present? && json[:mbox].present?
-          contrib = Contributor.find_by(email: json[:mbox])
+          contrib = Contributor.find_by(plan_id: plan.id, email: json[:mbox])
         end
 
         # Otherwise create a new one
-        contrib = Contributor.new(firstname: json[:firstname],
+        contrib = Contributor.new(plan_id: plan.id,
+                                  firstname: json[:firstname],
                                   surname: json[:surname],
                                   email: json[:mbox]) unless contrib.present?
 
@@ -92,23 +94,11 @@ module Api
         contrib.consolidate_identifiers!(
           array: identifiers_from_json(array: contributor_ids))
 
-        contrib
-      end
-
-      # Convert the incoming JSON into a PlansContributor
-      def plans_contributor_from_json(plan:, json: {})
-        return nil unless json.present? && plan.present?
-
-        json = json.with_indifferent_access
-        contributor = contributor_from_json(json: json)
-        return nil unless contributor.present?
-
-        role = translate_role(role: json[:role])
-        rec = PlansContributor.find_or_initialize_by(plan: plan,
-                                                     contributor: contributor)
         # Add the role
-        rec.send(:"#{role}=", true)
-        rec
+        role = translate_role(role: json[:role])
+        contrib.send(:"#{role}=", true)
+
+        contrib
       end
 
       # Convert the incoming JSON into a Plan
@@ -144,15 +134,16 @@ module Api
         plan.ethical_issues_report = json[:ethical_issues_report]
 
         # Process Contributors and Data Contact
-        contact = plans_contributor_from_json(plan: plan, json: json[:contact])
+        contact = contributor_from_json(plan: plan, json: json[:contact])
         contact.data_curation = true
         contact.writing_original_draft = true
 
         contributors = json.fetch(:contributors, []).map do |hash|
-          plans_contributor_from_json(plan: plan, json: hash)
+          contributor_from_json(plan: plan, json: hash)
         end
-        plan.plans_contributors = contributors if contributors.any?
-        plan.plans_contributors << contact if contact.present?
+
+        plan.contributors << contributors if contributors.any?
+        plan.contributors << contact if contact.present?
 
         # Process Funder
         funder_affil = json[:project].fetch(:funding, []).first
@@ -160,7 +151,7 @@ module Api
 
         # Attach the Funder and Contact's org
         plan.funder = funder
-        plan.org = contact.contributor.org
+        plan.org = contact.org
 
         # Attach any grant ids to the plan
         if funder_affil.present?
@@ -213,11 +204,11 @@ module Api
         default = "writing_original_draft"
         return default unless role.present?
 
-        url = PlansContributor::CREDIT_TAXONOMY_URI_BASE
+        url = Contributor::CREDIT_TAXONOMY_URI_BASE
         # Strip off the URL if present
         role = role.gsub("#{url}/", "").downcase if role.include?(url)
         # Return the role if its a valid one otherwise defualt
-        return role if PlansContributor.new.respond_to?(role.downcase.to_sym)
+        return role if Contributor.new.respond_to?(role.downcase.to_sym)
 
         default
       end

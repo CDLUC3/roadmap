@@ -5,7 +5,9 @@ class CreateContributors < ActiveRecord::Migration
       t.string :surname
       t.string :email, null: false, index: true
       t.string :phone
+      t.integer :roles, index: true, null: false
       t.references :org, index: true
+      t.references :plan, index: true, null: false
       t.timestamps
     end
   end

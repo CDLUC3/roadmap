@@ -93,7 +93,7 @@ RSpec.describe Api::V1::PlansController, type: :request do
             expect(expected).to eql(@original[:contact][:mbox])
           end
           it "set the Contact roles" do
-            expected = @plan.plans_contributors.first
+            expected = @plan.contributors.first
             expect(expected.data_curation?).to eql(true)
             expect(expected.writing_original_draft?).to eql(true)
           end
@@ -157,8 +157,8 @@ RSpec.describe Api::V1::PlansController, type: :request do
           context "contact inspection" do
             before(:each) do
               @original = @original[:contact]
-              contacts = @plan.plans_contributors.select do |pc|
-                pc.contributor.email == @original[:mbox]
+              contacts = @plan.contributors.select do |pc|
+                pc.email == @original[:mbox]
               end
               @contact = contacts.first
             end
@@ -167,28 +167,28 @@ RSpec.describe Api::V1::PlansController, type: :request do
               expect(@contact.present?).to eql(true)
             end
             it "set the Contact firstname" do
-              expect(@contact.contributor.firstname).to eql(@original[:firstname])
+              expect(@contact.firstname).to eql(@original[:firstname])
             end
             it "set the Contact surname" do
-              expect(@contact.contributor.surname).to eql(@original[:surname])
+              expect(@contact.surname).to eql(@original[:surname])
             end
             it "set the Contact email" do
-              expect(@contact.contributor.email).to eql(@original[:mbox])
+              expect(@contact.email).to eql(@original[:mbox])
             end
             it "set the Contact roles" do
               expect(@contact.data_curation?).to eql(true)
               expect(@contact.writing_original_draft?).to eql(true)
             end
             it "Contact identifiers includes the orcid" do
-              expect(@contact.contributor.identifiers.length).to eql(1)
+              expect(@contact.identifiers.length).to eql(1)
               expected = @original[:contributor_ids].first[:type]
-              expect(@contact.contributor.identifiers.first.identifier_scheme.name).to eql(expected)
+              expect(@contact.identifiers.first.identifier_scheme.name).to eql(expected)
 
               expected = @original[:contributor_ids].first[:identifier]
-              expect(@contact.contributor.identifiers.first.value).to eql(expected)
+              expect(@contact.identifiers.first.value).to eql(expected)
             end
             it "ignored the unknown identifier type" do
-              results = @contact.contributor.identifiers.select do |i|
+              results = @contact.identifiers.select do |i|
                 i.value == @original[:contributor_ids].last
               end
               expect(results.any?).to eql(false)
@@ -200,24 +200,24 @@ RSpec.describe Api::V1::PlansController, type: :request do
               end
 
               it "attached the Org to the Contact" do
-                expect(@contact.contributor.org.present?).to eql(true)
+                expect(@contact.org.present?).to eql(true)
               end
               it "sets the name" do
-                expect(@contact.contributor.org.name).to eql(@original[:name])
+                expect(@contact.org.name).to eql(@original[:name])
               end
               it "sets the abbreviation" do
-                expect(@contact.contributor.org.abbreviation).to eql(@original[:abbreviation])
+                expect(@contact.org.abbreviation).to eql(@original[:abbreviation])
               end
               it "Org identifiers includes the affiation id" do
-                expect(@contact.contributor.org.identifiers.length).to eql(1)
+                expect(@contact.org.identifiers.length).to eql(1)
                 expected = @original[:affiliation_ids].first[:type]
-                expect(@contact.contributor.org.identifiers.first.identifier_scheme.name).to eql(expected)
+                expect(@contact.org.identifiers.first.identifier_scheme.name).to eql(expected)
 
                 expected = @original[:affiliation_ids].first[:identifier]
-                expect(@contact.contributor.org.identifiers.first.value).to eql(expected)
+                expect(@contact.org.identifiers.first.value).to eql(expected)
               end
               it "is the same as the Plan's org" do
-                expect(@plan.org).to eql(@contact.contributor.org)
+                expect(@plan.org).to eql(@contact.org)
               end
             end
           end
@@ -225,35 +225,35 @@ RSpec.describe Api::V1::PlansController, type: :request do
           context "contributor inspection" do
             before(:each) do
               @original = @original[:contributors].first
-              contributors = @plan.plans_contributors.select do |pc|
-                pc.contributor.email == @original[:mbox]
+              contributors = @plan.contributors.select do |pc|
+                pc.email == @original[:mbox]
               end
               @subject = contributors.first
             end
 
             it "attached the Contributor to the Plan" do
-              expect(@subject.contributor.present?).to eql(true)
+              expect(@subject.present?).to eql(true)
             end
             it "set the Contributor firstname" do
-              expect(@subject.contributor.firstname).to eql(@original[:firstname])
+              expect(@subject.firstname).to eql(@original[:firstname])
             end
             it "set the Contributor surname" do
-              expect(@subject.contributor.surname).to eql(@original[:surname])
+              expect(@subject.surname).to eql(@original[:surname])
             end
             it "set the Contributor email" do
-              expect(@subject.contributor.email).to eql(@original[:mbox])
+              expect(@subject.email).to eql(@original[:mbox])
             end
             it "set the Contributor roles" do
-              expected = @original[:role].gsub("#{PlansContributor::CREDIT_TAXONOMY_URI_BASE}/", "")
+              expected = @original[:role].gsub("#{Contributor::CREDIT_TAXONOMY_URI_BASE}/", "")
               expect(@subject.send(:"#{expected.downcase}?")).to eql(true)
             end
             it "Contributor identifiers includes the orcid" do
-              expect(@subject.contributor.identifiers.length).to eql(1)
+              expect(@subject.identifiers.length).to eql(1)
               expected = @original[:contributor_ids].first[:type]
-              expect(@subject.contributor.identifiers.first.identifier_scheme.name).to eql(expected)
+              expect(@subject.identifiers.first.identifier_scheme.name).to eql(expected)
 
               expected = @original[:contributor_ids].first[:identifier]
-              expect(@subject.contributor.identifiers.first.value).to eql(expected)
+              expect(@subject.identifiers.first.value).to eql(expected)
             end
 
             context "contributor org inspection" do
@@ -262,21 +262,21 @@ RSpec.describe Api::V1::PlansController, type: :request do
               end
 
               it "attached the Org to the Contributor" do
-                expect(@subject.contributor.org.present?).to eql(true)
+                expect(@subject.org.present?).to eql(true)
               end
               it "sets the name" do
-                expect(@subject.contributor.org.name).to eql(@original[:name])
+                expect(@subject.org.name).to eql(@original[:name])
               end
               it "sets the abbreviation" do
-                expect(@subject.contributor.org.abbreviation).to eql(@original[:abbreviation])
+                expect(@subject.org.abbreviation).to eql(@original[:abbreviation])
               end
               it "Org identifiers includes the affiation id" do
-                expect(@subject.contributor.org.identifiers.length).to eql(1)
+                expect(@subject.org.identifiers.length).to eql(1)
                 expected = @original[:affiliation_ids].first[:type]
-                expect(@subject.contributor.org.identifiers.first.identifier_scheme.name).to eql(expected)
+                expect(@subject.org.identifiers.first.identifier_scheme.name).to eql(expected)
 
                 expected = @original[:affiliation_ids].first[:identifier]
-                expect(@subject.contributor.org.identifiers.first.value).to eql(expected)
+                expect(@subject.org.identifiers.first.value).to eql(expected)
               end
             end
           end
