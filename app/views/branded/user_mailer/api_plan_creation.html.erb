@@ -1,0 +1,13 @@
+<%
+  tool_name = Rails.configuration.branding[:application][:name]
+  help_url = 'https://github.com/CDLUC3/dmptool/wiki/Help-for-Administrators'
+%>
+<p>
+  <%= _("This is a test confirmation of a successful plan creation via the DMPTool API") %>
+</p>
+
+<ul>
+  <li>Plan id: <%= @plan.id %></li>
+  <li>Plan title: <%= @plan.title %></li>
+  <li>Data Contact / Owner: <%= @contributor.email %></li>
+</ul>

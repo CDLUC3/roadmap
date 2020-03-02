@@ -6,6 +6,8 @@ module Api
 
     class PlansController < BaseApiController
 
+      include ConditionalUserMailer
+
       respond_to :json
 
       # GET /api/v1/plans/:id
@@ -52,13 +54,26 @@ module Api
 
                 # If the user was not found, invite them and attach any know identifiers
                 unless user.present?
-                  user = User.invite!(email: author.email,
-                                      firstname: author.firstname,
-                                      surname: author.surname)
-                  author.identifiers.each do |id|
-                    user.identifiers << Identifier.new(
-                      identifier_scheme: id.identifier_scheme, value: id.value)
-                  end
+# ========================================
+# Start DMPTool Customization
+#   commenting out user invite for testing
+#   email myself and Manuel instead
+# ========================================
+
+                  #user = User.invite!(email: author.email,
+                  #                    firstname: author.firstname,
+                  #                    surname: author.surname)
+                  #author.identifiers.each do |id|
+                  #  user.identifiers << Identifier.new(
+                  #    identifier_scheme: id.identifier_scheme, value: id.value)
+                  #end
+
+                  UserMailer.sharing_notification(@role, r, inviter: current_user)
+                            .deliver_now
+
+# ========================================
+# End DMPTool Customization
+# ========================================
                 end
 
                 # Attach the role
@@ -67,6 +82,20 @@ module Api
                 role.administrator = true if author.writing_original_draft? &&
                                             !author.data_curation?
                 role.save
+
+# ========================================
+# Start DMPTool Customization
+#   Stub DOI minting
+# ========================================
+                doi = IdentifierScheme.by_name(name: "doi")
+                if doi.present?
+                  Identifier.create(identifiable: plan, identifier_scheme: doi,
+                                    value: SecureRandom.uuid)
+                  plan = plan.reload
+                end
+# ========================================
+# End DMPTool Customization
+# ========================================
               end
 
               @items = [plan]

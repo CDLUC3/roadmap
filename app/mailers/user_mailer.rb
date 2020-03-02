@@ -136,4 +136,23 @@ class UserMailer < ActionMailer::Base
       end
     end
   end
+
+# =====================================
+# Start DMPTool Customization
+#   DMPTool custom mailer for testing
+# =====================================
+  def api_plan_creation(plan, contributor)
+    @contributor = contributor
+    @plan = plan
+
+    FastGettext.with_locale FastGettext.default_locale do
+      mail(
+        to: "brian.riley@ucop.edu;", #" manuel.minwary@ucr.edu",
+        subject: _("New DMP created")
+      )
+    end
+  end
+# =====================================
+# End DMPTool Customization
+# =====================================
 end
