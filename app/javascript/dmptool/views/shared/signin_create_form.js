@@ -146,17 +146,9 @@ $(() => {
     const id = $(e.target);
     const json = JSON.parse(id.val());
     const button = $('#org-select-go');
-    if (json != undefined) {
-      if (json['id'] != undefined) {
-
-console.log('before');
-console.log(button);
-
+    if (json !== undefined) {
+      if (json.id !== undefined) {
         button.attr('disabled', 'false');
-
-console.log('after');
-console.log(button);
-
       } else {
         button.attr('disable', 'true');
       }
