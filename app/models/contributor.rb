@@ -9,7 +9,9 @@
 #  surname      :string
 #  email        :string
 #  phone        :string
+#  roles        :integer
 #  org_id       :integer
+#  plan_id      :integer
 #  created_at   :datetime
 #  updated_at   :datetime
 #
@@ -22,9 +24,11 @@
 # Foreign Keys
 #
 #  fk_rails_...  (org_id => orgs.id)
+#  fk_rails_...  (plan_id => plans.id)
 
 class Contributor < ActiveRecord::Base
 
+  include FlagShihTzu
   include ValidationMessages
   include Identifiable
 
@@ -36,9 +40,7 @@ class Contributor < ActiveRecord::Base
   #       NOT allow nil values in a belong_to field!
   belongs_to :org #, optional: true
 
-  has_many :plans_contributors, dependent: :destroy
-
-  has_many :plans, through: :plans_contributors
+  belongs_to :plan
 
   # =====================
   # = Nested attributes =
@@ -51,6 +53,29 @@ class Contributor < ActiveRecord::Base
   # ===============
 
   validates :email, email: { null: true }
+
+  validates :roles, presence: { message: PRESENCE_MESSAGE }
+
+  CREDIT_TAXONOMY_URI_BASE = "https://dictionary.casrai.org/Contributor_Roles".freeze
+
+  ##
+  # Define Bit Field values for roles
+  # Derived from the CASRAI CRediT Taxonomy: https://casrai.org/credit/
+  has_flags 1 =>  :conceptualization,
+            2 =>  :data_curation,
+            3 =>  :formal_analysis,
+            4 =>  :funding_acquisition,
+            5 =>  :investigation,
+            6 =>  :methodology,
+            7 =>  :project_administration,
+            8 =>  :resources,
+            9 =>  :software,
+            10 => :supervision,
+            11 => :validation,
+            12 => :visualization,
+            13 => :writing_original_draft,
+            14 => :writing_review_editing,
+            column: "roles"
 
   # ===============
   # Instance Methods

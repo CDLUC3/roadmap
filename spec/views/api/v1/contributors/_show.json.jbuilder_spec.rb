@@ -5,7 +5,9 @@ require "rails_helper"
 describe "api/v1/contributors/_show.json.jbuilder" do
 
   before(:each) do
-    @data_contact = create(:contributor, org: build(:org))
+    @plan = create(:plan)
+    @data_contact = create(:contributor, org: build(:org), plan: @plan,
+                                         writing_original_draft: true)
     @ident = create(:identifier, identifiable: @data_contact,
                                  value: Faker::Lorem.word)
     @data_contact.reload

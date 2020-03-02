@@ -6,14 +6,10 @@ describe "api/v1/plans/_show.json.jbuilder" do
 
   before(:each) do
     @plan = create(:plan, ethical_issues: true)
-    @data_contact = create(:contributor)
-    @pi = create(:contributor)
-    @plan.plans_contributors = [
-      create(:plans_contributor, contributor: @data_contact, data_curation: true,
-                                 writing_original_draft: true),
-      create(:plans_contributor, contributor: @pi, investigation: true)
-
-    ]
+    @data_contact = create(:contributor, writing_original_draft: true,
+                                         data_curation: true, plan: @plan)
+    @pi = create(:contributor, investigation: true, plan: @plan)
+    @plan.contributors = [@data_contact, @pi]
     create(:identifier, identifiable: @plan)
     @plan.reload
   end

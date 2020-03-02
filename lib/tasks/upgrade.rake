@@ -891,8 +891,8 @@ namespace :upgrade do
 
     # Loop through the plans and convert the Data Contact, owners and PI
     # into Contributors
-    Plan.includes(:plans_contributors, roles: :user).joins(roles: :user).all.each do |plan|
-      next if plan.plans_contributors.any?
+    Plan.includes(:contributors, roles: :user).joins(roles: :user).where("plans.id > 30000").each do |plan|
+      next if plan.contributors.any?
 
       p "--------------------------------------------------"
       p "Processing Plan: '#{plan.id} - #{plan.title}'"
@@ -901,60 +901,54 @@ namespace :upgrade do
 
       # Either use the Data Contact specified on the plan
       if plan.data_contact_email.present? || plan.data_contact.present?
-        contact, contact_id = to_contributor(plan.data_contact,
+        contact, contact_id = to_contributor(plan, plan.data_contact,
                                              plan.data_contact_email,
                                              plan.data_contact_phone, nil, nil)
 
       elsif owners.first.present?
         usr = owners.first
-        contact, contact_id = to_contributor([usr.firstname, usr.surname],
+        contact, contact_id = to_contributor(plan, [usr.firstname, usr.surname],
                                               usr.email, nil,
                                               usr.identifier_for(orcid)&.first&.value,
                                               usr.org_id)
       end
 
       # Get the PI
-      pi, pi_id = to_contributor(plan.principal_investigator,
+      pi, pi_id = to_contributor(plan, plan.principal_investigator,
                                  plan.principal_investigator_email,
                                  plan.principal_investigator_phone,
                                  plan.principal_investigator_identifier, nil)
 
       # Add the DMP Data Contact
-      if contact.present? &&
-          PlansContributor.data_curation.where(contributor: contact, plan: plan).empty?
+      if contact.present?
         contact.save
-        join = PlansContributor.new(contributor: contact, plan: plan)
-        join.data_curation = true
+        contact.data_curation = true
         p "    adding contact: #{contact.name} #{contact.email} (#{contact_id&.value})"
-        join.save
+        contact.save
         contact_id.save if contact_id.present?
       end
 
       # Add the Principal Investigator
-      if pi.present? &&
-          PlansContributor.investigation.where(contributor: pi, plan: plan).empty?
+      if pi.present?
         pi.save
-        join = PlansContributor.new(contributor: pi, plan: plan)
-        join.investigation = true
+        pi.investigation = true
         p "    adding PI:      #{pi.name} #{pi.email} (#{pi_id&.value})"
-        join.save
+        pi.save
         pi_id.save if pi_id.present?
       end
 
       # Add the authors
       owners.each do |owner|
-        user, id = to_contributor([owner.firstname, owner.surname],
+        user, id = to_contributor(plan, [owner.firstname, owner.surname],
                                    owner.email, nil,
                                    owner.identifier_for(orcid)&.first&.value,
                                    owner.org_id)
 
-        if user.present? &&
-            PlansContributor.writing_original_draft.where(contributor: user, plan: plan).empty?
+        if user.present?
           user.save
-          join = PlansContributor.new(contributor: user, plan: plan)
-          join.writing_original_draft = true
+          user.writing_original_draft = true
           p "    adding author:  #{user.name} #{user.email} (#{id&.value})"
-          join.save
+          user.save
           id.save if id.present?
         end
       end
@@ -979,7 +973,7 @@ namespace :upgrade do
 
   # Converts the names, email and phone into a Contributor and an
   # Identifier model
-  def to_contributor(names, email, phone, identifier, org)
+  def to_contributor(plan, names, email, phone, identifier, org)
     return nil, nil unless names.present? || email.present?
 
     # If the name is not an array already split it up
@@ -1002,11 +996,14 @@ namespace :upgrade do
       end
     end
 
-    contributor = Contributor.find_or_initialize_by(email: email)
-    contributor.firstname = names.length > 1 ? names.first : nil
-    contributor.surname = names.last
-    contributor.phone = phone
-    contributor.org_id = org
+    contributor = Contributor.where("plan_id = ? AND (LOWER(email) = LOWER(?) OR (LOWER(surname) = LOWER(?) AND LOWER(firstname) = LOWER(?)))", plan.id, email, names.last, names.first).first
+    unless contributor.present?
+      contributor = Contributor.new(email: email, plan: plan)
+      contributor.firstname = names.length > 1 ? names.first : nil
+      contributor.surname = names.last
+      contributor.phone = phone
+      contributor.org_id = org
+    end
     return contributor, nil if identifier.nil?
 
     # Get the ORCID id from the string

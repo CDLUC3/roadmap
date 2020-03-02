@@ -41,6 +41,34 @@ module Api
         if plan.present?
           if plan.new_record?
             if plan.save
+
+              # Attach all of the authors and then invite them if necessary
+              plan.contributors.writing_original_draft.each do |author|
+                identifiers = author.identifiers.map do |id|
+                  { name: id.identifier_scheme.name, value: id.value }
+                end
+                user = User.find_by_identifiers(identifiers) if identifiers.any?
+                user = User.find_by(email: author.email) unless user.present?
+
+                # If the user was not found, invite them and attach any know identifiers
+                unless user.present?
+                  user = User.invite!(email: author.email,
+                                      firstname: author.firstname,
+                                      surname: author.surname)
+                  author.identifiers.each do |id|
+                    user.identifiers << Identifier.new(
+                      identifier_scheme: id.identifier_scheme, value: id.value)
+                  end
+                end
+
+                # Attach the role
+                role = Role.new(user: user, plan: plan)
+                role.creator = true if author.data_curation?
+                role.administrator = true if author.writing_original_draft? &&
+                                            !author.data_curation?
+                role.save
+              end
+
               @items = [plan]
 
               # Handle any new user invitations

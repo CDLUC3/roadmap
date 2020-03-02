@@ -14,11 +14,11 @@ module Api
 
       # Attach the first data_curation role as the data_contact, otherwise
       # add the contributor to the contributors array
-      plan.plans_contributors.each do |pc|
-        @data_contact = pc.contributor if pc.data_curation? && @data_contact.nil?
-        next if @data_contact == pc.contributor
+      plan.contributors.each do |contributor|
+        @data_contact = contributor if contributor.data_curation? && @data_contact.nil?
+        next if @data_contact == contributor
 
-        @contributors << pc
+        @contributors << contributor
       end
 
       @costs = plan_costs(plan: plan)
