@@ -57,7 +57,6 @@ module Api
 # ========================================
 # Start DMPTool Customization
 #   commenting out user invite for testing
-#   email myself and Manuel instead
 # ========================================
 
                   #user = User.invite!(email: author.email,
@@ -67,9 +66,6 @@ module Api
                   #  user.identifiers << Identifier.new(
                   #    identifier_scheme: id.identifier_scheme, value: id.value)
                   #end
-
-                  UserMailer.sharing_notification(@role, r, inviter: current_user)
-                            .deliver_now
 
 # ========================================
 # End DMPTool Customization
@@ -82,21 +78,25 @@ module Api
                 role.administrator = true if author.writing_original_draft? &&
                                             !author.data_curation?
                 role.save
+              end
 
 # ========================================
 # Start DMPTool Customization
-#   Stub DOI minting
+#   Stub DOI minting and email devs
 # ========================================
-                doi = IdentifierScheme.by_name(name: "doi")
-                if doi.present?
-                  Identifier.create(identifiable: plan, identifier_scheme: doi,
-                                    value: SecureRandom.uuid)
-                  plan = plan.reload
-                end
+              doi = IdentifierScheme.by_name("doi").first
+
+              if doi.present?
+                Identifier.create(identifiable: plan, identifier_scheme: doi,
+                                  value: SecureRandom.uuid)
+                plan = plan.reload
+              end
+
+              contact = plan.contributors.select(&:data_curation?).first
+              UserMailer.api_plan_creation(plan, contact).deliver_now
 # ========================================
 # End DMPTool Customization
 # ========================================
-              end
 
               @items = [plan]
 

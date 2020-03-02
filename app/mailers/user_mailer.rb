@@ -147,7 +147,7 @@ class UserMailer < ActionMailer::Base
 
     FastGettext.with_locale FastGettext.default_locale do
       mail(
-        to: "brian.riley@ucop.edu;", #" manuel.minwary@ucr.edu",
+        to: "brian.riley@ucop.edu; manuel.minwary@ucr.edu",
         subject: _("New DMP created")
       )
     end

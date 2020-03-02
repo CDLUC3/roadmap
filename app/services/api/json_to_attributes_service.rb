@@ -21,7 +21,8 @@ module Api
 
         # Extract the landing page URL for the scheme so that we only save
         # the identifier in the event that the URL ever changes
-        value = json[:identifier].to_s.downcase.gsub(scheme.user_landing_url.downcase, "")
+        landing = scheme.user_landing_url&.downcase
+        value = landing.present? ? json[:identifier].to_s.downcase.gsub(landing, "") : json[:identifier]
 
         Identifier.find_or_initialize_by(identifier_scheme: scheme, value: value)
       end

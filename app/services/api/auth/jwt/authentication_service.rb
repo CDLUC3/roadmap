@@ -34,6 +34,12 @@ module Api
 
           @errors = {}
 
+p json
+p json.fetch(:grant_type, "")
+
+p "GRANT TYPE #{type}, ID: #{@client_id}, SECRET: #{@client_secret}"
+
+
           if @client_id.nil? || @client_secret.nil? ||
               !%w[client_credentials authorization_code].include?(type)
             @errors[:client_authentication] = _("Invalid grant type")

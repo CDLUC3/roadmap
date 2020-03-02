@@ -1,12 +1,13 @@
 /* eslint-env browser */ // This allows us to reference 'window' below
 import * as Cookies from 'js-cookie';
-import initAutoComplete from '../../../utils/autoComplete';
+import { initAutocomplete } from '../../../utils/autoComplete';
 import { isObject, isString } from '../../../utils/isType';
 import { renderAlert, renderNotice } from '../../../utils/notificationHelper';
 import getConstant from '../../../constants';
 
 $(() => {
-  initAutoComplete();
+  initAutocomplete('#create-account-org-controls .autocomplete');
+  initAutocomplete('#shib-ds-org-controls .autocomplete');
   const email = Cookies.get('dmproadmap_email');
 
   // Signin remember me
@@ -139,20 +140,25 @@ $(() => {
     }
   });
 
-  // When the user clicks 'Go' click the corresponding link from the list
-  // of all orgs
-  $('#org-select-go').click((e) => {
-    e.preventDefault();
-    const id = $('#shib-ds_org_id').val();
-    if (isString(id)) {
-      const link = $(`a[data-content="${id}"]`);
-      if (isObject(link)) {
-        // If the org doesn't have a shib setup then display the org sign in modal
-        if (link.is('.org-sign-in')) {
-          link.click();
-        } else {
-          window.location.replace(link.attr('href'));
-        }
+  // Only enable the Institutional Signin 'Go' Button if the user selected a
+  // value from the list
+  $('#shib-ds-org-controls').on('change', '#org_id', (e) => {
+    const id = $(e.target);
+    const json = JSON.parse(id.val());
+    const button = $('#org-select-go');
+    if (json != undefined) {
+      if (json['id'] != undefined) {
+
+console.log('before');
+console.log(button);
+
+        button.attr('disabled', 'false');
+
+console.log('after');
+console.log(button);
+
+      } else {
+        button.attr('disable', 'true');
       }
     }
   });

@@ -15,6 +15,12 @@ ul.ui-menu {
     .ui-menu-item-wrapper {
       font-family: $font-family;
     }
+
+    .ui-menu-item-wrapper:hover,
+    .ui-menu-item-wrapper:focus {
+      color: $color-primary-text;
+      background-color: $color-primary-background;
+    }
   }
 
   .ui-menu-item:hover,

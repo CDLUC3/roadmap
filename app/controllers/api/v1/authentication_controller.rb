@@ -31,8 +31,8 @@ module Api
 
       # POST /api/v1/authenticate
       def authenticate
-        # @json is set by callback on BaseApiController
-        auth_svc = Api::Auth::Jwt::AuthenticationService.new(json: @json)
+        json = JSON.parse(request.body.read)
+        auth_svc = Api::Auth::Jwt::AuthenticationService.new(json: json)
         @token = auth_svc.call
 
         if @token.present?
@@ -42,6 +42,10 @@ module Api
         else
           render_error errors: auth_svc.errors, status: :unauthorized
         end
+      end
+
+      def auth_params
+        params.require(:auth).permit(:grant_type, :client_id, :client_secret)
       end
 
     end
