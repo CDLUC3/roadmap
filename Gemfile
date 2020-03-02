@@ -181,7 +181,7 @@ gem "mini_racer"
 # ------------------------------------------------
 # EXPORTING
 # Provides binaries for WKHTMLTOPDF project in an easily accessible package.
-<<<<<<< HEAD
+
 # ------------------------------------------------
 # Start DMPTool customization
 # 0.12.5 does not work on our new linux2 instances. Pegging at 0.12.4 for now
@@ -191,9 +191,6 @@ gem 'wkhtmltopdf-binary', '0.12.4'
 # ------------------------------------------------
 # End DMPTool customization
 # ------------------------------------------------
-=======
-gem "wkhtmltopdf-binary"
->>>>>>> c0d0f664f798692520598e87654d4baf6a3264d8
 
 # PDF generator (from HTML) gem for Ruby on Rails
 # (https://github.com/mileszs/wicked_pdf)
@@ -271,13 +268,14 @@ group :development, :test do
 
   # Guard gem for RSpec (https://github.com/guard/guard-rspec)
   gem "guard-rspec"
-<<<<<<< HEAD
 
+# ------------------------------------------------
+# Start DMPTool customization
   gem "capistrano"
 
   gem "capistrano-rails"
-=======
->>>>>>> c0d0f664f798692520598e87654d4baf6a3264d8
+# End DMPTool customization
+# ------------------------------------------------
 end
 
 group :test do
