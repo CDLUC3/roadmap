@@ -31,8 +31,8 @@ module Api
 
       # POST /api/v1/authenticate
       def authenticate
-        # @json is set by callback on BaseApiController
-        auth_svc = Api::Auth::Jwt::AuthenticationService.new(json: @json)
+        json = JSON.parse(request.body.read)
+        auth_svc = Api::Auth::Jwt::AuthenticationService.new(json: json)
         @token = auth_svc.call
 
         if @token.present?

@@ -11,7 +11,7 @@ module Api
     def identifier
       return nil unless @id.present? && @id.identifier_scheme.name != "shibboleth"
 
-      landing_url = @id.identifier_scheme.user_landing_url
+      landing_url = @id.identifier_scheme&.user_landing_url
       return @id.value unless landing_url.present?
 
       "#{landing_url}#{@id.value}"

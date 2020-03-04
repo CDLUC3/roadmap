@@ -716,7 +716,7 @@ namespace :upgrade do
         name: "fundref",
         description: "Crossref Funder Registry (FundRef)",
         active: true,
-        user_landing_url: "https://search.crossref.org/funding?q="
+        user_landing_url: "https://api.crossref.org/funders/"
       )
     end
     unless IdentifierScheme.where(name: "ror").any?
@@ -764,9 +764,9 @@ namespace :upgrade do
     doi.save
 
     # Catchall scheme to collect grant numbers
-    ror = IdentifierScheme.find_or_initialize_by(name: "grant")
-    ror.for_plans = true
-    ror.save
+    grant = IdentifierScheme.find_or_initialize_by(name: "grant")
+    grant.for_plans = true
+    grant.save
   end
 
   desc "migrate the old user_identifiers over to the polymorphic identifiers table"
@@ -907,13 +907,6 @@ namespace :upgrade do
                                               usr.identifier_for(orcid)&.first&.value,
                                               usr.org_id)
       end
-
-      # Get the PI
-      pi, pi_id = to_contributor(plan, plan.principal_investigator,
-                                 plan.principal_investigator_email,
-                                 plan.principal_investigator_phone,
-                                 plan.principal_investigator_identifier, nil)
-
       # Add the DMP Data Contact
       if contact.present?
         contact.save
@@ -923,6 +916,11 @@ namespace :upgrade do
         contact_id.save if contact_id.present?
       end
 
+      # Get the PI
+      pi, pi_id = to_contributor(plan, plan.principal_investigator,
+                                 plan.principal_investigator_email,
+                                 plan.principal_investigator_phone,
+                                 plan.principal_investigator_identifier, nil)
       # Add the Principal Investigator
       if pi.present?
         pi.save
@@ -991,11 +989,11 @@ namespace :upgrade do
       end
     end
 
-    contributor = Contributor.where("plan_id = ? AND (LOWER(email) = LOWER(?) OR (LOWER(surname) = LOWER(?) AND LOWER(firstname) = LOWER(?)))", plan.id, email, names.last, names.first).first
+    contributor = Contributor.where("plan_id = ? AND (LOWER(email) = LOWER(?) OR (LOWER(surname) = LOWER(?) AND LOWER(firstname) = LOWER(?)))", plan.id, email, names&.last, names&.first).first
     unless contributor.present?
       contributor = Contributor.new(email: email, plan: plan)
-      contributor.firstname = names.length > 1 ? names.first : nil
-      contributor.surname = names.last
+      contributor.firstname = names.present? && names.length > 1 ? names.first : nil
+      contributor.surname = names.present? && names.length > 0 ? names.last : nil
       contributor.phone = phone
       contributor.org_id = org
     end
