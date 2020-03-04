@@ -6,7 +6,7 @@ class UsersController < ApplicationController
   helper PermsHelper
   include ConditionalUserMailer
 
-  include Dmptool::Controller::Users
+  include Dmptool::Controllers::Users
 
   after_action :verify_authorized
   respond_to :html

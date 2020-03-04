@@ -2,7 +2,7 @@
 
 class HomeController < ApplicationController
 
-  include Dmptool::Controller::Home
+  include Dmptool::Controllers::Home
 
   respond_to :html
 

@@ -2,7 +2,7 @@
 
 module Dmptool
 
-  module Model
+  module Models
 
     module User
 

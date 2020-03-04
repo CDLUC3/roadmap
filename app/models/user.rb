@@ -62,7 +62,7 @@ class User < ActiveRecord::Base
 
   extend UniqueRandom
 
-  include Dmptool::Model::User
+  include Dmptool::Models::User
 
   ##
   # Devise

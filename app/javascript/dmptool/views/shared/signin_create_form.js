@@ -2,12 +2,12 @@
 import * as Cookies from 'js-cookie';
 import { initAutocomplete } from '../../../utils/autoComplete';
 import { isObject, isString } from '../../../utils/isType';
-import { renderAlert, renderNotice } from '../../../utils/notificationHelper';
 import getConstant from '../../../constants';
 
 $(() => {
   initAutocomplete('#create-account-org-controls .autocomplete');
   initAutocomplete('#shib-ds-org-controls .autocomplete');
+
   const email = Cookies.get('dmproadmap_email');
 
   // Signin remember me
@@ -72,32 +72,6 @@ $(() => {
     toggleSignInCreateAccount(true);
   });
 
-  // Old LDAP username lookup
-  // -----------------------------------------------------
-  // Handling ldap username lookup here to take advantage of shared signin-create logic
-  $('form#forgot_email_form').on('ajax:success', (e, data) => {
-    if (isObject(data) && isString(data.msg)) {
-      if (data.code === 0) {
-        renderAlert(data.msg);
-      } else {
-        renderNotice(data.msg);
-      }
-      if (data.email === '' || data.email === null) {
-        //
-      } else {
-        toggleSignInCreateAccount(true);
-        $('#sign-in-create-account').modal('show');
-        $('#signin_user_email').val(data.email);
-      }
-    }
-  });
-  $('form#forgot_email_form').on('ajax:error', (e, xhr) => {
-    const error = xhr.responseJSON;
-    if (isObject(error) && isString(error)) {
-      renderAlert(error.msg);
-    }
-  });
-
   // Shibboleth DS
   // -----------------------------------------------------
   const logoSuccess = (data) => {
@@ -128,6 +102,7 @@ $(() => {
     e.preventDefault();
   });
 
+  // Toggles the full Org list on/off
   $('#show_list').click((e) => {
     e.preventDefault();
     const target = $('#full_list');
@@ -148,12 +123,33 @@ $(() => {
     const button = $('#org-select-go');
     if (json !== undefined) {
       if (json.id !== undefined) {
-        button.attr('disabled', 'false');
+        button.prop('disabled', false);
       } else {
-        button.attr('disable', 'true');
+        button.prop('disable', true);
       }
     }
   });
+
+  // When the user selects an Org from the autocomplete and clicks 'Go'
+  // click the matching link in the hidden full list of participating orgs
+  $('#org-select-go').on('click', (e) => {
+    const json = JSON.parse($('#shib-ds-org-controls #org_id').val());
+    if (json !== undefined && json.id !== undefined) {
+      const link = $(`#full_list li a[data-content="${json.id}"]`);
+      // If its not shibbolized click the link to open the modal otherwise
+      // just let the form submit
+      if (link.attr('data-toggle') !== undefined) {
+        e.preventDefault();
+        link.click();
+      }
+    } else {
+      e.preventDefault();
+    }
+  });
+
+  // Hide the vanilla Roadmap 'Sign in with your institutional credentials' button
+  $('#sign_in_form h4').addClass('hide');
+  $('#sign_in_form a[href="/orgs/shibboleth"]').addClass('hide');
 
   // Get Started button click
   // -----------------------------------------------------

@@ -4,7 +4,7 @@ require 'rss'
 
 module Dmptool
 
-  module Controller
+  module Controllers
 
     module Home
 

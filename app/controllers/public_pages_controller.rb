@@ -2,7 +2,7 @@
 
 class PublicPagesController < ApplicationController
 
-  include Dmptool::Controller::PublicPages
+  include Dmptool::Controllers::PublicPages
 
   # GET template_index
   # -----------------------------------------------------

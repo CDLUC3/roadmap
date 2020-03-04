@@ -13,13 +13,8 @@ ul.ui-menu {
     padding: 5px 10px 5px 10px;
 
     .ui-menu-item-wrapper {
+      background-color: inherit;
       font-family: $font-family;
-    }
-
-    .ui-menu-item-wrapper:hover,
-    .ui-menu-item-wrapper:focus {
-      color: $color-primary-text;
-      background-color: $color-primary-background;
     }
   }
 

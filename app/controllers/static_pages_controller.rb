@@ -2,7 +2,7 @@
 
 class StaticPagesController < ApplicationController
 
-  include Dmptool::Controller::StaticPages
+  include Dmptool::Controllers::StaticPages
 
   def about_us
     dcc_news_feed_url = "http://www.dcc.ac.uk/news/dmponline-0/feed"

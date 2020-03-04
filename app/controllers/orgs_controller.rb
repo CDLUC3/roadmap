@@ -3,7 +3,7 @@
 class OrgsController < ApplicationController
   after_action :verify_authorized, except: ['shibboleth_ds', 'shibboleth_ds_passthru']
 
-  include Dmptool::Controller::Orgs
+  include Dmptool::Controllers::Orgs
 
   include OrgSelectable
 
@@ -38,30 +38,31 @@ class OrgsController < ApplicationController
 
     # Only allow super admins to change the org types and shib info
     if current_user.can_super_admin?
-      # Handle Shibboleth identifiers if that is enabled
+      identifiers = []
+      attrs[:managed] = attrs[:managed] == "1"
+
+      # Handle Shibboleth identifier if that is enabled
       if Rails.application.config.shibboleth_use_filtered_discovery_service
         shib = IdentifierScheme.by_name("shibboleth").first
-        entity_id = attrs.fetch(:identifiers, {})
-        if params[:shib_id].blank? &&
-            entity_id[:identifier_scheme_id] == shib.id.to_s
-          identifier = Identifier.new(
-            identifier_scheme: shib,
-            value: entity_id.fetch(:value, ""),
-            attrs: {}
-          )
-          @org.consolidate_identifiers!(array: [identifier])
-          @org.save
-          @org.reload
-        end
-        attrs.delete(:identifiers)
-      end
 
-      attrs[:managed] = attrs[:managed] == "1"
+        if shib.present? && attrs.fetch(:identifiers_attributes, {}).any?
+          entity_id = attrs[:identifiers_attributes].first[1][:value]
+
+          if entity_id.present?
+            identifier = Identifier.find_or_initialize_by(identifiable: @org,
+                                                          identifier_scheme: shib)
+            identifier.value = entity_id
+            identifiers << identifier
+          end
+        end
+        attrs.delete(:identifiers_attributes)
+      end
 
       # See if the user selected a new Org via the Org Lookup and
       # convert it into an Org
       lookup = org_from_params(params_in: attrs)
-      identifiers = identifiers_from_params(params_in: attrs)
+      ids = identifiers_from_params(params_in: attrs)
+      identifiers += ids.select { |id| id.value.present? }
 
       # Remove the extraneous Org Selector hidden fields
       attrs = remove_org_selection_params(params_in: attrs)
@@ -70,7 +71,7 @@ class OrgsController < ApplicationController
     if @org.update(attrs)
       # Save any identifiers that were found
       if current_user.can_super_admin? && lookup.present?
-        @org.consolidate_identifiers!(array: identifiers)
+        @org.identifiers = identifiers
         @org.save
         @org.reload
       end
@@ -100,31 +101,38 @@ class OrgsController < ApplicationController
 
   # POST /orgs/shibboleth_ds
   # ----------------------------------------------------------------
-  def shibboleth_ds_passthru
-    if !params["shib-ds"][:org_name].blank?
-      session["org_id"] = params["shib-ds"][:org_name]
-
-      org = Org.where(id: params["shib-ds"][:org_id])
-      shib_entity = Identifier.by_scheme_name("shibboleth", "Org")
-                              .where(identifiable: org)
-
-      if !shib_entity.empty?
-        # Force SSL
-        shib_login = Rails.application.config.shibboleth_login
-        url = "#{request.base_url.gsub("http:", "https:")}#{shib_login}"
-        target = "#{user_shibboleth_omniauth_callback_url.gsub('http:', 'https:')}"
-
-        # initiate shibboleth login sequence
-        redirect_to "#{url}?target=#{target}&entityID=#{shib_entity.first.value}"
-      else
-        failure = _("Your organisation does not seem to be properly configured.")
-        redirect_to shibboleth_ds_path, alert: failure
-      end
-
-    else
-      redirect_to shibboleth_ds_path, notice: _("Please choose an organisation")
-    end
-  end
+  # --------------------------------------------------------
+  # Start DMPTool customization
+  #   Commenting out so that our customization is used
+  # --------------------------------------------------------
+  # def shibboleth_ds_passthru
+  #   if !params["shib-ds"][:org_name].blank?
+  #     session["org_id"] = params["shib-ds"][:org_name]
+  #
+  #     org = Org.where(id: params["shib-ds"][:org_id])
+  #     shib_entity = Identifier.by_scheme_name("shibboleth", "Org")
+  #                             .where(identifiable: org)
+  #
+  #     if !shib_entity.empty?
+  #       # Force SSL
+  #       shib_login = Rails.application.config.shibboleth_login
+  #       url = "#{request.base_url.gsub("http:", "https:")}#{shib_login}"
+  #       target = "#{user_shibboleth_omniauth_callback_url.gsub('http:', 'https:')}"
+  #
+  #       # initiate shibboleth login sequence
+  #       redirect_to "#{url}?target=#{target}&entityID=#{shib_entity.first.value}"
+  #     else
+  #       failure = _("Your organisation does not seem to be properly configured.")
+  #       redirect_to shibboleth_ds_path, alert: failure
+  #     end
+  #
+  #   else
+  #     redirect_to shibboleth_ds_path, notice: _("Please choose an organisation")
+  #   end
+  # end
+  # --------------------------------------------------------
+  # End DMPTool customization
+  # --------------------------------------------------------
 
   # POST /orgs/search  (via AJAX)
   # ----------------------------------------------------------------
@@ -172,7 +180,7 @@ class OrgsController < ApplicationController
           .permit(:name, :abbreviation, :logo, :contact_email, :contact_name,
                   :remove_logo, :org_type, :managed, :feedback_enabled,
                   :feedback_email_msg, :org_id, :org_name, :org_crosswalk,
-                  identifiers: [:identifier_scheme_id, :value])
+                  identifiers_attributes: [:identifier_scheme_id, :value])
   end
 
   def search_params
