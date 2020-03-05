@@ -73,7 +73,7 @@ module Api
 
               # Handle any new user invitations
 
-              render "/api/v1/plans/index", status: :ok
+              render "/api/v1/plans/index", status: :created
             else
               render_error(errors: plan.errors.full_messages, status: :bad_request)
             end
