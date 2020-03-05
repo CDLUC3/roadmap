@@ -42,10 +42,10 @@ module Api
         else
           render_error errors: auth_svc.errors, status: :unauthorized
         end
-      end
-
-      def auth_params
-        params.require(:auth).permit(:grant_type, :client_id, :client_secret)
+      rescue JSON::ParserError => pe
+        Rails.logger.error "API V1 authenticate: #{pe.message}"
+        Rails.logger.error request.body.read
+        render_error errors: _("Invalid JSON format"), status: :bad_request
       end
 
     end

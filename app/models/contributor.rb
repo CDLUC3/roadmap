@@ -52,8 +52,6 @@ class Contributor < ActiveRecord::Base
   # = Validations =
   # ===============
 
-  validates :email, email: { null: true }
-
   validates :roles, presence: { message: PRESENCE_MESSAGE }
 
   CREDIT_TAXONOMY_URI_BASE = "https://dictionary.casrai.org/Contributor_Roles".freeze

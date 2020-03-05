@@ -62,9 +62,7 @@ module Api
 
         json = json.with_indifferent_access
         contributor_ids = json.fetch(:contributor_ids, [])
-        return nil unless json[:mbox].present? ||
-                          json[:surname].present? ||
-                          contributor_ids.any?
+        return nil unless json[:mbox].present?
 
         # Retrieve the Org
         affiliations = json.fetch(:affiliations, [])
@@ -120,8 +118,7 @@ module Api
 
         # If this is not an existing Plan, then initialize a new one
         # for the specified template (or the default template if none specified)
-        template_id = json.fetch(:extended_attributes, {}).fetch(:dmptool, {})
-                          .fetch(:template_id, Template.default.id)
+        template_id = fetch_template(array: json.fetch(:extended_attributes, []))
         plan = Plan.new(template_id: template_id) unless plan.present?
 
         plan.title = json[:title]
@@ -143,7 +140,7 @@ module Api
           contributor_from_json(plan: plan, json: hash)
         end
 
-        plan.contributors << contributors if contributors.any?
+        plan.contributors << contributors.compact if contributors.any?
         plan.contributors << contact if contact.present?
 
         # Process Funder
@@ -170,6 +167,18 @@ module Api
 
       def dataset_from_json(json: {})
         # TODO: Need to implement multi-datasets in the data model
+      end
+
+      # Extract the template id from the `extended_attributes`
+      def fetch_template(array:)
+        app = ApplicationService.application_name
+        app_extensions = array.select { |ext| ext[app.to_sym].present? }
+        templates = app_extensions.select do |hash|
+          hash[app.to_sym][:template_id].present?
+        end
+        return templates.first[app.to_sym][:template_id] if templates.any?
+
+        Template.default&.id
       end
 
       private

@@ -49,7 +49,7 @@ module Api
                 identifiers = author.identifiers.map do |id|
                   { name: id.identifier_scheme.name, value: id.value }
                 end
-                user = User.find_by_identifiers(identifiers) if identifiers.any?
+                user = User.from_identifiers(array: identifiers) if identifiers.any?
                 user = User.find_by(email: author.email) unless user.present?
 
                 # If the user was not found, invite them and attach any know identifiers
@@ -70,14 +70,13 @@ module Api
 # ========================================
 # End DMPTool Customization
 # ========================================
+                  # Attach the role
+                  role = Role.new(user: user, plan: plan)
+                  role.creator = true if author.data_curation?
+                  role.administrator = true if author.writing_original_draft? &&
+                                              !author.data_curation?
+                  role.save
                 end
-
-                # Attach the role
-                role = Role.new(user: user, plan: plan)
-                role.creator = true if author.data_curation?
-                role.administrator = true if author.writing_original_draft? &&
-                                            !author.data_curation?
-                role.save
               end
 
 # ========================================

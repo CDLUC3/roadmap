@@ -33,10 +33,11 @@ class Identifier < ActiveRecord::Base
   # = Validations =
   # ===============
 
-  validates :identifier_scheme,
-            presence: { message: PRESENCE_MESSAGE },
-            uniqueness: { scope: %i[identifiable_id identifiable_type],
-                          message: UNIQUENESS_MESSAGE }
+  # TODO: This doesn't seem to work for a polymorphic relationship :/
+  # validates :identifier_scheme,
+  #          presence: { message: PRESENCE_MESSAGE },
+  #          uniqueness: { scope: %i[identifiable_id identifiable_type],
+  #                        message: UNIQUENESS_MESSAGE }
 
   validates :value, presence: { message: PRESENCE_MESSAGE }
 

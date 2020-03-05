@@ -7,7 +7,8 @@ module Api
     # Base API Controller
     class BaseApiController < ApplicationController
 
-      protect_from_forgery with: :null_session
+      # Skipping the standard Rails authenticity tokens passed in UI
+      skip_before_action :verify_authenticity_token
 
       respond_to :json
 
@@ -74,7 +75,8 @@ module Api
         return false unless request.present? && request.body.present?
 
         begin
-          @json = JSON.parse(request.body.read)
+          body = request.body.read
+          @json = JSON.parse(body).with_indifferent_access
 
           # Validate the JSON
           errors = validate_json
@@ -82,6 +84,7 @@ module Api
           errors.empty?
 
         rescue JSON::ParserError => pe
+          p pe.full_message
           render_error(errors: _("Invalid JSON format"), status: :bad_request)
           return false
         end
@@ -152,7 +155,10 @@ module Api
               # Either the plan id or template id must be present
               app = ApplicationService.application_name
               id = dmp.fetch(:dmp_ids, []).select { |id| ["doi", app].include?(id.fetch(:type, "").downcase) }
-              template = dmp.fetch(:extended_attributes, {}).fetch(:"#{app}", {})[:template_id]
+
+              template = Api::JsonToAttributesService.fetch_template(
+                array: dmp.fetch(:extended_attributes, [])
+              )
 
               unless id.present? || template.present?
                 errors << _("Expected item #{idx + 1} to have either a {'dmp':{'dmp_ids':[{'type':'#{app}','identifier'}]}} when updating or a {'dmp':{'extended_attributes':{'#{app}':{'template_id'}}}} if creating!")
