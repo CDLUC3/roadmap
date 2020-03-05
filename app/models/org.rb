@@ -268,6 +268,43 @@ class Org < ActiveRecord::Base
       self.token_permission_types.include? token_permission_type
   end
 
+  # ========================
+  # = JSON helpers for API =
+  # ========================
+  def self.from_json(json:)
+    json = json.with_indifferent_access
+
+    ids = json.fetch(:affiliation_ids, json.fetch(:funder_ids, []))
+    array = ids.map { |id| { name: id[:type], value: id[:identifier] } }
+    org = Org.from_identifiers(array: array)
+
+    # Otherwise try to find it by name (local DB, external API or a new one)
+    org = org_search_by_name(json: json) unless org.present?
+    return nil unless org.present?
+
+    # If found combine existing identifiers with new ones
+    org.consolidate_identifiers!(
+      array: identifiers_from_json(array: affiliation_ids))
+
+    # Org model requires a language sso just use the default for now
+    org.language = Language.find_by(default_language: true)
+    org.abbreviation = json[:abbreviation] if json[:abbreviation].present?
+    org
+
+  rescue JSON::ParserError => pe
+    Rails.logger.error "JSON parse error in Org.from_json: #{pe.message}"
+    Rails.logger.error json.inspect
+    return nil
+  end
+
+  def to_json
+    {
+      name: name,
+      abbreviation: abbreviation,
+      affiliation_ids: identifiers.map { |id| JSON.parse(id.to_json) }
+    }.to_json
+  end
+
   private
 
   ##

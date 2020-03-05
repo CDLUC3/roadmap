@@ -58,4 +58,45 @@ class Identifier < ActiveRecord::Base
     write_attribute(:attrs, (hash.is_a?(Hash) ? hash.to_json.to_s : "{}"))
   end
 
+  # ========================
+  # = JSON helpers for API =
+  # ========================
+  def self.from_json(json:)
+    json = json.with_indifferent_access
+
+    # get the IdentifierScheme
+    scheme = IdentifierScheme.by_name(json[:type].downcase).first
+    return nil unless scheme.present?
+
+    Identifier.find_or_initialize_by(
+      identifier_scheme: scheme,
+      value: url_to_value(val: json[:identifier])
+    )
+
+  rescue JSON::ParserError => pe
+    Rails.logger.error "JSON parse error in Identifier.from_json: #{pe.message}"
+    Rails.logger.error json.inspect
+    return nil
+  end
+
+  def to_json
+    val =
+    {
+      type: identifier_scheme.name,
+      identifier: value_to_url
+    }.to_json
+  end
+
+  # Append the scheme's langing page URL if applicable
+  def value_to_url
+    landing = scheme.user_landing_url&.downcase
+    landing.present? ? "#{landing}#{value}" : value
+  end
+
+  # Extract the landing page URL for the scheme
+  def url_to_value(val:)
+    landing = scheme.user_landing_url&.downcase
+    value = landing.present? ? val.to_s.downcase.gsub(landing, "") : val
+  end
+
 end

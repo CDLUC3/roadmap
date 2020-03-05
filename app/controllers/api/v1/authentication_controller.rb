@@ -31,13 +31,8 @@ module Api
 
       # POST /api/v1/authenticate
       def authenticate
-
-p "BODY"
-p request.body.read
-p "PARAMS"
-p params
-
-        json = JSON.parse(request.body.read)
+        body = request.body.read
+        json = JSON.parse(body)
         auth_svc = Api::Auth::Jwt::AuthenticationService.new(json: json)
         @token = auth_svc.call
 

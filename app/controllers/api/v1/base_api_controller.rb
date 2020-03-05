@@ -153,7 +153,10 @@ module Api
               # Either the plan id or template id must be present
               app = ApplicationService.application_name
               id = dmp.fetch(:dmp_ids, []).select { |id| ["doi", app].include?(id.fetch(:type, "").downcase) }
-              template = dmp.fetch(:extended_attributes, {}).fetch(:"#{app}", {})[:template_id]
+
+              template = Api::JsonToAttributesService.fetch_template(
+                array: dmp.fetch(:extended_attributes, [])
+              )
 
               unless id.present? || template.present?
                 errors << _("Expected item #{idx + 1} to have either a {'dmp':{'dmp_ids':[{'type':'#{app}','identifier'}]}} when updating or a {'dmp':{'extended_attributes':{'#{app}':{'template_id'}}}} if creating!")

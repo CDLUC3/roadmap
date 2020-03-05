@@ -21,7 +21,8 @@ module Api
 
         # Extract the landing page URL for the scheme so that we only save
         # the identifier in the event that the URL ever changes
-        value = json[:identifier].to_s.downcase.gsub(scheme.user_landing_url.downcase, "")
+        landing = scheme.user_landing_url&.downcase
+        value = landing.present? ? json[:identifier].to_s.downcase.gsub(landing, "") : json[:identifier]
 
         Identifier.find_or_initialize_by(identifier_scheme: scheme, value: value)
       end
@@ -117,8 +118,7 @@ module Api
 
         # If this is not an existing Plan, then initialize a new one
         # for the specified template (or the default template if none specified)
-        template_id = json.fetch(:extended_attributes, {}).fetch(:dmptool, {})
-                          .fetch(:template_id, Template.default.id)
+        template_id = fetch_template(array: json.fetch(:extended_attributes, []))
         plan = Plan.new(template_id: template_id) unless plan.present?
 
         plan.title = json[:title]
@@ -167,6 +167,18 @@ module Api
 
       def dataset_from_json(json: {})
         # TODO: Need to implement multi-datasets in the data model
+      end
+
+      # Extract the template id from the `extended_attributes`
+      def fetch_template(array:)
+        app = ApplicationService.application_name
+        app_extensions = array.select { |ext| ext[app.to_sym].present? }
+        templates = app_extensions.select do |hash|
+          hash[app.to_sym][:template_id].present?
+        end
+        return templates.first[app.to_sym][:template_id] if templates.any?
+
+        Template.default&.id
       end
 
       private
