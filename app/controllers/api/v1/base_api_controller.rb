@@ -7,7 +7,8 @@ module Api
     # Base API Controller
     class BaseApiController < ApplicationController
 
-      protect_from_forgery with: :null_session
+      # Skipping the standard Rails authenticity tokens passed in UI
+      skip_before_action :verify_authenticity_token
 
       respond_to :json
 

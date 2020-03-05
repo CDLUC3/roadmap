@@ -3,7 +3,6 @@
 # locals: plan
 
 json.name plan.funder.name
-json.funding_status Api::FundingPresenter.status(plan: plan)
 
 if plan.funder.identifiers.any?
   json.funder_ids plan.funder.identifiers do |identifier|
@@ -11,10 +10,11 @@ if plan.funder.identifiers.any?
   end
 end
 
-if plan.grant_number.present?
-  grant = Api::ConversionService.to_identifier(context: "grant",
-                                               value: plan.grant_number)
-  json.grant_ids [grant] do |grant|
-    json.partial! "api/v1/identifiers/show", identifier: grant
+grant_ids = plan.identifiers.select { |id| id.identifier_scheme.name == "grant" }
+grant_ids = [plan.grant_number] if grant_ids.empty? && plan.grant_number.present?
+if grant_ids.any?
+  json.grant_ids grant_ids do |identifier|
+    json.partial! 'api/v1/identifiers/show', identifier: identifier
   end
 end
+json.funding_status grant_ids.empty? ? "planned" : "granted"

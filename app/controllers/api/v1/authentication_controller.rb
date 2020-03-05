@@ -31,6 +31,12 @@ module Api
 
       # POST /api/v1/authenticate
       def authenticate
+
+p "BODY"
+p request.body.read
+p "PARAMS"
+p params
+
         json = JSON.parse(request.body.read)
         auth_svc = Api::Auth::Jwt::AuthenticationService.new(json: json)
         @token = auth_svc.call
@@ -42,6 +48,11 @@ module Api
         else
           render_error errors: auth_svc.errors, status: :unauthorized
         end
+
+      rescue JSON::ParserError => pe
+        Rails.logger.error "API V1 - authenticate: #{pe.message}"
+        Rails.logger.error request.body.read
+        render_error errors: _("Missing or invalid JSON"), status: :bad_request
       end
 
     end

@@ -250,6 +250,11 @@ group :development, :test do
 
   # Guard gem for RSpec (https://github.com/guard/guard-rspec)
   gem "guard-rspec"
+
+  # Swagger tooling for Rails API's. Generate beautiful API documentation,
+  # including a UI to explore and test operations, directly from your rspec
+  # integration tests.
+  gem "rswag"
 end
 
 group :test do

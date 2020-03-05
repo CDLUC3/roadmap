@@ -9,6 +9,6 @@ json.end plan.end_date&.utc&.to_s
 
 if plan.funder.present?
   json.funding [plan.funder] do
-    json.partial! "api/v1/plans/funding", locals: { plan: plan }
+    json.partial! "api/v1/plans/funding", plan: plan
   end
 end

@@ -61,9 +61,7 @@ module Api
 
         json = json.with_indifferent_access
         contributor_ids = json.fetch(:contributor_ids, [])
-        return nil unless json[:mbox].present? ||
-                          json[:surname].present? ||
-                          contributor_ids.any?
+        return nil unless json[:mbox].present?
 
         # Retrieve the Org
         affiliations = json.fetch(:affiliations, [])
@@ -142,7 +140,7 @@ module Api
           contributor_from_json(plan: plan, json: hash)
         end
 
-        plan.contributors << contributors if contributors.any?
+        plan.contributors << contributors.compact if contributors.any?
         plan.contributors << contact if contact.present?
 
         # Process Funder

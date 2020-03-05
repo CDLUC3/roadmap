@@ -1,0 +1,73 @@
+---
+swagger: '2.0'
+info:
+  title: API V1
+  version: v1
+paths:
+  "/api/v1/authenticate":
+    post:
+      summary: Issues an authorization token
+      tags:
+      - Authentication
+      consumes:
+      - - application/json
+      produces:
+      - - application/json
+      parameters:
+      - name: credentials
+        in: body
+        schema:
+          type: object
+          properties:
+            grant_type:
+              type: string
+              example: client_credentials
+            client_id:
+              type: string
+              example: "<My client id>"
+            client_secret:
+              type: string
+              example: "<My client secret>"
+          required:
+          - grant_type
+          - client_id
+          - client_secret
+      responses:
+        '200':
+          description: authentication successful
+        '400':
+          description: missing or invalid JSON
+        '401':
+          description: unauthorized
+  "/api/v1/heartbeat":
+    get:
+      summary: Endpoint to determine whether or not the API is online
+      tags:
+      - Heartbeat
+      produces:
+      - application/json
+      responses:
+        '200':
+          description: API is online
+        '503':
+          description: API is offline
+  "/api/v1/templates":
+    get:
+      summary: Returns the templates
+      tags:
+      - Templates
+      consumes:
+      - application/x-www-form-urlencoded
+      security:
+      - http: []
+      responses:
+        '200':
+          description: success
+        '401':
+          description: authorization failed - please provide your credentials
+securityDefinitions:
+  bearerAuth:
+    type: apiKey
+    description: Bearer token
+    name: Authorization
+    in: header
