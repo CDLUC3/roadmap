@@ -19,6 +19,8 @@ json.ethical_issues_report plan.ethical_issues_report
 
 if plan.identifiers.any?
   json.dmp_ids plan.identifiers do |identifier|
+    next if identifier.identifier_scheme.name == "grant"
+
     json.partial! 'api/v1/identifiers/show', identifier: identifier
   end
 end

@@ -2,7 +2,7 @@
 
 # locals: contributor, role
 
-role = role || nil
+role = role || "Data_curation"
 
 json.name contributor.name
 json.mbox contributor.email
