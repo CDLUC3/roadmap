@@ -18,9 +18,7 @@ json.ethical_issues_description plan.ethical_issues_description
 json.ethical_issues_report plan.ethical_issues_report
 
 if plan.identifiers.any?
-  json.dmp_ids plan.identifiers do |identifier|
-    next if identifier.identifier_scheme.name == "grant"
-
+  json.dmp_ids presenter.identifiers do |identifier|
     json.partial! 'api/v1/identifiers/show', identifier: identifier
   end
 end

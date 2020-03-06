@@ -194,7 +194,7 @@ module Api
         return nil unless name.present?
 
         # Search the DB
-        org = Org.search(name).first
+        org = Org.where("LOWER(name) = ?", name.downcase).first
         return org if org.present?
 
         # External ROR search

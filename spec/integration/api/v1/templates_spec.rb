@@ -11,14 +11,13 @@ describe "Templates API" do
       consumes "application/x-www-form-urlencoded"
       security [http: []]
 
+      parameter name: :authorization, in: :header, type: :string
+
       response "200", "success" do
-        let(:user) { create(:api_client) }
-        let(:Authorization) { "Bearer #{Api::Auth::Jwt::JsonWebToken.encode(user.client_id)}" }
         run_test!
       end
 
       response "401", "authorization failed - please provide your credentials" do
-        let(:Authorization) { "Bearer #{Api::Auth::Jwt::JsonWebToken.encode("foo")}" }
         run_test!
       end
 

@@ -12,16 +12,25 @@ module Api
       @contributors = []
       return true unless plan.present?
 
+      @plan = plan
+
       # Attach the first data_curation role as the data_contact, otherwise
       # add the contributor to the contributors array
-      plan.contributors.each do |contributor|
+      @plan.contributors.each do |contributor|
         @data_contact = contributor if contributor.data_curation? && @data_contact.nil?
         next if @data_contact == contributor
 
         @contributors << contributor
       end
 
-      @costs = plan_costs(plan: plan)
+      @costs = plan_costs(plan: @plan)
+    end
+
+    def identifiers
+      ids = @plan.identifiers.select { |id| id.identifier_scheme.name != "grant" }
+      scheme = IdentifierScheme.new(name: ApplicationService.application_name)
+      ids << Identifier.new(identifier_scheme: scheme, value: @plan.id)
+      ids
     end
 
     private

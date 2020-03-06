@@ -50,11 +50,13 @@ module Api
                 user = User.from_identifiers(array: identifiers) if identifiers.any?
                 user = User.find_by(email: author.email) unless user.present?
 
+                # Only do this step in production!
                 # If the user was not found, invite them and attach any know identifiers
-                unless user.present?
+                if Rails.env.production? && user.blank?
                   user = User.invite!(email: author.email,
                                       firstname: author.firstname,
                                       surname: author.surname)
+
                   author.identifiers.each do |id|
                     user.identifiers << Identifier.new(
                       identifier_scheme: id.identifier_scheme, value: id.value)
@@ -69,7 +71,7 @@ module Api
                 end
               end
 
-              @items = [plan]
+              @items = paginate_response(results: [plan])
 
               # Handle any new user invitations
 
