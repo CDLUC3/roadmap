@@ -33,34 +33,81 @@ RSpec.configure do |config|
         }
       },
       definitions: {
-        identifier_object: {
+        dmp: {
+          type: :object,
+          properties: {
+            title: { type: :string, example: "My research project" },
+            description: { type: :string, example: "An abstract describing the project and the data we intend to collect" },
+            created: { type: :string, example: Time.now.utc.to_s },
+            modified: { type: :string, example: Time.now.utc.to_s },
+            language: { type: :string, example: "en, es, de, etc." },
+            ethical_issues: { type: :string, enum: %w[unknown yes no], example: "unknown" },
+            ethical_issues_description: { type: :string, example: "An explanation of the types of ethical concerns our data may contain or deal with (e.g. 'We will anonymize patient data.')" },
+            ethical_issues_report: { type: :string, example: "https://my.school.edu/path/to/a/report/on/ethics_and_privacy/statements.pdf" },
+            dmp_ids: {
+              type: :array,
+              items: { "$ref": "#/definitions/dmp_identifier" }
+            },
+            contact: { "$ref": "#/definitions/contact" },
+            contributors: {
+              type: :array,
+              items: { "$ref": "#/definitions/contributor" }
+            },
+            project: { "$ref": "#/definitions/project" }
+          },
+          required: %w[title ethical_issues contact project]
+        },
+        dmp_identifier: {
           type: :object,
           properties: {
             type: {
-              enum: IdentifierScheme.where.not(name: "shibboleth").pluck(:name)
+              type: :string,
+              description: "One of the following identifier types",
+              enum: ["doi", "url" "#{ApplicationService.application_name.split("-").first}"],
+              example: "doi"
             },
-            identifier: { type: :string, example: SecureRandom.uuid.to_s }
+            identifier: { type: :string, example: "https://dx.doi.org/abc123" }
           },
           required: %w[type identifier]
         },
-        affiliation_object: {
+        person_identifier: {
           type: :object,
           properties: {
-            name: { type: :string, example: "University of Nowhere" },
-            abbreviation: { type: :string, example: "UN" },
-            region: { type: :string, example: "United States" },
-            affiliation_ids: {
-              type: :array,
-              items: { "$ref": "#/definitions/identifier_object" }
+            type: {
+              type: :string,
+              description: "One of the following identifier types or the local identifier from your system.",
+              enum: %w[orcid isni openid other]
             },
+            identifier: { type: :string, example: "0000-0000-0000-0000" }
           },
-          required: %w[name]
+          required: %w[type identifier]
         },
-        contributor_object: {
+        organization_identifier: {
           type: :object,
           properties: {
-            firstname: { type: :string, example: "Jane" },
-            surname: { type: :string, example: "Doe" },
+            type: {
+              type: :string,
+              description: "One of the following identifier types or the local identifier from your system.",
+              enum: %w[ror fundref]
+            },
+            identifier: { type: :string, example: "https://ror.org/x123y12z" }
+          },
+          required: %w[type identifier]
+        },
+        contact: {
+          type: :object,
+          properties: {
+            name: { type: :string, example: "Jane Doe" },
+            mbox: { type: :string, example: "jane.doe@nowhere.edu" },
+            affiliation: { "$ref": "#/definitions/affiliation" },
+            contact_id: { "$ref": "#/definitions/person_identifier" }
+          },
+          required: %w[name mbox]
+        },
+        contributor: {
+          type: :object,
+          properties: {
+            name: { type: :string, example: "Jane Doe" },
             mbox: { type: :string, example: "jane.doe@nowhere.edu" },
             role: {
               type: :string,
@@ -69,47 +116,56 @@ RSpec.configure do |config|
                   "#{Contributor::ONTOLOGY_BASE_URL}/#{r.to_s.capitalize}"
                 end
               ],
-              example: "#{Contributor::ONTOLOGY_BASE_URL}/#{Contributor.new.all_roles.first.to_s.capitalize}" },
-            affiliations: {
-              type: :array,
-              items: { "$ref": "#/definitions/affiliation_object" }
+              example: "#{Contributor::ONTOLOGY_BASE_URL}/#{Contributor.new.all_roles.first.to_s.capitalize}"
             },
-            contributor_ids: {
-              type: :array,
-              items: { "$ref": "#/definitions/identifier_object" }
-            }
+            affiliation: { "$ref": "#/definitions/affiliation" },
+            contributor_id: { "$ref": "#/definitions/person_identifier" }
           },
-          required: %w[mbox role]
+          required: %w[name mbox role]
         },
-        funding_object: {
+        affiliation: {
           type: :object,
           properties: {
-            name: { type: :string, example: "National Science Foundation" },
-            funding_status: { enum: %w[planned applied granted] },
-            funder_ids: {
-              type: :array,
-              items: { "$ref": "#/definitions/identifier_object" }
-            },
-            grant_ids: {
-              type: :array,
-              items: { "$ref": "#/definitions/identifier_object" }
-            }
+            name: { type: :string, example: "University of Nowhere" },
+            abbreviation: { type: :string, example: "UN" },
+            region: { type: :string, example: "United States" },
+            affiliation_id: { "$ref": "#/definitions/organization_identifier" }
           },
-          required: %w[name funding_status]
+          required: %w[name]
         },
-        project_object: {
+        project: {
           type: :object,
           properties: {
             title: { type: :string, example: "Study of API development in open source codebases" },
             description: { type: :string, example: "An abstract describing the overall research project" },
-            start_on: { type: :string, example: (Time.now + 3.months).utc.to_s },
-            end_on: { type: :string, example: (Time.now + 38.months).utc.to_s },
+            start: { type: :string, example: (Time.now + 3.months).utc.to_s },
+            end: { type: :string, example: (Time.now + 38.months).utc.to_s },
             funding: {
               type: :array,
-              items: { "$ref": "#/definitions/funding_object" }
+              items: { "$ref": "#/definitions/funding" }
             }
           },
-          required: %w[title"]
+          required: %w[title start end]
+        },
+        funding: {
+          type: :object,
+          properties: {
+            name: { type: :string, example: "National Science Foundation" },
+            funding_status: { type: :string, enum: %w[planned applied granted rejected], example: "granted" },
+            funder_id: { "$ref": "#/definitions/organization_identifier" },
+            grant_id: {
+              type: :object,
+              properties: {
+                type: {
+                  type: :string,
+                  enum: %w[url other]
+                },
+                identifier: { type: :string, example: "https://funder.org/999" }
+              },
+              required: %w[type identifier]
+            }
+          },
+          required: %w[name funding_status grant_id]
         }
       }
     }

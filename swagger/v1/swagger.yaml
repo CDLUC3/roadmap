@@ -75,87 +75,7 @@ paths:
             items:
               type: array
               items:
-                type: object
-                properties:
-                  dmp:
-                    type: object
-                    properties:
-                      title:
-                        type: string
-                        example: My new data management plan
-                        required: true
-                      description:
-                        type: string
-                        example: The abstract for my data management plan
-                      created:
-                        type: string
-                        example: 2020-03-06 22:01:51 UTC
-                      language:
-                        type: string
-                        example: en
-                      ethical_issues:
-                        type: boolean
-                        example: true
-                      ethical_issues_description:
-                        type: string
-                        example: A summary of any ethical concerns related to my research
-                          data.
-                      ethical_issues_report:
-                        type: string
-                        example: https://my-org.edu/path/to/my/ethical_issues_report.pdf
-                      dmp_ids:
-                        type: array
-                        items:
-                          "$ref": "#/definitions/identifier_object"
-                      contact:
-                        type: object
-                        properties:
-                          firstname:
-                            type: string
-                            example: John
-                          surname:
-                            type: string
-                            example: Smith
-                          mbox:
-                            type: string
-                            example: john.smith@nowhere.edu
-                          role:
-                            type: string
-                            example: https://dictionary.casrai.org/Contributor_Roles/DataCuration
-                          affiliations:
-                            type: array
-                            items:
-                              "$ref": "#/definitions/affiliation_object"
-                          contributor_ids:
-                            type: array
-                            items:
-                              "$ref": "#/definitions/identifier_object"
-                        required:
-                        - mbox
-                        - role
-                      contributors:
-                        type: array
-                        items:
-                          "$ref": "#/definitions/contributor_object"
-                      project:
-                        "$ref": "#/definitions/project_object"
-                      extended_attributes:
-                        type: array
-                        items:
-                          type: object
-                          properties:
-                            dmptool:
-                              type: object
-                              properties:
-                                template_id:
-                                  type: integer
-                                  example: 123
-                    required:
-                    - title
-                    - contact
-          required:
-          - total_items
-          - items
+                "$ref": "#/definitions/dmp"
       responses:
         '201':
           description: created
@@ -188,44 +108,127 @@ securityDefinitions:
     name: Authorization
     in: header
 definitions:
-  identifier_object:
+  dmp:
+    type: object
+    properties:
+      title:
+        type: string
+        example: My research project
+      description:
+        type: string
+        example: An abstract describing the project and the data we intend to collect
+      created:
+        type: string
+        example: 2020-03-10 17:40:56 UTC
+      modified:
+        type: string
+        example: 2020-03-10 17:40:56 UTC
+      language:
+        type: string
+        example: en, es, de, etc.
+      ethical_issues:
+        type: string
+        enum:
+        - unknown
+        - 'yes'
+        - 'no'
+        example: unknown
+      ethical_issues_description:
+        type: string
+        example: An explanation of the types of ethical concerns our data may contain
+          or deal with (e.g. 'We will anonymize patient data.')
+      ethical_issues_report:
+        type: string
+        example: https://my.school.edu/path/to/a/report/on/ethics_and_privacy/statements.pdf
+      dmp_ids:
+        type: array
+        items:
+          "$ref": "#/definitions/dmp_identifier"
+      contact:
+        "$ref": "#/definitions/contact"
+      contributors:
+        type: array
+        items:
+          "$ref": "#/definitions/contributor"
+      project:
+        "$ref": "#/definitions/project"
+    required:
+    - title
+    - ethical_issues
+    - contact
+    - project
+  dmp_identifier:
     type: object
     properties:
       type:
-        enum: []
+        type: string
+        description: One of the following identifier types
+        enum:
+        - doi
+        - urldmptool
+        example: doi
       identifier:
         type: string
-        example: b7008e8f-7fdb-41b7-9d74-716b4247606a
+        example: https://my-site.org/dmps/123
     required:
     - type
     - identifier
-  affiliation_object:
+  person_identifier:
+    type: object
+    properties:
+      type:
+        type: string
+        description: One of the following identifier types or the local identifier
+          from your system.
+        enum:
+        - orcid
+        - isni
+        - openid
+        - other
+      identifier:
+        type: string
+        example: 0000-0000-0000-0000
+    required:
+    - type
+    - identifier
+  organization_identifier:
+    type: object
+    properties:
+      type:
+        type: string
+        description: One of the following identifier types or the local identifier
+          from your system.
+        enum:
+        - ror
+        - fundref
+      identifier:
+        type: string
+        example: https://ror.org/x123y12z
+    required:
+    - type
+    - identifier
+  contact:
     type: object
     properties:
       name:
         type: string
-        example: University of Nowhere
-      abbreviation:
+        example: Jane Doe
+      mbox:
         type: string
-        example: UN
-      region:
-        type: string
-        example: United States
-      affiliation_ids:
-        type: array
-        items:
-          "$ref": "#/definitions/identifier_object"
+        example: jane.doe@nowhere.edu
+      affiliation:
+        "$ref": "#/definitions/affiliation"
+      contact_id:
+        "$ref": "#/definitions/person_identifier"
     required:
     - name
-  contributor_object:
+    - mbox
+  contributor:
     type: object
     properties:
-      firstname:
+      name:
         type: string
-        example: Jane
-      surname:
-        type: string
-        example: Doe
+        example: Jane Doe
       mbox:
         type: string
         example: jane.doe@nowhere.edu
@@ -247,40 +250,31 @@ definitions:
           - https://dictionary.casrai.org/Contributor_Roles/Writing_original_draft
           - https://dictionary.casrai.org/Contributor_Roles/Writing_review_editing
         example: https://dictionary.casrai.org/Contributor_Roles/Conceptualization
-      affiliations:
-        type: array
-        items:
-          "$ref": "#/definitions/affiliation_object"
-      contributor_ids:
-        type: array
-        items:
-          "$ref": "#/definitions/identifier_object"
+      affiliation:
+        "$ref": "#/definitions/affiliation"
+      contributor_id:
+        "$ref": "#/definitions/person_identifier"
     required:
+    - name
     - mbox
     - role
-  funding_object:
+  affiliation:
     type: object
     properties:
       name:
         type: string
-        example: National Science Foundation
-      funding_status:
-        enum:
-        - planned
-        - applied
-        - granted
-      funder_ids:
-        type: array
-        items:
-          "$ref": "#/definitions/identifier_object"
-      grant_ids:
-        type: array
-        items:
-          "$ref": "#/definitions/identifier_object"
+        example: University of Nowhere
+      abbreviation:
+        type: string
+        example: UN
+      region:
+        type: string
+        example: United States
+      affiliation_id:
+        "$ref": "#/definitions/organization_identifier"
     required:
     - name
-    - funding_status
-  project_object:
+  project:
     type: object
     properties:
       title:
@@ -289,15 +283,51 @@ definitions:
       description:
         type: string
         example: An abstract describing the overall research project
-      start_on:
+      start:
         type: string
-        example: 2020-06-06 21:01:51 UTC
-      end_on:
+        example: 2020-06-10 17:40:56 UTC
+      end:
         type: string
-        example: 2023-05-06 21:01:51 UTC
+        example: 2023-05-10 17:40:56 UTC
       funding:
         type: array
         items:
-          "$ref": "#/definitions/funding_object"
+          "$ref": "#/definitions/funding"
     required:
-    - title"
+    - title
+    - start
+    - end
+  funding:
+    type: object
+    properties:
+      name:
+        type: string
+        example: National Science Foundation
+      funding_status:
+        type: string
+        enum:
+        - planned
+        - applied
+        - granted
+        - rejected
+        example: granted
+      funder_id:
+        "$ref": "#/definitions/organization_identifier"
+      grant_id:
+        type: object
+        properties:
+          type:
+            type: string
+            enum:
+            - url
+            - other
+          identifier:
+            type: string
+            example: https://funder.org/999
+        required:
+        - type
+        - identifier
+    required:
+    - name
+    - funding_status
+    - grant_id
