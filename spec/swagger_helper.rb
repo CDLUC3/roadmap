@@ -31,6 +31,86 @@ RSpec.configure do |config|
           in: :header
 
         }
+      },
+      definitions: {
+        identifier_object: {
+          type: :object,
+          properties: {
+            type: {
+              enum: IdentifierScheme.where.not(name: "shibboleth").pluck(:name)
+            },
+            identifier: { type: :string, example: SecureRandom.uuid.to_s }
+          },
+          required: %w[type identifier]
+        },
+        affiliation_object: {
+          type: :object,
+          properties: {
+            name: { type: :string, example: "University of Nowhere" },
+            abbreviation: { type: :string, example: "UN" },
+            region: { type: :string, example: "United States" },
+            affiliation_ids: {
+              type: :array,
+              items: { "$ref": "#/definitions/identifier_object" }
+            },
+          },
+          required: %w[name]
+        },
+        contributor_object: {
+          type: :object,
+          properties: {
+            firstname: { type: :string, example: "Jane" },
+            surname: { type: :string, example: "Doe" },
+            mbox: { type: :string, example: "jane.doe@nowhere.edu" },
+            role: {
+              type: :string,
+              enum: [
+                Contributor.new.all_roles.map do |r|
+                  "#{Contributor::ONTOLOGY_BASE_URL}/#{r.to_s.capitalize}"
+                end
+              ],
+              example: "#{Contributor::ONTOLOGY_BASE_URL}/#{Contributor.new.all_roles.first.to_s.capitalize}" },
+            affiliations: {
+              type: :array,
+              items: { "$ref": "#/definitions/affiliation_object" }
+            },
+            contributor_ids: {
+              type: :array,
+              items: { "$ref": "#/definitions/identifier_object" }
+            }
+          },
+          required: %w[mbox role]
+        },
+        funding_object: {
+          type: :object,
+          properties: {
+            name: { type: :string, example: "National Science Foundation" },
+            funding_status: { enum: %w[planned applied granted] },
+            funder_ids: {
+              type: :array,
+              items: { "$ref": "#/definitions/identifier_object" }
+            },
+            grant_ids: {
+              type: :array,
+              items: { "$ref": "#/definitions/identifier_object" }
+            }
+          },
+          required: %w[name funding_status]
+        },
+        project_object: {
+          type: :object,
+          properties: {
+            title: { type: :string, example: "Study of API development in open source codebases" },
+            description: { type: :string, example: "An abstract describing the overall research project" },
+            start_on: { type: :string, example: (Time.now + 3.months).utc.to_s },
+            end_on: { type: :string, example: (Time.now + 38.months).utc.to_s },
+            funding: {
+              type: :array,
+              items: { "$ref": "#/definitions/funding_object" }
+            }
+          },
+          required: %w[title"]
+        }
       }
     }
   }

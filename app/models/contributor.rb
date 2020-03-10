@@ -54,7 +54,7 @@ class Contributor < ActiveRecord::Base
 
   validates :roles, presence: { message: PRESENCE_MESSAGE }
 
-  CREDIT_TAXONOMY_URI_BASE = "https://dictionary.casrai.org/Contributor_Roles".freeze
+  ONTOLOGY_BASE_URL = "https://dictionary.casrai.org/Contributor_Roles".freeze
 
   ##
   # Define Bit Field values for roles

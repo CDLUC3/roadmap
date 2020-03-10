@@ -34,145 +34,33 @@ describe "Plans API" do
                     ethical_issues_report: { type: :string, example: "https://my-org.edu/path/to/my/ethical_issues_report.pdf" },
                     dmp_ids: {
                       type: :array,
-                      items: {
-                        type: :object,
-                        properties: {
-                          type: { type: :string, example: "external-system" },
-                          identifier: { type: :string, example: 1234 }
-                        },
-                        required: %i[type identifier]
-                      }
+                      items: { "$ref": "#/definitions/identifier_object" }
                     },
                     contact: {
                       type: :object,
                       properties: {
-                        firstname: { type: :string, example: "Jane" },
-                        surname: { type: :string, example: "Doe" },
-                        mbox: { type: :string, example: "jane.doe@my-org.edu" },
-                        role: { type: :string, example: "https://dictionary.casrai.org/Contributor_Roles/Data_curation" },
+                        firstname: { type: :string, example: "John" },
+                        surname: { type: :string, example: "Smith" },
+                        mbox: { type: :string, example: "john.smith@nowhere.edu" },
+                        role: {
+                          type: :string,
+                          example: "#{Contributor::ONTOLOGY_BASE_URL}/DataCuration" },
                         affiliations: {
                           type: :array,
-                          items: {
-                            type: :object,
-                            properties: {
-                              name: { type: :string, example: "University of Nowhere" },
-                              abbreviation: { type: :string, example: "UN" },
-                              region: { type: :string, example: "United States" },
-                              affiliation_ids: {
-                                type: :array,
-                                items: {
-                                  type: :object,
-                                  properties: {
-                                    type: { type: :string, example: "ror" },
-                                    identifier: { type: :string, example: "https://ror.org/0153tk833" }
-                                  },
-                                  required: %i[type identifier]
-                                }
-                              }
-                            }
-                          }
+                          items: { "$ref": "#/definitions/affiliation_object" }
                         },
                         contributor_ids: {
                           type: :array,
-                          items: {
-                            type: :object,
-                            properties: {
-                              type: { type: :string, example: "orcid" },
-                              identifier: { type: :string, example:"0000-0000-0000-0001" }
-                            },
-                            required: %i[type identifier]
-                          }
+                          items: { "$ref": "#/definitions/identifier_object" }
                         }
                       },
-                      required: %i[role mbox]
+                      required: %w[mbox role]
                     },
                     contributors: {
                       type: :array,
-                      items: {
-                        type: :object,
-                        properties: {
-                          firstname: { type: :string, example: "John" },
-                          surname: { type: :string, example: "Smith" },
-                          mbox: { type: :string, example: "john.smith@my-org.edu" },
-                          role: { type: :string, example: "https://dictionary.casrai.org/Contributor_Roles/Investigation" },
-                          affiliations: {
-                            type: :array,
-                            items: {
-                              type: :object,
-                              properties: {
-                                name: { type: :string, example: "University of Nowhere" },
-                                abbreviation: { type: :string, example: "UN" },
-                                region: { type: :string, example: "United States" },
-                                affiliation_ids: {
-                                  type: :array,
-                                  items: {
-                                    type: :object,
-                                    properties: {
-                                      type: { type: :string, example: "ror" },
-                                      identifier: { type: :string, example: "https://ror.org/098zy987" }
-                                    },
-                                    required: %i[type identifier]
-                                  }
-                                }
-                              }
-                            }
-                          },
-                          contributor_ids: {
-                            type: :array,
-                            items: {
-                              type: :object,
-                              properties: {
-                                type: { type: :string, example: "orcid" },
-                                identifier: { type: :string, example:"0000-0000-0000-0002" }
-                              },
-                              required: %i[type identifier]
-                            }
-                          }
-                        }
-                      }
+                      items: { "$ref": "#/definitions/contributor_object" }
                     },
-                    project: {
-                      type: :object,
-                      properties: {
-                        title: { type: :string, example: "Study of API development in open source codebases" },
-                        description: { type: :string, example: "An abstract describing the overall research project" },
-                        start_on: { type: :string, example: (Time.now + 3.months).utc.to_s },
-                        end_on: { type: :string, example: (Time.now + 38.months).utc.to_s },
-                        funding: {
-                          type: :array,
-                          items: {
-                            type: :object,
-                            properties: {
-                              name: "National Science Foundation",
-                              funding_status: "granted",
-                              funder_ids: {
-                                type: :array,
-                                items: {
-                                  type: :object,
-                                  properties: {
-                                    type: { type: :string, example: "fundref" },
-                                    identifier: { type: :string, example:"https://api.crossref.org/funders/100000014" }
-                                  },
-                                  required: %i[type identifier]
-                                }
-                              },
-                              grant_ids: {
-                                type: :array,
-                                items: {
-                                  type: :object,
-                                  properties: {
-                                    type: { type: :string, example: "grant" },
-                                    identifier: { type: :string, example: "123456789" }
-                                  },
-                                  required: %i[type identifier]
-                                }
-                              }
-                            }
-                          }
-                        }
-                      },
-                      required: ["title"]
-                    },
+                    project: { "$ref": "#/definitions/project_object" },
                     extended_attributes: {
                       type: :array,
                       items: {
@@ -188,13 +76,13 @@ describe "Plans API" do
                       }
                     }
                   },
-                  required: %i[title contact]
+                  required: %w[title contact]
                 }
               }
             }
           }
         },
-        required: %i[total_items items]
+        required: %w[total_items items]
       }
 
       response "201", "created" do
@@ -202,6 +90,7 @@ describe "Plans API" do
       end
 
       response "400", "bad request - if JSON is invalid or Plan already exists" do
+        #schema '$ref': '#/definitions/bad_request_error'
         run_test!
       end
 

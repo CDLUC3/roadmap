@@ -214,7 +214,7 @@ module Api
         default = "writing_original_draft"
         return default unless role.present?
 
-        url = Contributor::CREDIT_TAXONOMY_URI_BASE
+        url = Contributor::ONTOLOGY_BASE_URL
         # Strip off the URL if present
         role = role.gsub("#{url}/", "").downcase if role.include?(url)
         # Return the role if its a valid one otherwise defualt

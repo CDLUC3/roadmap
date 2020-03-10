@@ -10,7 +10,7 @@ module Api
       def role_as_uri(role:)
         return nil unless role.present?
 
-        "#{Contributor::CREDIT_TAXONOMY_URI_BASE}/#{role.to_s.capitalize}"
+        "#{Contributor::ONTOLOGY_BASE_URL}/#{role.to_s.capitalize}"
       end
 
     end

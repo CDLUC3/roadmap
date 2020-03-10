@@ -244,7 +244,7 @@ RSpec.describe Api::V1::PlansController, type: :request do
               expect(@subject.email).to eql(@original[:mbox])
             end
             it "set the Contributor roles" do
-              expected = @original[:role].gsub("#{Contributor::CREDIT_TAXONOMY_URI_BASE}/", "")
+              expected = @original[:role].gsub("#{Contributor::ONTOLOGY_BASE_URL}/", "")
               expect(@subject.send(:"#{expected.downcase}?")).to eql(true)
             end
             it "Contributor identifiers includes the orcid" do
