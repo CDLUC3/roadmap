@@ -13,6 +13,9 @@ module Api
         "#{Contributor::ONTOLOGY_BASE_URL}/#{role.to_s.capitalize}"
       end
 
+      def contributor_id(identifiers:)
+        identifiers.select { |id| id.identifier_scheme.name == "orcid" }.first
+      end
     end
 
   end

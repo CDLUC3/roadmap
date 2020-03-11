@@ -2,7 +2,5 @@
 
 # locals: identifier
 
-presenter = Api::IdentifierPresenter.new(identifier: identifier)
-
-json.type identifier.identifier_scheme.name.downcase
-json.identifier presenter.identifier
+json.type identifier.identifier_format
+json.identifier identifier.value

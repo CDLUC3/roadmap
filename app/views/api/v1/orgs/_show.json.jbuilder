@@ -7,10 +7,8 @@ json.abbreviation org.abbreviation
 json.region org.region&.abbreviation
 
 if org.identifiers.any?
-  json.affiliation_ids org.identifiers do |identifier|
-    # skip Org sibboleth identifiers
-    next if identifier.identifier_scheme.name.downcase == "shibboleth"
-
-    json.partial! "api/v1/identifiers/show", locals: { identifier: identifier }
+  json.affiliation_id do
+    id = Api::OrgPresenter.affiliation_id(identifiers: org.identifiers)
+    json.partial! "api/v1/identifiers/show", identifier: id
   end
 end

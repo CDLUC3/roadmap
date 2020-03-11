@@ -16,4 +16,24 @@ RSpec.describe Api::ContributorPresenter do
     end
   end
 
+  describe "#contributor_id" do
+    before(:each) do
+      @contributor = create(:contributor, investigation: true, plan: create(:plan))
+      create(:identifier, identifiable: @contributor)
+      @contributor.reload
+    end
+
+    it "returns nil if no ORCID exists" do
+      rslt = described_class.contributor_id(identifiers: @contributor.identifiers)
+      expect(rslt).to eql(nil)
+    end
+    it "returns the ORCID" do
+      scheme = create(:identifier_scheme, name: "orcid")
+      orcid = create(:identifier, identifier_scheme: scheme, identifiable: @contributor)
+      @contributor.reload
+      rslt = described_class.contributor_id(identifiers: @contributor.identifiers)
+      expect(rslt).to eql(orcid)
+    end
+  end
+
 end

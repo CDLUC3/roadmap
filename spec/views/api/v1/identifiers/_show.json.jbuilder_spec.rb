@@ -14,10 +14,10 @@ describe "api/v1/identifiers/_show.json.jbuilder" do
 
   describe "includes all of the identifier attributes" do
     it "includes :type" do
-      expect(@json[:type]).to eql(@scheme.name)
+      expect(@json[:type]).to eql(@identifier.identifier_format)
     end
     it "includes :identifier" do
-      expect(@json[:identifier].end_with?(@identifier.value)).to eql(true)
+      expect(@json[:identifier]).to eql(@identifier.value)
     end
   end
 

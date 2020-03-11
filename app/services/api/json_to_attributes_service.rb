@@ -153,9 +153,11 @@ module Api
 
         # Attach any grant ids to the plan
         if funder_affil.present?
-          grant_ids = funder_affil.fetch(:grant_ids, [])
-          plan.consolidate_identifiers!(
-            array: identifiers_from_json(array: grant_ids)) if grant_ids.any?
+          grant_ids = identifiers_from_json(array:
+            [funder_affil.fetch(:grant_id, {})])
+
+          plan.consolidate_identifiers!(array: grant_ids) if grant_ids.any?
+          plan.grant_id = grant_ids.first.id if grant_ids.first.present?
         end
 
         plan

@@ -6,46 +6,83 @@ describe "api/v1/contributors/_show.json.jbuilder" do
 
   before(:each) do
     @plan = create(:plan)
-    @data_contact = create(:contributor, org: build(:org), plan: @plan,
-                                         writing_original_draft: true)
-    @ident = create(:identifier, identifiable: @data_contact,
-                                 value: Faker::Lorem.word)
-    @data_contact.reload
+    scheme = create(:identifier_scheme, name: "orcid")
+    @contact = create(:contributor, org: create(:org), plan: @plan, roles_count: 0,
+                                    writing_original_draft: true)
+    @ident = create(:identifier, identifiable: @contact, value: Faker::Lorem.word,
+                                 identifier_scheme: scheme)
+    @contact.reload
   end
 
   describe "includes all of the Contributor attributes" do
     before(:each) do
-      render partial: "api/v1/contributors/show",
-             locals: { contributor: @data_contact, role: :investigation }
+      render partial: "api/v1/contributors/show", locals: { contributor: @contact }
       @json = JSON.parse(rendered).with_indifferent_access
     end
 
-    it "includes the :name as `first last`" do
-      expected = "#{@data_contact.firstname} #{@data_contact.surname}"
-      expect(@json[:name]).to eql(expected)
+    it "includes the :name" do
+      expect(@json[:name]).to eql(@contact.name)
     end
     it "includes the :mbox" do
-      expect(@json[:mbox]).to eql(@data_contact.email)
+      expect(@json[:mbox]).to eql(@contact.email)
     end
 
     it "includes the :role" do
-      expect(@json[:role].end_with?("Investigation")).to eql(true)
+      expect(@json[:role].first.ends_with?("Writing_original_draft")).to eql(true)
     end
 
-    it "includes :affiliations" do
-      expect(@json[:affiliations].length).to eql(1)
+    it "includes :affiliation" do
+      expect(@json[:affiliation][:name]).to eql(@contact.org.name)
     end
 
-    it "includes :user_ids" do
-      expect(@json[:contributor_ids].length).to eql(1)
+    it "includes :contributor_id" do
+      expect(@json[:contributor_id][:type]).to eql(@ident.identifier_format)
+      expect(@json[:contributor_id][:identifier]).to eql(@ident.value)
+    end
+    it "ignores non-orcid identifiers :contributor_id" do
+      scheme = create(:identifier_scheme, name: "shibboleth")
+      create(:identifier, value: Faker::Lorem.word, identifiable: @contact,
+                                 identifier_scheme: scheme)
+      @contact.reload
+      expect(@json[:contributor_id][:type]).to eql(@ident.identifier_format)
+      expect(@json[:contributor_id][:identifier]).to eql(@ident.value)
     end
   end
 
-  it "excludes the role if :role is nil" do
-    render partial: "api/v1/contributors/show",
-           locals: { contributor: @data_contact }
-    json = JSON.parse(rendered).with_indifferent_access
-    expect(json[:role]).to eql(nil)
+  describe "includes all of the Contact attributes" do
+    before(:each) do
+      render partial: "api/v1/contributors/show", locals: { contributor: @contact,
+                                                            is_contact: true }
+      @json = JSON.parse(rendered).with_indifferent_access
+    end
+
+    it "includes the :name" do
+      expect(@json[:name]).to eql(@contact.name)
+    end
+    it "includes the :mbox" do
+      expect(@json[:mbox]).to eql(@contact.email)
+    end
+
+    it "does NOT include the :role" do
+      expect(@json[:role]).to eql(nil)
+    end
+
+    it "includes :affiliation" do
+      expect(@json[:affiliation][:name]).to eql(@contact.org.name)
+    end
+
+    it "includes :contact_id" do
+      expect(@json[:contact_id][:type]).to eql(@ident.identifier_format)
+      expect(@json[:contact_id][:identifier]).to eql(@ident.value)
+    end
+    it "ignores non-orcid identifiers :contact_id" do
+      scheme = create(:identifier_scheme, name: "shibboleth")
+      create(:identifier, value: Faker::Lorem.word, identifiable: @contact,
+                                 identifier_scheme: scheme)
+      @contact.reload
+      expect(@json[:contact_id][:type]).to eql(@ident.identifier_format)
+      expect(@json[:contact_id][:identifier]).to eql(@ident.value)
+    end
   end
 
 end

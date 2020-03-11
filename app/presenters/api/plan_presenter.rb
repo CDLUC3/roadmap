@@ -26,11 +26,14 @@ module Api
       @costs = plan_costs(plan: @plan)
     end
 
-    def identifiers
-      ids = @plan.identifiers.select { |id| id.identifier_scheme.name != "grant" }
-      scheme = IdentifierScheme.new(name: ApplicationService.application_name)
-      ids << Identifier.new(identifier_scheme: scheme, value: @plan.id)
-      ids
+    # Extract the ARK or DOI for the DMP OR use its URL if none exists
+    def identifier
+      doi = @plan.identifiers.select { |id| %w[ark doi].include?(id.identifier_format) }.first
+      return doi if doi.present?
+
+      # if no DOI then use the URL for the DMP
+      #scheme = IdentifierScheme.new(name: ApplicationService.application_name)
+      Identifier.new(value: Rails.application.routes.url_helpers.api_v1_plan_url(@plan))
     end
 
     private

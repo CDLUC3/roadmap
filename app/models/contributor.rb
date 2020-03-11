@@ -75,13 +75,4 @@ class Contributor < ActiveRecord::Base
             14 => :writing_review_editing,
             column: "roles"
 
-  # ===============
-  # Instance Methods
-  # ===============
-
-  def name(last_first: false)
-    names = [firstname, surname]
-    last_first ? names.reverse.join(", ") : names.join(" ")
-  end
-
 end

@@ -55,7 +55,7 @@ RSpec.configure do |config|
             },
             project: { "$ref": "#/definitions/project" }
           },
-          required: %w[title ethical_issues contact project]
+          required: %w[title ethical_issues contact project dataset]
         },
         dmp_identifier: {
           type: :object,
@@ -166,6 +166,26 @@ RSpec.configure do |config|
             }
           },
           required: %w[name funding_status grant_id]
+        },
+        dataset: {
+          type: :object,
+          properties: {
+            title: { type: :string, example: "Time lapse video of bacteria riding a bicycle" },
+            dataset_id: {
+              type: :object,
+              properties: {
+                type: {
+                  type: :string,
+                  enum: %w[ark doi handle url other],
+                  example: "doi"
+                },
+                identifier: { type: :string, example: "doi:10.9999/123ab/c453" }
+              }
+            },
+            personal_data: { type: :string, enum: %w[unknown yes no], example: "unknown" },
+            sensitive_data: { type: :string, enum: %w[unknown yes no], example: "unknown" }
+          },
+          required: %w[title dataset_id personal_data sensitive_data]
         }
       }
     }
