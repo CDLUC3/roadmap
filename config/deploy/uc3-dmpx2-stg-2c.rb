@@ -11,3 +11,16 @@ set :share_to, 'dmp/apps/dmp/shared'
 set :config_branch, 'uc3-dmpx2-stg'
 
 set :rails_env, 'stage'
+
+namespace :deploy do
+  after :deploy, 'swagger:build'
+end
+
+namespace :swagger do
+  desc 'Build the Swagger API docs'
+  task :build do
+    on roles(:app), wait: 1 do
+      execute "cd #{release_path} && bundle exec rake rswag"
+    end
+  end
+end
