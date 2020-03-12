@@ -20,8 +20,6 @@ module Api
         # add the contributor to the contributors array
         @plan.contributors.each do |contributor|
           @data_contact = contributor if contributor.data_curation? && @data_contact.nil?
-          next if @data_contact == contributor
-
           @contributors << contributor
         end
 

@@ -69,6 +69,11 @@ module Mocks
 
     def complete_create_json
       lang = Language.all.pluck(:abbreviation).sample || "en-UK"
+      contact = {
+        name: Faker::TvShows::Simpsons.character,
+        email: Faker::Internet.email,
+        id: SecureRandom.uuid
+      }
       {
         "total_items": 1,
         "items": [
@@ -82,8 +87,8 @@ module Mocks
               "ethical_issues_description": Faker::Lorem.paragraph,
               "ethical_issues_report": Faker::Internet.url,
               "contact": {
-                "name": Faker::TvShows::Simpsons.character,
-                "mbox": Faker::Internet.email,
+                "name": contact[:name],
+                "mbox": contact[:email],
                 "affiliation": {
                   "name": Faker::TvShows::Simpsons.location,
                   "abbreviation": Faker::Lorem.word.upcase,
@@ -95,12 +100,13 @@ module Mocks
                 },
                 "contact_id": {
                   "type": "orcid",
-                  "identifier": SecureRandom.uuid
+                  "identifier": contact[:id]
                 }
               },
               "contributor": [{
                 "role": [
-                  "https://dictionary.casrai.org/Contributor_Roles/#{ROLES.sample}"
+                  "https://dictionary.casrai.org/Contributor_Roles/Project_administration",
+                  "https://dictionary.casrai.org/Contributor_Roles/Investigation"
                 ],
                 "name": Faker::Movies::StarWars.character,
                 "mbox": Faker::Internet.email,
@@ -115,6 +121,24 @@ module Mocks
                 "contributor_id": {
                   "type": "orcid",
                   "identifier": SecureRandom.uuid
+                }
+              }, {
+                "role": [
+                  "https://dictionary.casrai.org/Contributor_Roles/Investigation"
+                ],
+                "name": contact[:name],
+                "mbox": contact[:email],
+                "affiliation": {
+                  "name": Faker::Movies::StarWars.planet,
+                  "abbreviation": Faker::Lorem.word.upcase,
+                  "affiliation_id": {
+                    "type": "ror",
+                    "identifier": SecureRandom.uuid
+                  }
+                },
+                "contributor_id": {
+                  "type": "orcid",
+                  "identifier": contact[:id]
                 }
               }],
               "project": [{
