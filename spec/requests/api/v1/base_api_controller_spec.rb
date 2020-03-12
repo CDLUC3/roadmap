@@ -81,26 +81,26 @@ RSpec.describe Api::V1::BaseApiController, type: :request do
           errs = @controller.send(:validate_json)
           expect(errs.first.include?("mbox")).to eql(true)
         end
-        it "fails if no dmp_ids are present" do
-          @json["items"].first["dmp"]["dmp_ids"] = []
+        it "fails if no dmp_id is present" do
+          @json["items"].first["dmp"]["dmp_id"] = {}
           @controller.send(:json=, @json)
           errs = @controller.send(:validate_json)
-          expect(errs.first.include?("dmp_ids")).to eql(true)
+          expect(errs.first.include?("dmp_id")).to eql(true)
         end
-        it "fails if dmp_ids are not a local DB id or a doi" do
-          @json["items"].first["dmp"]["dmp_ids"] = [{
+        it "fails if dmp_id is not a local DB id or a doi" do
+          @json["items"].first["dmp"]["dmp_id"] = {
             "#{Faker::Lorem.word}": SecureRandom.uuid
-          }]
+          }
           @controller.send(:json=, @json)
           errs = @controller.send(:validate_json)
-          expect(errs.first.include?("dmp_ids")).to eql(true)
+          expect(errs.first.include?("dmp_id")).to eql(true)
         end
       end
 
       context "minimal JSON for creating" do
         before(:each) do
           create(:template)
-          @app = ApplicationService.application_name
+          @app = ApplicationService.application_name.split("-").first
           @json = JSON.parse(minimal_create_json)
         end
 
@@ -108,30 +108,32 @@ RSpec.describe Api::V1::BaseApiController, type: :request do
           @controller.send(:json=, @json)
           expect(@controller.send(:validate_json).empty?).to eql(true)
         end
-        it "fails if no extended_attributes are present" do
-          @json["items"].first["dmp"]["extended_attributes"] = {}
+        it "fails if no extension is present" do
+          @json["items"].first["dmp"]["extension"] = []
           @controller.send(:json=, @json)
           errs = @controller.send(:validate_json)
-          expect(errs.first.include?("template_id")).to eql(true)
+          expect(errs.first.include?("[id]")).to eql(true)
         end
-        it "fails if no extended_attributes does not include an application area" do
-          @json["items"].first["dmp"]["extended_attributes"][@app] = {}
+        it "fails if no extension does not include an application area" do
+          @json["items"].first["dmp"]["extension"] = [{ "#{@app}": {} }]
           @controller.send(:json=, @json)
           errs = @controller.send(:validate_json)
-          expect(errs.first.include?("template_id")).to eql(true)
+          expect(errs.first.include?("[id]")).to eql(true)
         end
-        it "fails if no extended_attributes - application area does not have a template_id" do
-          @json["items"].first["dmp"]["extended_attributes"][@app]["template_id"] = ""
+        it "fails if no extension - application area does not have a template id" do
+          @json["items"].first["dmp"]["extension"] = [
+            { "#{@app}": { template: {} } }
+          ]
           @controller.send(:json=, @json)
           errs = @controller.send(:validate_json)
-          expect(errs.first.include?("template_id")).to eql(true)
+          expect(errs.first.include?("[id]")).to eql(true)
         end
       end
 
       context "complete JSON for creating" do
         before(:each) do
           create(:template)
-          @app = ApplicationService.application_name
+          @app = ApplicationService.application_name.split("-").first
           @json = JSON.parse(complete_create_json)
         end
 
@@ -151,21 +153,21 @@ RSpec.describe Api::V1::BaseApiController, type: :request do
 
       it "calls log_access if the authorization succeeds" do
         auth_svc = OpenStruct.new(call: @client)
-        Api::Auth::Jwt::AuthorizationService.expects(:new).returns(auth_svc)
+        Api::V1::Auth::Jwt::AuthorizationService.expects(:new).returns(auth_svc)
         @controller.expects(:log_access).at_least(1)
         @controller.send(:authorize_request)
       end
 
       it "sets the client if the authorization succeeds" do
         auth_svc = OpenStruct.new(call: @client)
-        Api::Auth::Jwt::AuthorizationService.expects(:new).returns(auth_svc)
+        Api::V1::Auth::Jwt::AuthorizationService.expects(:new).returns(auth_svc)
         @controller.send(:authorize_request)
         expect(@controller.client).to eql(@client)
       end
 
       it "renders an UNAUTHORIZED error if the client is not authorized" do
         auth_svc = OpenStruct.new(call: nil)
-        Api::Auth::Jwt::AuthorizationService.expects(:new).returns(auth_svc)
+        Api::V1::Auth::Jwt::AuthorizationService.expects(:new).returns(auth_svc)
         @controller.expects(:render_error).at_least(1)
         @controller.send(:authorize_request)
       end

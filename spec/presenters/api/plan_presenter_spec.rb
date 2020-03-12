@@ -2,7 +2,7 @@
 
 require "rails_helper"
 
-RSpec.describe Api::PlanPresenter do
+RSpec.describe Api::V1::PlanPresenter do
 
   describe "#initialize(plan:)" do
     before(:each) do

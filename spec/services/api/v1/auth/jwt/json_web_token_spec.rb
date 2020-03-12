@@ -2,7 +2,7 @@
 
 require "rails_helper"
 
-RSpec.describe Api::Auth::Jwt::JsonWebToken do
+RSpec.describe Api::V1::Auth::Jwt::JsonWebToken do
 
   before(:each) do
     @payload = {

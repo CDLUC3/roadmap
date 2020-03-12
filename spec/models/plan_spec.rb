@@ -1395,4 +1395,18 @@ describe Plan do
     end
   end
 
+  describe "#grant" do
+    let!(:plan) { create(:plan, :creator) }
+    let!(:grant) { create(:identifier, identifiable: plan, identifier_scheme: nil) }
+
+    it "returns nil if no grant_id is defined" do
+      expect(plan.grant).to eql(nil)
+    end
+    it "returns the grant as an Identifier" do
+      plan.update(grant_id: grant.id)
+      plan.reload
+      expect(plan.grant).to eql(grant)
+    end
+  end
+
 end

@@ -1,8 +1,7 @@
 class CreateContributors < ActiveRecord::Migration
   def change
     create_table :contributors do |t|
-      t.string :firstname
-      t.string :surname
+      t.string :name
       t.string :email, null: false, index: true
       t.string :phone
       t.integer :roles, index: true, null: false

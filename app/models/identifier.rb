@@ -27,17 +27,11 @@ class Identifier < ActiveRecord::Base
 
   belongs_to :identifiable, polymorphic: true
 
-  belongs_to :identifier_scheme
+  belongs_to :identifier_scheme #, optional: true
 
   # ===============
   # = Validations =
   # ===============
-
-  # TODO: This doesn't seem to work for a polymorphic relationship :/
-  # validates :identifier_scheme,
-  #          presence: { message: PRESENCE_MESSAGE },
-  #          uniqueness: { scope: %i[identifiable_id identifiable_type],
-  #                        message: UNIQUENESS_MESSAGE }
 
   validates :value, presence: { message: PRESENCE_MESSAGE }
 
@@ -56,6 +50,21 @@ class Identifier < ActiveRecord::Base
   # ===========================
   def attrs=(hash)
     write_attribute(:attrs, (hash.is_a?(Hash) ? hash.to_json.to_s : "{}"))
+  end
+
+  # Determines the format of the identifier based on the scheme or value
+  def identifier_format
+    scheme = identifier_scheme&.name
+    return scheme if %w[orcid ror fundref].include?(scheme)
+
+    return "ark" if value.include?("ark:")
+
+    doi_regex = /(doi:)?[0-9]{2}\.[0-9]+\/./
+    return "doi" if value =~ doi_regex
+
+    return "url" if value.starts_with?("http")
+
+    "other"
   end
 
 end

@@ -2,11 +2,11 @@
 
 require "rails_helper"
 
-RSpec.describe Api::JsonToAttributesService do
+RSpec.describe Api::V1::JsonToAttributesService do
 
   describe "#identifier_from_json(json: {})" do
     before(:each) do
-      @scheme = create(:identifier_scheme, user_landing_url: Faker::Internet.url)
+      @scheme = create(:identifier_scheme, identifier_prefix: "#{Faker::Internet.url}/")
     end
 
     it "returns nil when json[:identifier] is not present" do
@@ -17,46 +17,51 @@ RSpec.describe Api::JsonToAttributesService do
       json = { identifier: Faker::Lorem.word }
       expect(described_class.identifier_from_json(json: json)).to eql(nil)
     end
-    it "returns nil if there is no matching IdentifierScheme" do
-      json = { type: "foo", identifier: Faker::Lorem.word }
-      expect(described_class.identifier_from_json(json: json)).to eql(nil)
-    end
     it "returns the existing identifier" do
       id = create(:identifier, identifier_scheme: @scheme,
+                               value: "#{@scheme.identifier_prefix}#{Faker::Internet.url}",
                                identifiable: create(:org))
       json = { type: @scheme.name.downcase, identifier: id.value }
       expect(described_class.identifier_from_json(json: json)).to eql(id)
+    end
+    it "appends the identifier_scheme.identifier_prefix to the value" do
+      id = create(:identifier, identifier_scheme: @scheme,
+                               value: Faker::Lorem.word,
+                               identifiable: create(:org))
+      json = { type: @scheme.name.downcase, identifier: id.value }
+      expected = "#{@scheme.identifier_prefix}#{id.value}"
+      rslt = described_class.identifier_from_json(json: json)
+      expect(expected).to eql(rslt.value)
     end
     it "initializes a new identifier" do
       json = { type: @scheme.name.downcase, identifier: Faker::Lorem.word }
       expected = described_class.identifier_from_json(json: json)
       expect(expected.new_record?).to eql(true)
     end
-    it "strips out the IdentifierScheme user_landing_url from the value" do
-      val = Faker::Lorem.word
-      json = {
-        type: @scheme.name.downcase,
-        identifier: "#{@scheme.user_landing_url}#{val}"
-      }
-      expected = described_class.identifier_from_json(json: json)
-      expect(expected.value).to eql(val)
-    end
     it "sets the correct IdentifierScheme" do
       json = { type: @scheme.name.downcase, identifier: Faker::Lorem.word }
       result = described_class.identifier_from_json(json: json)
       expect(result.identifier_scheme).to eql(@scheme)
     end
+    it "ignores the IdentifierScheme if the type is unknown" do
+      json = { type: Faker::Lorem.word, identifier: Faker::Lorem.word }
+      result = described_class.identifier_from_json(json: json)
+      expect(result.identifier_scheme).to eql(nil)
+    end
     it "sets the value" do
       json = { type: @scheme.name.downcase, identifier: Faker::Lorem.word }
       result = described_class.identifier_from_json(json: json)
-      expect(result.value).to eql(json[:identifier])
+      expect(result.value).to eql("#{@scheme.identifier_prefix}#{json[:identifier]}")
     end
   end
 
   describe "#org_from_json(json: {})" do
     before(:each) do
       @org = create(:org)
-      @json = { name: Faker::Lorem.word }
+      @json = {
+        name: Faker::Lorem.word,
+        affiliation_id: { type: "url", identifier: Faker::Internet.url }
+      }
     end
 
     it "returns nil when json[:name] sand json[:affiliation_ids] are not present" do
@@ -78,7 +83,6 @@ RSpec.describe Api::JsonToAttributesService do
     end
     it "consolidates identifiers for the org" do
       described_class.stubs(:org_search_by_name).returns(@org)
-      @org.expects(:consolidate_identifiers!).at_least(1)
       described_class.org_from_json(json: @json)
     end
     it "sets the name" do
@@ -92,15 +96,24 @@ RSpec.describe Api::JsonToAttributesService do
     before(:each) do
       @plan = create(:plan)
       @contributor = create(:contributor, plan: @plan, investigation: true)
-      @json = { mbox: @contributor.email }
+      @json = {
+        name: @contributor.name,
+        mbox: @contributor.email,
+        role: ["#{Contributor::ONTOLOGY_BASE_URL}/#{@contributor.all_roles.last}"]
+      }
     end
 
     it "returns nil when json is not present" do
       result = described_class.contributor_from_json(plan: @plan, json: nil)
       expect(result).to eql(nil)
     end
-    it "returns nil when json[:mbox] sand json[:surname] and ids are not present" do
-      json = { firstname: Faker::Lorem.word }
+    it "returns nil when json[:mbox] is not present" do
+      json = { name: Faker::Lorem.word }
+      result = described_class.contributor_from_json(plan: @plan, json: json)
+      expect(result).to eql(nil)
+    end
+    it "returns nil when json[:name] is not present" do
+      json = { mbox: Faker::Internet.email }
       result = described_class.contributor_from_json(plan: @plan, json: json)
       expect(result).to eql(nil)
     end
@@ -114,7 +127,7 @@ RSpec.describe Api::JsonToAttributesService do
       expect(result).to eql(@contributor)
     end
     it "initializes a Contributor if one is not found by identifier or email" do
-      json = { mbox: Faker::Internet.email }
+      json = { name: Faker::Movies::StarWars.character, mbox: Faker::Internet.email }
       result = described_class.contributor_from_json(plan: @plan, json: json)
       expect(result.new_record?).to eql(true)
       expect(result.email).to eql(json[:mbox])
@@ -125,25 +138,20 @@ RSpec.describe Api::JsonToAttributesService do
       result = described_class.contributor_from_json(plan: @plan, json: @json)
       expect(result.org).to eql(@contributor.org)
     end
-    it "sets the firstname" do
-      json = { firstname: Faker::Lorem.word, mbox: Faker::Internet.email }
+    it "sets the name" do
+      json = { name: Faker::Lorem.word, mbox: Faker::Internet.email }
       result = described_class.contributor_from_json(plan: @plan, json: json)
-      expect(result.firstname).to eql(json[:firstname])
-    end
-    it "sets the surname" do
-      json = { firstname: Faker::Lorem.word, surname: Faker::Lorem.word }
-      result = described_class.contributor_from_json(plan: @plan, json: json)
-      expect(result.surname).to eql(json[:surname])
+      expect(result.name).to eql(json[:name])
     end
     it "sets the email" do
-      json = { mbox: Faker::Internet.email }
+      json = { name: Faker::Lorem.word, mbox: Faker::Internet.email }
       result = described_class.contributor_from_json(plan: @plan, json: json)
       expect(result.email).to eql(json[:mbox])
     end
     it "adds the new role" do
-      described_class.stubs(:contributor_from_json).returns(@contributor)
       result = described_class.contributor_from_json(plan: @plan, json: @json)
-      expect(result.investigation?).to eql(true)
+      expected = @contributor.all_roles.last
+      expect(result.selected_roles.include?(expected)).to eql(true)
     end
   end
 
@@ -151,7 +159,7 @@ RSpec.describe Api::JsonToAttributesService do
     include Mocks::ApiJsonSamples
 
     before(:each) do
-      create(:identifier_scheme, name: "grant")
+      create(:language, default_language: true)
       create(:template, is_default: true, published: true)
       @org = create(:org)
       described_class.stubs(:org_search_by_name).returns(@org)
@@ -170,18 +178,19 @@ RSpec.describe Api::JsonToAttributesService do
       @json[:contact] = {}
       expect(described_class.plan_from_json(json: @json)).to eql(nil)
     end
-    it "returns nil when json[:project] is not present" do
-      @json[:project] = {}
-      expect(described_class.plan_from_json(json: @json)).to eql(nil)
+    it "uses the plan when the Plan is passed in" do
+      expected = described_class.plan_from_json(plan: @plan, json: @json)
+      expect(expected.id).to eql(@plan.id)
     end
     it "returns the plan when the Plan is found by its Plan.id" do
-      @json["dmp_ids"] = [{
-        type: ApplicationService.application_name,
-        identifier: @plan.id
-      }]
+      @json["dmp_id"] = {
+        type: "url",
+        identifier: Rails.application.routes.url_helpers.api_v1_plan_url(@plan)
+      }
       expect(described_class.plan_from_json(json: @json)).to eql(@plan)
     end
     it "returns the plan when the Plan is found by an identifier" do
+      @json["dmp_id"] = { type: "doi", identifier: SecureRandom.uuid }
       Plan.stubs(:from_identifiers).returns(@plan)
       expect(described_class.plan_from_json(json: @json)).to eql(@plan)
     end
@@ -209,7 +218,7 @@ RSpec.describe Api::JsonToAttributesService do
     end
     it "attaches the Grant number if it was defined in the json" do
       result = described_class.plan_from_json(json: @json)
-      expect(result.identifier_for_scheme(scheme: "grant").present?).to eql(true)
+      expect(result.grant_id.present?).to eql(true)
     end
     it "sets the template (for new plans)" do
       result = described_class.plan_from_json(json: @json)

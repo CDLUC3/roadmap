@@ -2,7 +2,7 @@
 
 require "rails_helper"
 
-RSpec.describe Api::TemplatePresenter do
+RSpec.describe Api::V1::TemplatePresenter do
 
   describe "#title" do
     before(:each) do

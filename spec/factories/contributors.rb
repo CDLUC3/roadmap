@@ -5,8 +5,7 @@
 # Table name: contributors
 #
 #  id           :integer          not null, primary key
-#  firstname    :string
-#  surname      :string
+#  name         :string
 #  email        :string
 #  phone        :string
 #  roles        :integer
@@ -29,8 +28,7 @@
 FactoryBot.define do
   factory :contributor do
     org
-    firstname { Faker::Movies::StarWars.character.split.first }
-    surname { Faker::Movies::StarWars.character.split.last }
+    name { Faker::Movies::StarWars.character }
     email { Faker::Internet.email }
     phone { Faker::PhoneNumber.phone_number }
 
