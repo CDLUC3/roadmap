@@ -44,18 +44,18 @@ RSpec.configure do |config|
             ethical_issues: { type: :string, enum: %w[unknown yes no], example: "unknown" },
             ethical_issues_description: { type: :string, example: "An explanation of the types of ethical concerns our data may contain or deal with (e.g. 'We will anonymize patient data.')" },
             ethical_issues_report: { type: :string, example: "https://my.school.edu/path/to/a/report/on/ethics_and_privacy/statements.pdf" },
-            dmp_ids: {
-              type: :array,
-              items: { "$ref": "#/definitions/dmp_identifier" }
-            },
+            dmp_id: { "$ref": "#/definitions/dmp_identifier" },
             contact: { "$ref": "#/definitions/contact" },
-            contributors: {
+            contributor: {
               type: :array,
               items: { "$ref": "#/definitions/contributor" }
             },
-            project: { "$ref": "#/definitions/project" }
+            project: {
+              type: :array,
+              items: { "$ref": "#/definitions/project" }
+            }
           },
-          required: %w[title ethical_issues contact project dataset]
+          required: %w[title ethical_issues contact dataset]
         },
         dmp_identifier: {
           type: :object,

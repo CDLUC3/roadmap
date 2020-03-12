@@ -2,11 +2,11 @@
 
 require "rails_helper"
 
-RSpec.describe Api::Auth::Jwt::AuthorizationService do
+RSpec.describe Api::V1::Auth::Jwt::AuthorizationService do
 
   before(:each) do
     @token = SecureRandom.uuid
-    Api::Auth::Jwt::JsonWebToken.stubs(:decode).returns({ client_id: @token })
+    Api::V1::Auth::Jwt::JsonWebToken.stubs(:decode).returns({ client_id: @token })
     @headers = { "Authorization": "Bearer #{@token}" }
     @service = described_class.new(headers: @headers)
   end
@@ -55,7 +55,7 @@ RSpec.describe Api::Auth::Jwt::AuthorizationService do
         expect(@service.send(:decoded_auth_token)[:client_id]).to eql(@token)
       end
       it "adds 'token expired' to errors when a JWT has expired" do
-        Api::Auth::Jwt::JsonWebToken.stubs(:decode).raises(
+        Api::V1::Auth::Jwt::JsonWebToken.stubs(:decode).raises(
           JWT::ExpiredSignature)
         expect(@service.send(:decoded_auth_token)).to eql(nil)
         expect(@service.errors[:token]).to eql("Token expired")

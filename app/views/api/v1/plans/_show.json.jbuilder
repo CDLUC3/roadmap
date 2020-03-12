@@ -2,16 +2,20 @@
 
 # locals: plan
 
-presenter = Api::PlanPresenter.new(plan: plan)
+json.schema "https://github.com/RDA-DMP-Common/RDA-DMP-Common-Standard/tree/master/examples/JSON/JSON-schema/1.0"
+
+presenter = Api::V1::PlanPresenter.new(plan: plan)
 # A JSON representation of a Data Management Plan in the
 # RDA Common Standard format
 json.title plan.title
 json.description plan.description
-json.language Api::LanguagePresenter.three_char_code(lang: ApplicationService.default_language)
+json.language Api::V1::LanguagePresenter.three_char_code(
+  lang: ApplicationService.default_language
+)
 json.created plan.created_at.utc.to_s
 json.modified plan.updated_at.utc.to_s
 
-json.ethical_issues_exist Api::ConversionService.boolean_to_yes_no_unknown(
+json.ethical_issues_exist Api::V1::ConversionService.boolean_to_yes_no_unknown(
   plan.ethical_issues
 )
 json.ethical_issues_description plan.ethical_issues_description

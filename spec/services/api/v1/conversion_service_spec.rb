@@ -2,7 +2,7 @@
 
 require "rails_helper"
 
-RSpec.describe Api::ConversionService do
+RSpec.describe Api::V1::ConversionService do
 
   describe "boolean_to_yes_no_unknown" do
     it "returns `yes` when true" do

@@ -23,7 +23,7 @@ describe "api/v1/plans/_funding.json.jbuilder" do
       expect(@json[:name]).to eql(@funder.name)
     end
     it "includes :funding_status" do
-      expected = Api::FundingPresenter.status(plan: @plan)
+      expected = Api::V1::FundingPresenter.status(plan: @plan)
       expect(@json[:funding_status]).to eql(expected)
     end
     it "includes :funder_ids" do

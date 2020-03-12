@@ -33,7 +33,7 @@ module Api
       def authenticate
         body = request.body.read
         json = JSON.parse(body)
-        auth_svc = Api::Auth::Jwt::AuthenticationService.new(json: json)
+        auth_svc = Api::V1::Auth::Jwt::AuthenticationService.new(json: json)
         @token = auth_svc.call
 
         if @token.present?

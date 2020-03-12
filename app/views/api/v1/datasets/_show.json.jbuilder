@@ -2,7 +2,7 @@
 
 # locals: plan
 
-presenter = Api::PlanPresenter.new(plan: plan)
+presenter = Api::V1::PlanPresenter.new(plan: plan)
 
 json.title "Generic Dataset"
 json.personal_data "unknown"

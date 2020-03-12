@@ -2,7 +2,7 @@
 
 require "rails_helper"
 
-RSpec.describe Api::OrgPresenter do
+RSpec.describe Api::V1::OrgPresenter do
 
   describe "#affiliation_id" do
     before(:each) do

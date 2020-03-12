@@ -2,7 +2,7 @@
 
 require "rails_helper"
 
-RSpec.describe Api::LanguagePresenter do
+RSpec.describe Api::V1::LanguagePresenter do
 
   describe "#three_char_code(lang:)" do
     it "returns nil if the specified lang (as string) has no match" do

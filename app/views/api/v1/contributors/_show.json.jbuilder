@@ -10,7 +10,7 @@ json.mbox contributor.email
 unless is_contact
   if contributor.selected_roles.any?
     roles = contributor.selected_roles.map do |role|
-      Api::ContributorPresenter.role_as_uri(role: role)
+      Api::V1::ContributorPresenter.role_as_uri(role: role)
     end
     json.role roles if roles.any?
   end
@@ -24,7 +24,9 @@ end
 
 orcid = contributor.identifier_for_scheme(scheme: "orcid")
 if orcid.present?
-  id = Api::ContributorPresenter.contributor_id(identifiers: contributor.identifiers)
+  id = Api::V1::ContributorPresenter.contributor_id(
+    identifiers: contributor.identifiers
+  )
   if is_contact
     json.contact_id do
       json.partial! "api/v1/identifiers/show", identifier: id

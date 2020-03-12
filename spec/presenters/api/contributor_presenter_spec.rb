@@ -2,7 +2,7 @@
 
 require "rails_helper"
 
-RSpec.describe Api::ContributorPresenter do
+RSpec.describe Api::V1::ContributorPresenter do
 
   describe "#role_as_uri" do
     it "returns nil if the plans_contributor role is nil" do

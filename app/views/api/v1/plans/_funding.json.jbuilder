@@ -5,7 +5,7 @@
 json.name plan.funder&.name
 
 if plan.funder.present?
-  id = Api::OrgPresenter.affiliation_id(identifiers: plan.funder.identifiers)
+  id = Api::V1::OrgPresenter.affiliation_id(identifiers: plan.funder.identifiers)
 
   if id.present?
     json.funder_id do

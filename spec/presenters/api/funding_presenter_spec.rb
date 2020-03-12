@@ -2,7 +2,7 @@
 
 require "rails_helper"
 
-RSpec.describe Api::FundingPresenter do
+RSpec.describe Api::V1::FundingPresenter do
 
   describe "#status(plan:)" do
     it "returns `planned` if the plan is nil" do

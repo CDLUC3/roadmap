@@ -2,11 +2,11 @@
 
 require "rails_helper"
 
-RSpec.describe Api::Auth::Jwt::AuthenticationService do
+RSpec.describe Api::V1::Auth::Jwt::AuthenticationService do
 
   before(:each) do
     @jwt = SecureRandom.uuid
-    Api::Auth::Jwt::JsonWebToken.stubs(:encode).returns(@jwt)
+    Api::V1::Auth::Jwt::JsonWebToken.stubs(:encode).returns(@jwt)
   end
 
   context "instance methods" do
