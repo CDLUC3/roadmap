@@ -2,7 +2,7 @@
 
 require "rails_helper"
 
-RSpec.describe Api::ApplicationService do
+RSpec.describe ApplicationService do
 
   describe "#default_language" do
     it "returns the default language abbreviation defined in languages table" do

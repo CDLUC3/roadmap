@@ -59,19 +59,19 @@ RSpec.describe Api::V1::PlansController, type: :request do
           expect(response).to render_template("api/v1/error")
         end
         it "returns a 400 if the plan already exists" do
-          plan = create(:plan)
-          @json[:items].first[:dmp][:dmp_ids] = [{
-            type: ApplicationService.application_name,
-            identifier: plan.id
-          }]
+          plan = create(:plan, created_at: (Time.now - 3.days))
+          @json[:items].first[:dmp][:dmp_id] = {
+            type: "url",
+            identifier: Rails.application.routes.url_helpers.api_v1_plan_url(plan)
+          }
           post api_v1_plans_path, @json.to_json
           expect(response.code).to eql("400")
           expect(response).to render_template("api/v1/error")
           expect(response.body.include?("already exists")).to eql(true)
         end
-        it "returns a 200 if the incoming JSON is valid" do
+        it "returns a 201 if the incoming JSON is valid" do
           post api_v1_plans_path, @json.to_json
-          expect(response.code).to eql("200")
+          expect(response.code).to eql("201")
           expect(response).to render_template("api/v1/plans/index")
         end
 
@@ -98,8 +98,9 @@ RSpec.describe Api::V1::PlansController, type: :request do
             expect(expected.writing_original_draft?).to eql(true)
           end
           it "set the Template id" do
-            app = ApplicationService.application_name
-            expected = @original[:extended_attributes][:"#{app}"][:template_id]
+            app = ApplicationService.application_name.split("-").first
+            tmplt = @original[:extension].select { |i| i[app].present? }.first
+            expected = tmplt[app][:template][:id]
             expect(@plan.template_id).to eql(expected)
           end
         end
@@ -110,9 +111,9 @@ RSpec.describe Api::V1::PlansController, type: :request do
           @json = JSON.parse(complete_create_json).with_indifferent_access
         end
 
-        it "returns a 200 if the incoming JSON is valid" do
+        it "returns a 201 if the incoming JSON is valid" do
           post api_v1_plans_path, @json.to_json
-          expect(response.code).to eql("200")
+          expect(response.code).to eql("201")
           expect(response).to render_template("api/v1/plans/index")
         end
 
@@ -147,10 +148,10 @@ RSpec.describe Api::V1::PlansController, type: :request do
           end
           it "Plan identifiers includes the grant id" do
             expect(@plan.identifiers.length).to eql(1)
-            expected = @original[:project][:funding].first[:grant_ids].first[:type]
-            expect(@plan.identifiers.first.identifier_scheme.name).to eql(expected)
+            expected = @original[:project].first[:funding].first[:grant_id][:type]
+            expect("other").to eql(expected)
 
-            expected = @original[:project][:funding].first[:grant_ids].first[:identifier]
+            expected = @original[:project].first[:funding].first[:grant_id][:identifier]
             expect(@plan.identifiers.first.value).to eql(expected)
           end
 
@@ -166,11 +167,8 @@ RSpec.describe Api::V1::PlansController, type: :request do
             it "attached the Contact to the Plan" do
               expect(@contact.present?).to eql(true)
             end
-            it "set the Contact firstname" do
-              expect(@contact.firstname).to eql(@original[:firstname])
-            end
-            it "set the Contact surname" do
-              expect(@contact.surname).to eql(@original[:surname])
+            it "set the Contact name" do
+              expect(@contact.name).to eql(@original[:name])
             end
             it "set the Contact email" do
               expect(@contact.email).to eql(@original[:mbox])
@@ -181,22 +179,23 @@ RSpec.describe Api::V1::PlansController, type: :request do
             end
             it "Contact identifiers includes the orcid" do
               expect(@contact.identifiers.length).to eql(1)
-              expected = @original[:contributor_ids].first[:type]
+              expected = @original[:contact_id][:type]
               expect(@contact.identifiers.first.identifier_scheme.name).to eql(expected)
 
-              expected = @original[:contributor_ids].first[:identifier]
-              expect(@contact.identifiers.first.value).to eql(expected)
+              expected = @original[:contact_id][:identifier]
+              rslt = @contact.identifiers.first.value
+              expect(rslt.ends_with?(expected)).to eql(true)
             end
             it "ignored the unknown identifier type" do
               results = @contact.identifiers.select do |i|
-                i.value == @original[:contributor_ids].last
+                i.value == @original[:contact_id]
               end
               expect(results.any?).to eql(false)
             end
 
             context "contact org inspection" do
               before(:each) do
-                @original = @original[:affiliations].first
+                @original = @original[:affiliation]
               end
 
               it "attached the Org to the Contact" do
@@ -210,11 +209,12 @@ RSpec.describe Api::V1::PlansController, type: :request do
               end
               it "Org identifiers includes the affiation id" do
                 expect(@contact.org.identifiers.length).to eql(1)
-                expected = @original[:affiliation_ids].first[:type]
+                expected = @original[:affiliation_id][:type]
                 expect(@contact.org.identifiers.first.identifier_scheme.name).to eql(expected)
 
-                expected = @original[:affiliation_ids].first[:identifier]
-                expect(@contact.org.identifiers.first.value).to eql(expected)
+                expected = @original[:affiliation_id][:identifier]
+                rslt = @contact.org.identifiers.first.value
+                expect(rslt.ends_with?(expected)).to eql(true)
               end
               it "is the same as the Plan's org" do
                 expect(@plan.org).to eql(@contact.org)
@@ -224,9 +224,9 @@ RSpec.describe Api::V1::PlansController, type: :request do
 
           context "contributor inspection" do
             before(:each) do
-              @original = @original[:contributors].first
-              contributors = @plan.contributors.select do |pc|
-                pc.email == @original[:mbox]
+              @original = @original[:contributor].first
+              contributors = @plan.contributors.select do |contrib|
+                contrib.email == @original[:mbox]
               end
               @subject = contributors.first
             end
@@ -234,31 +234,31 @@ RSpec.describe Api::V1::PlansController, type: :request do
             it "attached the Contributor to the Plan" do
               expect(@subject.present?).to eql(true)
             end
-            it "set the Contributor firstname" do
-              expect(@subject.firstname).to eql(@original[:firstname])
-            end
-            it "set the Contributor surname" do
-              expect(@subject.surname).to eql(@original[:surname])
+            it "set the Contributor name" do
+              expect(@subject.name).to eql(@original[:name])
             end
             it "set the Contributor email" do
               expect(@subject.email).to eql(@original[:mbox])
             end
             it "set the Contributor roles" do
-              expected = @original[:role].gsub("#{Contributor::CREDIT_TAXONOMY_URI_BASE}/", "")
-              expect(@subject.send(:"#{expected.downcase}?")).to eql(true)
+              expected = @original[:role].map do |role|
+                role.gsub("#{Contributor::ONTOLOGY_BASE_URL}/", "")
+              end
+              expect(@subject.send(:"#{expected.first.downcase}?")).to eql(true)
             end
             it "Contributor identifiers includes the orcid" do
               expect(@subject.identifiers.length).to eql(1)
-              expected = @original[:contributor_ids].first[:type]
+              expected = @original[:contributor_id][:type]
               expect(@subject.identifiers.first.identifier_scheme.name).to eql(expected)
 
-              expected = @original[:contributor_ids].first[:identifier]
-              expect(@subject.identifiers.first.value).to eql(expected)
+              expected = @original[:contributor_id][:identifier]
+              rslt = @subject.identifiers.first.value
+              expect(rslt.ends_with?(expected)).to eql(true)
             end
 
             context "contributor org inspection" do
               before(:each) do
-                @original = @original[:affiliations].first
+                @original = @original[:affiliation]
               end
 
               it "attached the Org to the Contributor" do
@@ -272,18 +272,19 @@ RSpec.describe Api::V1::PlansController, type: :request do
               end
               it "Org identifiers includes the affiation id" do
                 expect(@subject.org.identifiers.length).to eql(1)
-                expected = @original[:affiliation_ids].first[:type]
-                expect(@subject.org.identifiers.first.identifier_scheme.name).to eql(expected)
+                expected = @original[:affiliation_id][:type]
+                expect("ror").to eql(expected)
 
-                expected = @original[:affiliation_ids].first[:identifier]
-                expect(@subject.org.identifiers.first.value).to eql(expected)
+                expected = @original[:affiliation_id][:identifier]
+                rslt = @subject.org.identifiers.first.value
+                expect(rslt.ends_with?(expected)).to eql(true)
               end
             end
           end
 
           context "funder inspection" do
             before(:each) do
-              @original = @original[:project][:funding].first
+              @original = @original[:project].first[:funding].first
               @funder = @plan.funder
             end
 
@@ -295,17 +296,19 @@ RSpec.describe Api::V1::PlansController, type: :request do
             end
             it "Funder identifiers includes the funder_id id" do
               expect(@funder.identifiers.length).to eql(1)
-              expected = @original[:funder_ids].first[:type]
+              expected = @original[:funder_id][:type]
               expect(@funder.identifiers.first.identifier_scheme.name).to eql(expected)
 
-              expected = @original[:funder_ids].first[:identifier]
-              expect(@funder.identifiers.first.value.to_s).to eql(expected.to_s)
+              expected = @original[:funder_id][:identifier].to_s
+              rslt = @funder.identifiers.first.value
+              expect(rslt.ends_with?(expected)).to eql(true)
             end
           end
 
           it "set the Template id" do
-            app = ApplicationService.application_name
-            expected = @original[:extended_attributes][:"#{app}"][:template_id]
+            app = ApplicationService.application_name.split("-").first
+            tmplt = @original[:extension].select { |i| i[app].present? }.first
+            expected = tmplt[app][:template][:id]
             expect(@plan.template_id).to eql(expected)
           end
         end

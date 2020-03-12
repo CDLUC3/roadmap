@@ -3,7 +3,7 @@
 # locals: response, request, total_items
 
 total_items = total_items || 0
-paginator = Api::PaginationPresenter.new(current_url: request.path,
+paginator = Api::V1::PaginationPresenter.new(current_url: request.path,
                                          per_page: @per_page,
                                          total_items: total_items,
                                          current_page: @page)

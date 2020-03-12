@@ -7,7 +7,7 @@ describe "api/v1/token.json.jbuilder" do
   before(:each) do
     @url = Faker::Internet.url
     @payload = { client_id: "foo" }
-    @token = Api::Auth::Jwt::JsonWebToken.encode(payload: @payload)
+    @token = Api::V1::Auth::Jwt::JsonWebToken.encode(payload: @payload)
     @exp = @payload[:exp]
     @type = Faker::Lorem.word.capitalize
 

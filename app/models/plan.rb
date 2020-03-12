@@ -31,11 +31,13 @@
 #  ethical_issues_report             :string
 #  org_id                            :integer
 #  funder_id                         :integer
+#  grant_id                          :integer
 #
 # Indexes
 #
 #  index_plans_on_template_id  (template_id)
 #  index_plans_on_funder_id    (funder_id)
+#  index_plans_on_grant_id     (grant_id)
 #
 # Foreign Keys
 #
@@ -43,8 +45,8 @@
 #  fk_rails_...  (org_id => orgs.id)
 #
 
-# TODO: Drop the funder_name column once the funder_id has been back
-#       filled and we're removing the is_other org stuff
+# TODO: Drop the funder_name and grant_number columns once the funder_id has
+#       been back filled and we're removing the is_other org stuff
 
 class Plan < ActiveRecord::Base
 
@@ -555,6 +557,13 @@ class Plan < ActiveRecord::Base
     else
       false
     end
+  end
+
+  # Returns the identifier associated with the grant_id
+  def grant
+    return nil unless grant_id.present?
+
+    identifiers.select { |identifier| identifier.id == grant_id }.first
   end
 
   private

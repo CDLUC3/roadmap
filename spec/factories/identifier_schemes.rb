@@ -18,7 +18,7 @@ FactoryBot.define do
     name { Faker::Company.unique.name[0..29] }
     description { Faker::Movies::StarWars.quote }
     logo_url { Faker::Internet.url }
-    user_landing_url { Faker::Internet.url }
+    identifier_prefix { "#{Faker::Internet.url}/" }
     active { true }
 
     transient do

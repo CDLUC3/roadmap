@@ -48,11 +48,15 @@ class OrgsController < ApplicationController
         if shib.present? && attrs.fetch(:identifiers_attributes, {}).any?
           entity_id = attrs[:identifiers_attributes].first[1][:value]
 
-          if entity_id.present?
-            identifier = Identifier.find_or_initialize_by(identifiable: @org,
-                                                          identifier_scheme: shib)
+          identifier = Identifier.find_or_initialize_by(identifiable: @org,
+                                                        identifier_scheme: shib)
+          if entity_id.present? && identifier.present?
             identifier.value = entity_id
-            identifiers << identifier
+            identifier.save
+            @org.reload
+          else
+            # Otherwise it was blanked out, so delete it
+            identifier.destroy unless identifier.new_record?
           end
         end
         attrs.delete(:identifiers_attributes)
