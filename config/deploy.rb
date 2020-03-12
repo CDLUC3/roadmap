@@ -1,5 +1,5 @@
 # config valid only for current version of Capistrano
-lock "3.12.0"
+lock "3.12.1"
 
 # Default branch is :master
 ask :branch, `git rev-parse --abbrev-ref HEAD`.chomp unless ENV['BRANCH']
