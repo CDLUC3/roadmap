@@ -243,6 +243,17 @@ gem "dotenv-rails"
 gem "activerecord-session_store"
 
 # ------------------------------------------------
+# Start DMPTool customization
+
+# Swagger tooling for Rails API's. Generate beautiful API documentation,
+# including a UI to explore and test operations, directly from your rspec
+# integration tests.
+gem "rswag"
+
+# End DMPTool customization
+# ------------------------------------------------
+
+# ------------------------------------------------
 # ENVIRONMENT SPECIFIC DEPENDENCIES
 group :development, :test do
   # Ruby fast debugger - base + CLI
@@ -274,13 +285,14 @@ group :development, :test do
   gem "capistrano"
 
   gem "capistrano-rails"
-# End DMPTool customization
-# ------------------------------------------------
 
   # Swagger tooling for Rails API's. Generate beautiful API documentation,
   # including a UI to explore and test operations, directly from your rspec
   # integration tests.
-  gem "rswag"
+  #gem "rswag"
+
+# End DMPTool customization
+# ------------------------------------------------
 end
 
 group :test do
