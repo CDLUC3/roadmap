@@ -6,14 +6,10 @@ describe "api/v1/plans/_show.json.jbuilder" do
 
   before(:each) do
     @plan = create(:plan, ethical_issues: true)
-    @data_contact = create(:contributor)
-    @pi = create(:contributor)
-    @plan.plans_contributors = [
-      create(:plans_contributor, contributor: @data_contact, data_curation: true,
-                                 writing_original_draft: true),
-      create(:plans_contributor, contributor: @pi, investigation: true)
-
-    ]
+    @data_contact = create(:contributor, writing_original_draft: true,
+                                         data_curation: true, plan: @plan)
+    @pi = create(:contributor, investigation: true, plan: @plan)
+    @plan.contributors = [@data_contact, @pi]
     create(:identifier, identifiable: @plan)
     @plan.reload
   end
@@ -32,7 +28,7 @@ describe "api/v1/plans/_show.json.jbuilder" do
       expect(@json[:description]).to eql(@plan.description)
     end
     it "includes the :language" do
-      expected = ApplicationService.default_language
+      expected = Api::V1::LanguagePresenter.three_char_code(lang: ApplicationService.default_language)
       expect(@json[:language]).to eql(expected)
     end
     it "includes the :created" do
@@ -52,22 +48,56 @@ describe "api/v1/plans/_show.json.jbuilder" do
       expect(@json[:ethical_issues_report]).to eql(@plan.ethical_issues_report)
     end
 
-    it "includes the :identifiers" do
-      expected = @plan.identifiers.first.value
-      expect(@json[:dmp_ids].first[:identifier].end_with?(expected)).to eql(true)
+    it "returns the URL of the plan as the :dmp_id if no DOI is defined" do
+      expected = Rails.application.routes.url_helpers.api_v1_plan_url(@plan)
+      expect(@json[:dmp_id][:type]).to eql("url")
+      expect(@json[:dmp_id][:identifier]).to eql(expected)
     end
 
     it "includes the :contact" do
       expect(@json[:contact][:mbox]).to eql(@data_contact.email)
     end
     it "includes the :contributors" do
-      expect(@json[:contributors].first[:mbox]).to eql(@pi.email)
+      expect(@json[:contributor].first[:mbox]).to eql(@pi.email)
     end
 
     # TODO: make sure this is working once the new Cost theme and Currency
     #       question type have been implemented
-    it "includes the :costs" do
-      expect(@json[:costs]).to eql(nil)
+    it "includes the :cost" do
+      expect(@json[:cost]).to eql(nil)
+    end
+
+    it "includes the :project" do
+      expect(@json[:project].length).to eql(1)
+    end
+    it "includes the :dataset" do
+      expect(@json[:dataset].length).to eql(1)
+    end
+    it "includes the :extension" do
+      expect(@json[:extension].length).to eql(1)
+    end
+    it "includes the :template in :extension" do
+      app = ApplicationService.application_name.split("-").first
+      @section = @json[:extension].select { |hash| hash.keys.first == app }.first
+      expect(@section[app.to_sym].present?).to eql(true)
+      tmplt = @plan.template
+      expect(@section[app.to_sym][:template][:id]).to eql(tmplt.id)
+      expect(@section[app.to_sym][:template][:title]).to eql(tmplt.title)
+    end
+
+  end
+
+  describe "when the system mints DOIs" do
+    before(:each) do
+      @doi = create(:identifier, value: "10.9999/123abc.zy/x23", identifiable: @plan)
+      @plan.reload
+      render partial: "api/v1/plans/show", locals: { plan: @plan }
+      @json = JSON.parse(rendered).with_indifferent_access
+    end
+
+    it "returns the DOI for the :dmp_id if one is present" do
+      expect(@json[:dmp_id][:type]).to eql("doi")
+      expect(@json[:dmp_id][:identifier]).to eql(@doi.value)
     end
   end
 

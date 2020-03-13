@@ -1,5 +1,7 @@
 Rails.application.routes.draw do
 
+  mount Rswag::Ui::Engine => '/api-docs'
+  mount Rswag::Api::Engine => '/api-docs'
   devise_for( :users, controllers: {
     registrations: "registrations",
     passwords: 'passwords',
@@ -77,6 +79,9 @@ Rails.application.routes.draw do
 
   #post 'contact_form' => 'contacts', as: 'localized_contact_creation'
   #get 'contact_form' => 'contacts#new', as: 'localized_contact_form'
+
+  # AJAX call used to search for Orgs based on user input into autocompletes
+  post "orgs" => "orgs#search", as: "orgs_search"
 
   # AJAX call used to search for Orgs based on user input into autocompletes
   post "orgs" => "orgs#search", as: "orgs_search"
@@ -237,6 +242,10 @@ Rails.application.routes.draw do
     resources :departments, only: [] do
       get 'index/:page', action: :index, on: :collection, as: :index
     end
+    # Paginable actions for api_clients
+    resources :api_clients, only: [] do
+      get 'index/:page', action: :index, on: :collection, as: :index
+    end
   end
 
   resources :template_options, only: [:index], constraints: { format: /json/ }
@@ -310,6 +319,13 @@ Rails.application.routes.draw do
       end
     end
     resources :notifications, except: [:show]
+
+    resources :api_clients do
+      member do
+        get :email_credentials
+        get :refresh_credentials
+      end
+    end
   end
 
   get "research_projects/search", action: "search",

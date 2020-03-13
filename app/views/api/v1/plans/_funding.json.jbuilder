@@ -2,19 +2,21 @@
 
 # locals: plan
 
-json.name plan.funder.name
-json.funding_status Api::FundingPresenter.status(plan: plan)
+json.name plan.funder&.name
 
-if plan.funder.identifiers.any?
-  json.funder_ids plan.funder.identifiers do |identifier|
-    json.partial! "api/v1/identifiers/show", identifier: identifier
+if plan.funder.present?
+  id = Api::V1::OrgPresenter.affiliation_id(identifiers: plan.funder.identifiers)
+
+  if id.present?
+    json.funder_id do
+      json.partial! "api/v1/identifiers/show", identifier: id
+    end
   end
 end
 
-if plan.grant_number.present?
-  grant = Api::ConversionService.to_identifier(context: "grant",
-                                               value: plan.grant_number)
-  json.grant_ids [grant] do |grant|
-    json.partial! "api/v1/identifiers/show", identifier: grant
+if plan.grant_id.present? && plan.grant.present?
+  json.grant_id do
+    json.partial! 'api/v1/identifiers/show', identifier: plan.grant
   end
 end
+json.funding_status plan.grant.present? ? "granted" : "planned"

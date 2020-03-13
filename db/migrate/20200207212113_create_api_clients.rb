@@ -4,6 +4,7 @@ class CreateApiClients < ActiveRecord::Migration
       t.string :name, null: false, index: true
       t.string :description
       t.string :homepage
+      t.string :contact_name
       t.string :contact_email, null: false
       t.string :client_id, null: false
       t.string :client_secret, null: false

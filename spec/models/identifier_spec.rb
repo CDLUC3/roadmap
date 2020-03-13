@@ -5,19 +5,9 @@ require "rails_helper"
 RSpec.describe Identifier, type: :model do
 
   context "validations" do
-    it do
-      subject.identifier_scheme = create(:identifier_scheme)
-      subject.value = Faker::Lorem.word
-      is_expected.to validate_uniqueness_of(:identifier_scheme)
-        .scoped_to(%i[identifiable_id identifiable_type])
-        .with_message("must be unique")
-    end
-
     it { is_expected.to validate_presence_of(:value) }
 
     it { is_expected.to validate_presence_of(:identifiable) }
-
-    it { is_expected.to validate_presence_of(:identifier_scheme) }
   end
 
   context "associations" do
@@ -62,6 +52,58 @@ RSpec.describe Identifier, type: :model do
     it "when hash is a String sets attrs to empty JSON object" do
       identifier.attrs = ""
       expect(identifier.attrs).to eql({}.to_json)
+    end
+  end
+
+  describe "#identifier_format" do
+    it "returns 'orcid' for identifiers associated with the orcid identifier_scheme" do
+      scheme = build(:identifier_scheme, name: "orcid")
+      id = build(:identifier, identifier_scheme: scheme)
+      expect(id.identifier_format).to eql("orcid")
+    end
+    it "returns 'ror' for identifiers associated with the ror identifier_scheme" do
+      scheme = build(:identifier_scheme, name: "ror")
+      id = build(:identifier, identifier_scheme: scheme)
+      expect(id.identifier_format).to eql("ror")
+    end
+    it "returns 'fundref' for identifiers associated with the fundref identifier_scheme" do
+      scheme = build(:identifier_scheme, name: "fundref")
+      id = build(:identifier, identifier_scheme: scheme)
+      expect(id.identifier_format).to eql("fundref")
+    end
+    it "returns 'ark' for identifiers whose value contains 'ark:'" do
+      scheme = build(:identifier_scheme, name: "ror")
+      val = "#{scheme.identifier_prefix}ark:#{Faker::Lorem.word}"
+      id = create(:identifier, value: val)
+      expect(id.identifier_format).to eql("ark")
+    end
+    it "returns 'doi' for identifiers whose value matches the doi format" do
+      scheme = build(:identifier_scheme, name: "ror")
+      val = "#{scheme.identifier_prefix}doi:10.1234/123abc98"
+      id = create(:identifier, value: val)
+      expect(id.identifier_format).to eql("doi"), "expected url containing 'doi:' to be a doi"
+
+      val = "#{scheme.identifier_prefix}10.1234/123abc98"
+      id = create(:identifier, value: val)
+      expect(id.identifier_format).to eql("doi"), "expected url not containing 'doi:' to be a doi"
+    end
+    it "returns 'url' for identifiers whose value matches a URL format" do
+      scheme = build(:identifier_scheme, name: "ror")
+      id = create(:identifier, value: "#{scheme.identifier_prefix}#{Faker::Lorem.word}")
+      expect(id.identifier_format).to eql("url")
+
+      id = create(:identifier, value: "#{scheme.identifier_prefix}#{Faker::Lorem.word}")
+      expect(id.identifier_format).to eql("url")
+    end
+    it "returns 'other' for all other identifier values" do
+      id = create(:identifier, value: Faker::Lorem.word)
+      expect(id.identifier_format).to eql("other"), "expected alpha characters to return 'other'"
+
+      id = create(:identifier, value: Faker::Number.number)
+      expect(id.identifier_format).to eql("other"), "expected numeric characters to return 'other'"
+
+      id = create(:identifier, value: SecureRandom.uuid)
+      expect(id.identifier_format).to eql("other"), "expected UUID to return 'other'"
     end
   end
 

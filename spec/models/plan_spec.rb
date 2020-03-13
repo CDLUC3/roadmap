@@ -47,8 +47,6 @@ describe Plan do
 
     it { is_expected.to have_many :setting_objects }
 
-    it { is_expected.to have_many :plans_contributors }
-
     it { is_expected.to have_many :contributors }
 
     it { is_expected.to have_many(:identifiers) }
@@ -866,6 +864,36 @@ describe Plan do
       end
     end
 
+    context "explicit sharing does not conflict with admin-viewing" do
+
+      it "super admins" do
+        Branding.expects(:fetch)
+                .with(:service_configuration, :plans, :super_admins_read_all)
+                .at_most_once
+                .returns(false)
+
+        user.perms << create(:perm, name: "add_organisations")
+        role = subject.roles.commenter.first
+        role.user_id = user.id
+        role.save!
+
+        expect(subject.readable_by?(user.id)).to eql(true)
+      end
+
+      it "org admins" do
+        Branding.expects(:fetch)
+                .with(:service_configuration, :plans, :org_admins_read_all)
+                .at_most_once
+                .returns(false)
+
+        user.perms << create(:perm, name: "modify_guidance")
+        role = subject.roles.commenter.first
+        role.user_id = user.id
+        role.save!
+
+        expect(subject.readable_by?(user.id)).to eql(true)
+      end
+    end
   end
 
   describe "#commentable_by?" do
@@ -1394,6 +1422,20 @@ describe Plan do
 
       it { is_expected.to eql(false) }
 
+    end
+  end
+
+  describe "#grant" do
+    let!(:plan) { create(:plan, :creator) }
+    let!(:grant) { create(:identifier, identifiable: plan, identifier_scheme: nil) }
+
+    it "returns nil if no grant_id is defined" do
+      expect(plan.grant).to eql(nil)
+    end
+    it "returns the grant as an Identifier" do
+      plan.update(grant_id: grant.id)
+      plan.reload
+      expect(plan.grant).to eql(grant)
     end
   end
 

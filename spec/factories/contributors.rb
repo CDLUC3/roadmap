@@ -5,11 +5,12 @@
 # Table name: contributors
 #
 #  id           :integer          not null, primary key
-#  firstname    :string
-#  surname      :string
+#  name         :string
 #  email        :string
 #  phone        :string
+#  roles        :integer
 #  org_id       :integer
+#  plan_id      :integer
 #  created_at   :datetime
 #  updated_at   :datetime
 #
@@ -22,13 +23,23 @@
 # Foreign Keys
 #
 #  fk_rails_...  (org_id => orgs.id)
+#  fk_rails_...  (plan_id => plans.id)
 
 FactoryBot.define do
   factory :contributor do
     org
-    firstname { Faker::Movies::StarWars.character.split.first }
-    surname { Faker::Movies::StarWars.character.split.last }
+    name { Faker::Movies::StarWars.character }
     email { Faker::Internet.email }
     phone { Faker::PhoneNumber.phone_number }
+
+    transient do
+      roles_count { 1 }
+    end
+
+    after(:create) do |contributor, evaluator|
+      (0..evaluator.roles_count - 1).each do |idx|
+        contributor.update("#{contributor.all_roles[idx]}": true)
+      end
+    end
   end
 end

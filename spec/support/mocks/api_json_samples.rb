@@ -26,15 +26,13 @@ module Mocks
                 "name": Faker::TvShows::Simpsons.character,
                 "mbox": Faker::Internet.email
               },
-              "project": {
+              "dataset": {
                 "title": Faker::Lorem.sentence
               },
-              "dmp_ids": [
-                {
-                  "type": "#{ApplicationService.application_name}",
-                  "identifier": SecureRandom.uuid
-                }
-              ]
+              "dmp_id": {
+                "type": "doi",
+                "identifier": SecureRandom.uuid
+              }
             }
           }
         ]
@@ -52,14 +50,17 @@ module Mocks
                 "name": Faker::TvShows::Simpsons.character,
                 "mbox": Faker::Internet.email
               },
-              "project": {
+              "dataset": {
                 "title": Faker::Lorem.sentence
               },
-              "extended_attributes": {
-                "#{ApplicationService.application_name}": {
-                  "template_id": Template.last.id
+              "extension": [
+                "#{ApplicationService.application_name.split("-").first}": {
+                  "template": {
+                    "id": Template.last.id,
+                    "title": Faker::Lorem.sentence
+                  }
                 }
-              }
+              ]
             }
           }
         ]
@@ -67,6 +68,12 @@ module Mocks
     end
 
     def complete_create_json
+      lang = Language.all.pluck(:abbreviation).sample || "en-UK"
+      contact = {
+        name: Faker::TvShows::Simpsons.character,
+        email: Faker::Internet.email,
+        id: SecureRandom.uuid
+      }
       {
         "total_items": 1,
         "items": [
@@ -75,74 +82,100 @@ module Mocks
               "created": (Time.now - 3.months).utc.to_s,
               "title": Faker::Lorem.sentence,
               "description": Faker::Lorem.paragraph,
-              "language": Language.all.pluck(:abbreviation).sample,
+              "language": Api::V1::LanguagePresenter.three_char_code(lang: lang),
               "ethical_issues_exist": %w[yes no unknown].sample,
               "ethical_issues_description": Faker::Lorem.paragraph,
               "ethical_issues_report": Faker::Internet.url,
               "contact": {
-                "firstname": Faker::TvShows::Simpsons.character.split.first,
-                "surname": Faker::TvShows::Simpsons.character.split.last,
-                "mbox": Faker::Internet.email,
-                "role": "https://dictionary.casrai.org/Contributor_Roles/Data_curation",
-                "affiliations": [{
+                "name": contact[:name],
+                "mbox": contact[:email],
+                "affiliation": {
                   "name": Faker::TvShows::Simpsons.location,
                   "abbreviation": Faker::Lorem.word.upcase,
                   "region": Faker::Space.planet,
-                  "affiliation_ids": [{
+                  "affiliation_id": {
                     "type": "ror",
                     "identifier": SecureRandom.uuid
-                  }]
-                }],
-                "contributor_ids": [{
-                  "type": "orcid",
-                  "identifier": SecureRandom.uuid
+                  }
                 },
-                {
-                  "type": Faker::Lorem.word,
-                  "identifier": Faker::Number.number
-                }]
+                "contact_id": {
+                  "type": "orcid",
+                  "identifier": contact[:id]
+                }
               },
-              "contributors": [{
-                "role": "https://dictionary.casrai.org/Contributor_Roles/#{ROLES.sample}",
-                "firstname": Faker::Movies::StarWars.character.split.first,
-                "surname": Faker::Movies::StarWars.character.split.last,
+              "contributor": [{
+                "role": [
+                  "https://dictionary.casrai.org/Contributor_Roles/Project_administration",
+                  "https://dictionary.casrai.org/Contributor_Roles/Investigation"
+                ],
+                "name": Faker::Movies::StarWars.character,
                 "mbox": Faker::Internet.email,
-                "affiliations": [{
+                "affiliation": {
                   "name": Faker::Movies::StarWars.planet,
                   "abbreviation": Faker::Lorem.word.upcase,
-                  "affiliation_ids": [{
+                  "affiliation_id": {
                     "type": "ror",
                     "identifier": SecureRandom.uuid
-                  }]
-                }],
-                "contributor_ids": [{
+                  }
+                },
+                "contributor_id": {
                   "type": "orcid",
                   "identifier": SecureRandom.uuid
-                }]
+                }
+              }, {
+                "role": [
+                  "https://dictionary.casrai.org/Contributor_Roles/Investigation"
+                ],
+                "name": contact[:name],
+                "mbox": contact[:email],
+                "affiliation": {
+                  "name": Faker::Movies::StarWars.planet,
+                  "abbreviation": Faker::Lorem.word.upcase,
+                  "affiliation_id": {
+                    "type": "ror",
+                    "identifier": SecureRandom.uuid
+                  }
+                },
+                "contributor_id": {
+                  "type": "orcid",
+                  "identifier": contact[:id]
+                }
               }],
-              "project": {
+              "project": [{
                 "title": Faker::Lorem.sentence,
                 "description": Faker::Lorem.paragraph,
-                "start_on": (Time.now + 3.months).utc.to_s,
-                "end_on": (Time.now + 2.years).utc.to_s,
+                "start": (Time.now + 3.months).utc.to_s,
+                "end": (Time.now + 2.years).utc.to_s,
                 "funding": [{
                   "name": Faker::Movies::StarWars.droid,
-                  "funder_ids": [{
+                  "funder_id": {
                     "type": "fundref",
                     "identifier": Faker::Number.number
-                  }],
-                  "grant_ids": [{
-                    "type": "grant",
+                  },
+                  "grant_id": {
+                    "type": "other",
                     "identifier": SecureRandom.uuid
-                  }],
+                  },
                   "funding_status": %w[planned applied granted].sample
                 }]
-              },
-              "extended_attributes": {
-                "#{ApplicationService.application_name}": {
-                  "template_id": Template.last.id
+              }],
+              "dataset": [{
+                "title": Faker::Lorem.sentence,
+                "personal_data": %w[yes no unknown].sample,
+                "sensitive_data": %w[yes no unknown].sample,
+                "dataset_id": {
+                  "type": "url",
+                  "identifier": Faker::Internet.url
                 }
-              }
+              }],
+              "extension": [{
+                "#{ApplicationService.application_name.split("-").first}": {
+                  "template": {
+                    "id": Template.last.id,
+                    "title": Faker::Lorem.sentence
+                  }
+                }
+              }]
             }
           }
         ]

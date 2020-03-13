@@ -52,7 +52,7 @@ module Identifiable
       return false unless array.present? && array.is_a?(Array)
 
       array.each do |id|
-        next unless id.is_a?(Identifier)
+        next unless id.is_a?(Identifier) && id.value.present?
 
         # If the identifier already exists then keep it
         current = identifier_for_scheme(scheme: id.identifier_scheme)

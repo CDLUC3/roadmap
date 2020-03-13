@@ -7,7 +7,8 @@ module Api
     # Base API Controller
     class BaseApiController < ApplicationController
 
-      protect_from_forgery with: :null_session
+      # Skipping the standard Rails authenticity tokens passed in UI
+      skip_before_action :verify_authenticity_token
 
       respond_to :json
 
@@ -43,7 +44,7 @@ module Api
       # CALLBACKS
       # ==========================
       def authorize_request
-        auth_svc = Api::Auth::Jwt::AuthorizationService.new(
+        auth_svc = Api::V1::Auth::Jwt::AuthorizationService.new(
           headers: request.headers
         )
         @client = auth_svc.call
@@ -142,7 +143,7 @@ module Api
               end
 
               if dmp[:contact].present?
-                unless dmp[:contact][:mbox].present?
+                unless dmp[:contact][:mbox].present? && dmp[:contact][:name].present?
                   errors << _("Expected item #{idx + 1} to have a {'dmp':{'contact':{'mbox'}}}!")
                 end
               else
@@ -150,12 +151,17 @@ module Api
               end
 
               # Either the plan id or template id must be present
-              app = ApplicationService.application_name
-              id = dmp.fetch(:dmp_ids, []).select { |id| ["doi", app].include?(id.fetch(:type, "").downcase) }
-              template = dmp.fetch(:extended_attributes, {}).fetch(:"#{app}", {})[:template_id]
+              id = Api::V1::JsonToAttributesService.fetch_plan_id(
+                json: dmp.fetch(:dmp_id, {})
+              )
 
+              template = Api::V1::JsonToAttributesService.fetch_template(
+                array: dmp.fetch(:extension, [])
+              )
+
+              app = ApplicationService.application_name.split("-").first
               unless id.present? || template.present?
-                errors << _("Expected item #{idx + 1} to have either a {'dmp':{'dmp_ids':[{'type':'#{app}','identifier'}]}} when updating or a {'dmp':{'extended_attributes':{'#{app}':{'template_id'}}}} if creating!")
+                errors << _("Expected item #{idx + 1} to have either a {'dmp':{'dmp_id':[{'type':'url','identifier':'[id]'}]}} when updating or a {'dmp':{'extension':{'#{app}':{'template': 'id'}}}} if creating!")
               end
             else
               errors << _("Expected item #{idx + 1} to be {'dmp':{}}")

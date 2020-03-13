@@ -51,8 +51,8 @@ describe "api/v1/templates/index.json.jbuilder" do
       expect(@template[:affiliation][:name]).to eql(@template1.org.name)
     end
     it "includes the :template_ids" do
-      expect(@template[:template_ids].first[:identifier]).to eql(@template1.id.to_s)
-      expect(@template[:template_ids].first[:type]).to eql(@application)
+      expect(@template[:template_id][:identifier]).to eql(@template1.id.to_s)
+      expect(@template[:template_id][:type]).to eql("other")
     end
   end
 

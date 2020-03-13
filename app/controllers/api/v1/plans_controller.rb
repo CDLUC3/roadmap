@@ -36,26 +36,53 @@ module Api
       # POST /api/v1/plans
       def create
         dmp = @json.with_indifferent_access.fetch(:items, []).first.fetch(:dmp, {})
-        plan = Api::JsonToAttributesService.plan_from_json(json: dmp)
+        now = (Time.now - 1.minute)
+        plan = Api::V1::JsonToAttributesService.plan_from_json(json: dmp)
 
         if plan.present?
           if plan.new_record?
-            if plan.save
-              @items = [plan]
+            render_error(errors: plan.errors.full_messages, status: :bad_request)
 
-              # Handle any new user invitations
-
-              render "/api/v1/plans/index", status: :ok
-            else
-              render_error(errors: plan.errors.full_messages, status: :bad_request)
-            end
+          elsif plan.created_at.utc < now.utc
+            render_error(errors: _("Plan already exists. Send an updated instead."),
+                         status: :bad_request)
 
           else
-            render_error(
-              errors: [_("Plan already exists. Send an update instead")],
-              status: :bad_request
-            )
+            # Attach all of the authors and then invite them if necessary
+            plan.contributors.writing_original_draft.each do |author|
+              identifiers = author.identifiers.map do |id|
+                { name: id.identifier_scheme.name, value: id.value }
+              end
+              user = User.from_identifiers(array: identifiers) if identifiers.any?
+              user = User.find_by(email: author.email) unless user.present?
+
+              # Only do this step in production!
+              # If the user was not found, invite them and attach any know identifiers
+              if Rails.env.production? && user.blank?
+                # Handle any new user invitations
+                user = User.invite!(email: author.email,
+                                    firstname: author.firstname,
+                                    surname: author.surname)
+
+                author.identifiers.each do |id|
+                  user.identifiers << Identifier.new(
+                    identifier_scheme: id.identifier_scheme, value: id.value)
+                end
+
+                # Attach the role
+                role = Role.new(user: user, plan: plan)
+                role.creator = true if author.data_curation?
+                role.administrator = true if author.writing_original_draft? &&
+                                            !author.data_curation?
+                role.save
+              end
+            end
+
+            # Kaminari Pagination requires an ActiveRecord result set :/
+            @items = paginate_response(results: Plan.where(id: plan.id))
+            render "/api/v1/plans/index", status: :created
           end
+
         else
           render_error(errors: [_("Invalid JSON")], status: :bad_request)
         end

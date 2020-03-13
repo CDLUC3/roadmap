@@ -58,6 +58,7 @@ ActiveRecord::Schema.define(version: 20200224190747) do
     t.string   "name",                      null: false
     t.string   "description"
     t.string   "homepage"
+    t.string   "contact_name"
     t.string   "contact_email",             null: false
     t.string   "client_id",                 null: false
     t.string   "client_secret",             null: false
@@ -69,11 +70,12 @@ ActiveRecord::Schema.define(version: 20200224190747) do
   add_index "api_clients", ["name"], name: "index_api_clients_on_name", using: :btree
 
   create_table "contributors", force: :cascade do |t|
-    t.string   "firstname"
-    t.string   "surname"
-    t.string   "email",                     null: false
+    t.string   "name"
+    t.string   "email"
     t.string   "phone"
+    t.integer  "roles",                     null: false
     t.integer  "org_id"
+    t.integer  "plan_id",                   null: false
     t.datetime "created_at"
     t.datetime "updated_at"
   end
@@ -128,7 +130,7 @@ ActiveRecord::Schema.define(version: 20200224190747) do
     t.datetime "created_at"
     t.datetime "updated_at"
     t.text     "logo_url"
-    t.text     "user_landing_url"
+    t.string   "identifier_prefix"
     t.integer  "context"
   end
 
@@ -137,7 +139,7 @@ ActiveRecord::Schema.define(version: 20200224190747) do
   create_table "identifiers", force: :cascade do |t|
     t.string   "value",                null: false
     t.text     "attrs"
-    t.integer  "identifier_scheme_id", null: false
+    t.integer  "identifier_scheme_id"
     t.integer  "identifiable_id"
     t.string   "identifiable_type"
     t.datetime "created_at"
@@ -281,22 +283,12 @@ ActiveRecord::Schema.define(version: 20200224190747) do
     t.datetime "end_date"
     t.integer  "org_id"
     t.integer  "funder_id"
+    t.integer  "grant_id"
   end
 
   add_index "plans", ["template_id"], name: "index_plans_on_template_id", using: :btree
   add_index "plans", ["funder_id"], name: "index_plans_on_funder_id", using: :btree
-
-  create_table "plans_contributors", force: :cascade do |t|
-    t.integer  "contributor_id"
-    t.integer  "plan_id"
-    t.integer  "roles"
-    t.datetime "created_at"
-    t.datetime "updated_at"
-  end
-
-  add_index "plans_contributors", ["contributor_id"], name: "index_plans_contributors_on_contributor_id", using: :btree
-  add_index "plans_contributors", ["plan_id"], name: "index_plans_contributors_on_plan_id", using: :btree
-  add_index "plans_contributors", ["roles"], name: "index_plans_contributors_on_roles", using: :btree
+  add_index "plans", ["grant_id"], name: "index_plans_on_grant_id", using: :btree
 
   create_table "plans_guidance_groups", force: :cascade do |t|
     t.integer "guidance_group_id", limit: 4
@@ -537,6 +529,7 @@ ActiveRecord::Schema.define(version: 20200224190747) do
   add_foreign_key "answers_question_options", "answers"
   add_foreign_key "answers_question_options", "question_options"
   add_foreign_key "contributors", "orgs"
+  add_foreign_key "contributors", "plans"
   add_foreign_key "guidance_groups", "orgs"
   add_foreign_key "guidances", "guidance_groups"
   add_foreign_key "notes", "answers"

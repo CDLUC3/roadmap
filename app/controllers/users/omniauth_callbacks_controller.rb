@@ -63,6 +63,7 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
     #   if user.nil?
     #     if UserIdentifier.create(identifier_scheme: scheme,
     #                              identifier: request.env["omniauth.auth"].uid,
+    #                              attrs: request.env["omniauth.auth"],
     #                              user: current_user)
     #       # rubocop:disable LineLength
     #       flash[:notice] = _("Your account has been successfully linked to %{scheme}.") % {
@@ -75,23 +76,15 @@ class Users::OmniauthCallbacksController < Devise::OmniauthCallbacksController
     #       }
     #     end
     #
-    #   else
+    #   elsif user.id != current_user.id
     #     # If a user was found but does NOT match the current user then the identifier has
     #     # already been attached to another account (likely the user has 2 accounts)
-    #     identifier = UserIdentifier.where(
-    #       identifier: request.env["omniauth.auth"].uid
-    #     ).first
-    #     if identifier.user.id != current_user.id
-    #       # rubocop:disable LineLength
-    #       flash[:alert] = _("The current #{scheme.description} iD has been already linked to a user with email #{identifier.user.email}")
-    #       # rubocop:enable LineLength
-    #     end
-    #
-    #     # Otherwise, the identifier was found and it matches the one already associated
-    #     # with the current user so nothing else needs to be done
+    #     # rubocop:disable Metrics/LineLength
+    #     flash[:alert] = _("The current #{scheme.description} iD has been already linked to a user with email #{identifier.user.email}")
+    #     # rubocop:enable Metrics/LineLength
     #   end
     #
-    #   # Redirect to the User Profile page
+    # # Redirect to the User Profile page
     #   redirect_to edit_user_registration_path
     # end
 

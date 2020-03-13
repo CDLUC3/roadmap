@@ -73,6 +73,7 @@ FactoryBot.define do
     after :create do |org, evaluator|
       create_list(:template, evaluator.templates, :published, org: org)
       create_list(:plan, evaluator.plans)
+<<<<<<< HEAD
     end
 
     # ----------------------------------------------------
@@ -84,6 +85,8 @@ FactoryBot.define do
         create(:org_identifier, org_id: org.id, identifier_scheme: scheme,
                                 identifier: SecureRandom.hex(4))
       end
+=======
+>>>>>>> 48d563fd88bb67697e2b99692e50d54dd707bed9
     end
     # ----------------------------------------------------
     # end DMPTool customization

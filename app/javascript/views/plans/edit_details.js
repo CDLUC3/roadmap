@@ -1,5 +1,5 @@
 import { initAutocomplete } from '../../utils/autoComplete';
-import { Tinymce } from '../../utils/tinymce';
+import { Tinymce } from '../../utils/tinymce.js.erb';
 import getConstant from '../../constants';
 import 'bootstrap-3-typeahead';
 

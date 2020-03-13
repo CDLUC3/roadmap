@@ -31,11 +31,13 @@
 #  ethical_issues_report             :string
 #  org_id                            :integer
 #  funder_id                         :integer
+#  grant_id                          :integer
 #
 # Indexes
 #
 #  index_plans_on_template_id  (template_id)
 #  index_plans_on_funder_id    (funder_id)
+#  index_plans_on_grant_id     (grant_id)
 #
 # Foreign Keys
 #
@@ -43,9 +45,8 @@
 #  fk_rails_...  (org_id => orgs.id)
 #
 
-# TODO: Drop the funder_name column once the funder_id has been back
-#       filled and we're removing the is_other org stuff
-
+# TODO: Drop the funder_name and grant_number columns once the funder_id has
+#       been back filled and we're removing the is_other org stuff
 class Plan < ActiveRecord::Base
 
   include ConditionalUserMailer
@@ -116,9 +117,7 @@ class Plan < ActiveRecord::Base
 
   has_many :roles
 
-  has_many :plans_contributors, dependent: :destroy
-
-  has_many :contributors, through: :plans_contributors
+  has_many :contributors, dependent: :destroy
 
   # =====================
   # = Nested Attributes =
@@ -128,7 +127,7 @@ class Plan < ActiveRecord::Base
 
   accepts_nested_attributes_for :roles
 
-  accepts_nested_attributes_for :plans_contributors
+  accepts_nested_attributes_for :contributors
 
   # ===============
   # = Validations =
@@ -357,19 +356,17 @@ class Plan < ActiveRecord::Base
   #
   # Returns Boolean
   def readable_by?(user_id)
+    return true if commentable_by?(user_id)
     current_user = User.find(user_id)
-    if current_user.present?
-      # If the user is a super admin and the config allows for supers to view plans
-      if current_user.can_super_admin? &&
-          Branding.fetch(:service_configuration, :plans, :super_admins_read_all)
-        true
-      # If the user is an org admin and the config allows for org admins to view plans
-      elsif current_user.can_org_admin? &&
-          Branding.fetch(:service_configuration, :plans, :org_admins_read_all)
-        owner_and_coowners.map(&:org_id).include?(current_user.org_id)
-      else
-        commentable_by?(user_id)
-      end
+    return false unless current_user.present?
+    # If the user is a super admin and the config allows for supers to view plans
+    if current_user.can_super_admin? &&
+        Branding.fetch(:service_configuration, :plans, :super_admins_read_all)
+      true
+    # If the user is an org admin and the config allows for org admins to view plans
+    elsif current_user.can_org_admin? &&
+        Branding.fetch(:service_configuration, :plans, :org_admins_read_all)
+      owner_and_coowners.map(&:org_id).include?(current_user.org_id)
     else
       false
     end
@@ -401,6 +398,7 @@ class Plan < ActiveRecord::Base
   def reviewable_by?(user_id)
     reviewer = User.find(user_id)
     feedback_requested? &&
+    reviewer.present? &&
     reviewer.org_id == owner.org_id &&
     reviewer.can_review_plans?
   end
@@ -557,6 +555,13 @@ class Plan < ActiveRecord::Base
     else
       false
     end
+  end
+
+  # Returns the identifier associated with the grant_id
+  def grant
+    return nil unless grant_id.present?
+
+    identifiers.select { |identifier| identifier.id == grant_id }.first
   end
 
   private
