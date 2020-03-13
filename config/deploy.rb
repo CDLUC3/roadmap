@@ -25,7 +25,8 @@ append :linked_files, 'config/branding.yml',
                       'config/initializers/devise.rb',
                       'config/initializers/dragonfly.rb',
                       'config/initializers/recaptcha.rb',
-                      'config/initializers/wicked_pdf.rb'
+                      'config/initializers/wicked_pdf.rb',
+                      'config/initializers/external_apis/open_aire.rb'
 
 # Default value for linked_dirs is []
 append :linked_dirs, 'log',
