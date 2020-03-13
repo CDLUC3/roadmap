@@ -715,15 +715,8 @@ namespace :upgrade do
     Role.reviewer.destroy_all
   end
 
-  desc "add the ROR and Other identifier schemes"
+  desc "add the ROR and Fundref identifier schemes"
   task add_new_identifier_schemes: :environment do
-    unless IdentifierScheme.where(name: "other").any?
-      IdentifierScheme.create(
-        name: "other",
-        description: "Used for non-OAuth / non-API generated identifiers",
-        active: true
-      )
-    end
     unless IdentifierScheme.where(name: "fundref").any?
       IdentifierScheme.create(
         name: "fundref",
@@ -761,7 +754,6 @@ namespace :upgrade do
     orcid.for_users = true
     orcid.for_contributors = true
     orcid.for_authentication = true
-    orcid.identifier_prefix = "https://orcid.org/"
     orcid.save
 
     # Org identifier schemes
@@ -774,14 +766,6 @@ namespace :upgrade do
     fundref.for_orgs = true
     fundref.identifier_prefix = "https://api.crossref.org/funders/"
     fundref.save
-
-    # Catchall scheme for non OAuth and non external API generated ids
-    orcid = IdentifierScheme.find_or_initialize_by(name: "other")
-    orcid.for_users = true
-    orcid.for_contributors = true
-    orcid.for_orgs = true
-    orcid.for_plans = true
-    orcid.save
   end
 
   desc "migrate the old user_identifiers over to the polymorphic identifiers table"
@@ -896,7 +880,6 @@ namespace :upgrade do
 
           ror_id = rslt[:ror]
           fundref_id = rslt[:fundref]
-
           if ror_id.present?
             ror_ident = Identifier.find_or_initialize_by(identifiable: org,
                                                          identifier_scheme: ror)
@@ -936,7 +919,7 @@ namespace :upgrade do
 
     # Loop through the plans and convert the Data Contact, owners and PI
     # into Contributors
-    Plan.includes(:contributors, roles: :user).joins(roles: :user).where("plans.id > 30000").each do |plan|
+    Plan.includes(:contributors, roles: :user).joins(roles: :user).each do |plan|
       next if plan.contributors.any?
 
       p "--------------------------------------------------"
@@ -985,7 +968,6 @@ namespace :upgrade do
                                    owner.email, nil,
                                    owner.identifier_for(orcid)&.first&.value,
                                    owner.org_id)
-
         if user.present?
           user.save
           user.writing_original_draft = true

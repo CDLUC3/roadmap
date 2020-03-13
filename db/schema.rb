@@ -58,6 +58,7 @@ ActiveRecord::Schema.define(version: 20200224190747) do
     t.string   "name",                      null: false
     t.string   "description"
     t.string   "homepage"
+    t.string   "contact_name"
     t.string   "contact_email",             null: false
     t.string   "client_id",                 null: false
     t.string   "client_secret",             null: false

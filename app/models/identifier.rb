@@ -27,6 +27,7 @@ class Identifier < ActiveRecord::Base
 
   belongs_to :identifiable, polymorphic: true
 
+  # TODO: uncomment 'optional: true' once we are on Rails 5
   belongs_to :identifier_scheme #, optional: true
 
   # ===============
@@ -40,6 +41,7 @@ class Identifier < ActiveRecord::Base
   # ===============
   # = Scopes =
   # ===============
+
   def self.by_scheme_name(value, identifiable_type)
     where(identifier_scheme: IdentifierScheme.by_name(value),
           identifiable_type: identifiable_type)
@@ -48,6 +50,7 @@ class Identifier < ActiveRecord::Base
   # ===========================
   # = Public instance methods =
   # ===========================
+
   def attrs=(hash)
     write_attribute(:attrs, (hash.is_a?(Hash) ? hash.to_json.to_s : "{}"))
   end

@@ -147,7 +147,6 @@ group :aws do
 # End DMPTool customization
 # ------------------------------------------------
   gem 'dragonfly-s3_data_store'
-
 end
 
 # bootstrap-sass is a Sass-powered version of Bootstrap 3, ready to drop
@@ -181,7 +180,6 @@ gem "mini_racer"
 # ------------------------------------------------
 # EXPORTING
 # Provides binaries for WKHTMLTOPDF project in an easily accessible package.
-
 # ------------------------------------------------
 # Start DMPTool customization
 # 0.12.5 does not work on our new linux2 instances. Pegging at 0.12.4 for now
@@ -201,9 +199,6 @@ gem "wicked_pdf", "~> 1.1.0"
 # that can be downloaded by your users as simple MS Word docx files.
 # (http://github.com/karnov/htmltoword)
 gem "htmltoword", "1.1.0"
-
-# A feed fetching and parsing library (http://feedjira.com)
-gem "feedjira"
 
 # Filename sanitization for Ruby. This is useful when you generate filenames
 # for downloads from user input

@@ -282,6 +282,26 @@ class Org < ActiveRecord::Base
       self.token_permission_types.include? token_permission_type
   end
 
+  # Takes an array of Identifiers and create/update/delete them for this Org
+  # TODO: For some reason accepts_nested_atributes_for does not work for
+  #       polymorphic relationships, so using this instead. Reevaluate
+  #       post Rails 5 upgrade
+  def save_identifiers!(array:)
+    return false unless array.present? && array.any?
+
+    array.each do |identifier|
+      scheme = identifier.identifier_scheme
+      current = identifiers.by_scheme_name(scheme.name, "Org").first
+
+      current.destroy if current.present?
+      next unless identifier.value.present?
+
+      identifier.identifiable = self
+      identifier.save
+    end
+    true
+  end
+
   private
 
   ##

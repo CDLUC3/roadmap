@@ -66,18 +66,25 @@ module Api
 # Start DMPTool Customization
 #   commenting out user invite for testing
 # ========================================
-                # # Handle any new user invitations
-                # user = User.invite!(email: author.email,
-                #                     firstname: author.firstname,
-                #                     surname: author.surname)
-                #
-                # author.identifiers.each do |id|
-                #   user.identifiers << Identifier.new(
-                #     identifier_scheme: id.identifier_scheme, value: id.value)
-                # end
+                # Handle any new user invitations
+                #user = User.invite!(email: author.email,
+                #                    firstname: author.firstname,
+                #                    surname: author.surname)
+
+                #author.identifiers.each do |id|
+                #  user.identifiers << Identifier.new(
+                #    identifier_scheme: id.identifier_scheme, value: id.value)
+                #end
 # ========================================
 # End DMPTool Customization
 # ========================================
+
+                # Attach the role
+                role = Role.new(user: user, plan: plan)
+                role.creator = true if author.data_curation?
+                role.administrator = true if author.writing_original_draft? &&
+                                            !author.data_curation?
+                role.save
               end
 
 # ========================================

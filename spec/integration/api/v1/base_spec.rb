@@ -4,6 +4,8 @@ require "swagger_helper"
 
 describe "Heartbeat API" do
 
+# TODO: Will uncomment this once Swagger setup has been finalized
+=begin
   path "/api/v1/heartbeat" do
 
     get "Endpoint to determine whether or not the API is online" do
@@ -21,5 +23,6 @@ describe "Heartbeat API" do
     end
 
   end
+=end
 
 end

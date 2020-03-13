@@ -1,9 +1,10 @@
 <% title _('Usage statistics') %>
 
 <%= render partial: 'usage/total_usage',
-           locals: { user_count: @total_org_users, plan_count: @total_org_plans } %>
+           locals: { user_count: @total_org_users, plan_count: @total_org_plans, separators: @separators } %>
 
 <%= render partial: 'usage/filter' %>
+
 
 <div class="row">
   <div class="col-md-12">
@@ -14,10 +15,10 @@
 <div class="row">
   <div class="col-md-6">
     <div class="pull-left">
-      <h4 class="bold"><%= _('No. users joined during last year') %></h4>
+      <p class="bold fontsize-h4"><%= _('No. users joined during last year') %></p>
     </div>
     <div class="pull-right">
-      <%= link_to usage_yearly_users_path, class: 'stat btn btn-default', role: 'button', target: '_blank' do %>
+      <%= link_to usage_yearly_users_path(sep: ","), class: 'stat btn btn-default', role: 'button', target: '_blank' do %>
         <%= _('Download') %> <i class="fa fa-download" aria-hidden="true"></i>
       <% end %>
     </div>
@@ -29,10 +30,10 @@
   </div>
   <div class="col-md-6">
     <div class="pull-left">
-      <h4 class="bold"><%= _('No. plans during last year') %></h4>
+      <p class="bold fontsize-h4"><%= _('No. plans during last year') %></p>
     </div>
     <div class="pull-right">
-      <%= link_to usage_yearly_plans_path, class: 'stat btn btn-default', role: 'button', target: '_blank' do %>
+      <%= link_to usage_yearly_plans_path(sep: ","), class: 'stat btn btn-default', role: 'button', target: '_blank' do %>
         <%= _('Download') %> <i class="fa fa-download" aria-hidden="true"></i>
       <% end %>
     </div>
@@ -52,7 +53,7 @@
   <div class="col-md-12">
       <div class="col-md-6">
         <div class="pull-left">
-          <h4 class="bold"><%= _('No. plans by template') %></h4>
+          <p class="bold fontsize-h4"><%= _('No. plans by template') %></p>
         </div>
       </div>
 
@@ -76,7 +77,7 @@
             </li>
             <li>
               <div class="form-group">
-                <%= link_to usage_all_plans_by_template_path, class: 'btn btn-default', role: 'button', target: '_blank' do %>
+                <%= link_to usage_all_plans_by_template_path(sep: ","), class: 'btn btn-default stat', role: 'button', target: '_blank' do %>
                   <%= _('Download all') %> <i class="fa fa-download" aria-hidden="true"></i>
                 <% end %>
              </div>

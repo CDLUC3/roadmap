@@ -4,6 +4,8 @@ require "swagger_helper"
 
 describe "Plans API" do
 
+# TODO: Will uncomment this once Swagger setup has been finalized
+=begin
   path "/api/v1/plans" do
 
     post 'Creates a plan' do
@@ -40,5 +42,6 @@ describe "Plans API" do
     end
 
   end
+=end
 
 end

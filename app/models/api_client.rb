@@ -6,6 +6,8 @@
 #
 #  id             :integer          not null, primary key
 #  name           :string,          not null
+#  homepage       :string
+#  contact_name   :string
 #  contact_email  :string,          not null
 #  client_id      :string,          not null
 #  client_secret  :string,          not null
@@ -21,6 +23,13 @@
 class ApiClient < ActiveRecord::Base
 
   include ValidationMessages
+
+  # If the Client_id or client_secret are nil generate them
+  before_validation :generate_credentials,
+                    if: Proc.new { |c| c.client_id.blank? || c.client_secret.blank? }
+
+  # Force the name to downcase
+  before_save :name_to_downcase
 
   # ===============
   # = Validations =
@@ -45,8 +54,21 @@ class ApiClient < ActiveRecord::Base
     name
   end
 
+  # Verify that the incoming secret matches
   def authenticate(secret:)
     client_secret == secret
+  end
+
+  # Generate UUIDs for the client_id and client_secret
+  def generate_credentials
+    self.client_id = SecureRandom.uuid
+    self.client_secret = SecureRandom.uuid
+  end
+
+  private
+
+  def name_to_downcase
+    self.name = self.name.downcase
   end
 
 end

@@ -11,6 +11,11 @@ class OrgsController < ApplicationController
     shibboleth_ds shibboleth_ds_passthru search
   ]
 
+  include OrgSelectable
+
+  after_action :verify_authorized, except: %w[
+    shibboleth_ds shibboleth_ds_passthru search
+  ]
   respond_to :html
 
   ##

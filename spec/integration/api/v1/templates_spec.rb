@@ -4,6 +4,8 @@ require "swagger_helper"
 
 describe "Templates API" do
 
+# TODO: Will uncomment this once Swagger setup has been finalized
+=begin
   path "/api/v1/templates" do
 
     get 'Returns the templates' do
@@ -24,5 +26,6 @@ describe "Templates API" do
     end
 
   end
+=end
 
 end
