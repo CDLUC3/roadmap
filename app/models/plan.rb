@@ -47,10 +47,6 @@
 
 # TODO: Drop the funder_name and grant_number columns once the funder_id has
 #       been back filled and we're removing the is_other org stuff
-<<<<<<< HEAD
-
-=======
->>>>>>> DMPRoadmap-api-v1
 class Plan < ActiveRecord::Base
 
   include ConditionalUserMailer
