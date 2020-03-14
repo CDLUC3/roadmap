@@ -83,9 +83,6 @@ Rails.application.routes.draw do
   # AJAX call used to search for Orgs based on user input into autocompletes
   post "orgs" => "orgs#search", as: "orgs_search"
 
-  # AJAX call used to search for Orgs based on user input into autocompletes
-  post "orgs" => "orgs#search", as: "orgs_search"
-
   resources :orgs, :path => 'org/admin', only: [] do
     member do
       get 'admin_edit'
