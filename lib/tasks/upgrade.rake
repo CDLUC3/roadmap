@@ -715,35 +715,20 @@ namespace :upgrade do
     Role.reviewer.destroy_all
   end
 
-<<<<<<< HEAD
-  desc "add the Fundref and ROR identifier schemes"
-  task add_fundref_and_ror: :environment do
-=======
   desc "add the ROR and Fundref identifier schemes"
   task add_new_identifier_schemes: :environment do
->>>>>>> 48d563fd88bb67697e2b99692e50d54dd707bed9
     unless IdentifierScheme.where(name: "fundref").any?
       IdentifierScheme.create(
         name: "fundref",
         description: "Crossref Funder Registry (FundRef)",
-<<<<<<< HEAD
-        active: true,
-        user_landing_url: "https://search.crossref.org/funding?q="
-=======
         active: true
->>>>>>> 48d563fd88bb67697e2b99692e50d54dd707bed9
       )
     end
     unless IdentifierScheme.where(name: "ror").any?
       IdentifierScheme.create(
         name: "ror",
         description: "Research Organization Registry (ROR)",
-<<<<<<< HEAD
-        active: true,
-        user_landing_url: "https://ror.org"
-=======
         active: true
->>>>>>> 48d563fd88bb67697e2b99692e50d54dd707bed9
       )
     end
   end
@@ -758,10 +743,7 @@ namespace :upgrade do
 
   desc "Contextualize the Identifier Schemes (e.g. which ones are for orgs, etc."
   task contextualize_identifier_schemes: :environment do
-<<<<<<< HEAD
-=======
     # Identifier schemes for multiple uses
->>>>>>> 48d563fd88bb67697e2b99692e50d54dd707bed9
     shib = IdentifierScheme.find_or_initialize_by(name: "shibboleth")
     shib.for_users = true
     shib.for_orgs = true
@@ -772,12 +754,6 @@ namespace :upgrade do
     orcid.for_users = true
     orcid.for_contributors = true
     orcid.for_authentication = true
-<<<<<<< HEAD
-    orcid.save
-
-    ror = IdentifierScheme.find_or_initialize_by(name: "ror")
-    ror.for_orgs = true
-=======
     orcid.identifier_prefix = "https://orcid.org/"
     orcid.save
 
@@ -785,23 +761,10 @@ namespace :upgrade do
     ror = IdentifierScheme.find_or_initialize_by(name: "ror")
     ror.for_orgs = true
     ror.identifier_prefix = "https://ror.org/"
->>>>>>> 48d563fd88bb67697e2b99692e50d54dd707bed9
     ror.save
 
     fundref = IdentifierScheme.find_or_initialize_by(name: "fundref")
     fundref.for_orgs = true
-<<<<<<< HEAD
-    fundref.save
-
-    doi = IdentifierScheme.find_or_initialize_by(name: "doi")
-    doi.for_plans = true
-    doi.save
-
-    # Catchall scheme to collect grant numbers
-    ror = IdentifierScheme.find_or_initialize_by(name: "grant")
-    ror.for_plans = true
-    ror.save
-=======
     fundref.identifier_prefix = "https://api.crossref.org/funders/"
     fundref.save
 
@@ -812,7 +775,6 @@ namespace :upgrade do
     orcid.for_orgs = true
     orcid.for_plans = true
     orcid.save
->>>>>>> 48d563fd88bb67697e2b99692e50d54dd707bed9
   end
 
   desc "migrate the old user_identifiers over to the polymorphic identifiers table"
@@ -825,10 +787,7 @@ namespace :upgrade do
       ui.user.identifiers << Identifier.new(
         identifier_scheme: ui.identifier_scheme,
         value: ui.identifier,
-<<<<<<< HEAD
-=======
         type: (ui.identifier_scheme.name == "orcid" ? "url" : "other"),
->>>>>>> 48d563fd88bb67697e2b99692e50d54dd707bed9
         attrs: {}.to_json
       )
     end
@@ -841,11 +800,6 @@ namespace :upgrade do
     OrgIdentifier.joins(:org, :identifier_scheme)
                  .includes(:org, :identifier_scheme).all.each do |ui|
 
-<<<<<<< HEAD
-      ui.org.identifiers << Identifier.new(
-        identifier_scheme: ui.identifier_scheme,
-        value: ui.identifier,
-=======
       val = ui.identifier
       val = "https://orcid.org/#{val}" if ui.identifier_scheme.name == "orcid" && !val.starts_with?("http")
 
@@ -853,14 +807,11 @@ namespace :upgrade do
         identifier_scheme: ui.identifier_scheme,
         value: val,
         type: (ui.identifier_scheme.name == "orcid" ? "url" : "other"),
->>>>>>> 48d563fd88bb67697e2b99692e50d54dd707bed9
         attrs: ui.attrs
       )
     end
   end
 
-<<<<<<< HEAD
-=======
   desc "migrate the old grant_number to identifiers"
   task convert_grant_numbers_to_identifiers: :environment do
     p "Transferring existing grant_number information over to the Identifiers table"
@@ -877,7 +828,6 @@ namespace :upgrade do
     end
   end
 
->>>>>>> 48d563fd88bb67697e2b99692e50d54dd707bed9
   desc "Sets the new managed flag for all existing Orgs to managed = true"
   task default_orgs_to_managed: :environment do
     Org.all.update_all(managed: true)

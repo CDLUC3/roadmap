@@ -47,6 +47,7 @@
 
 # TODO: Drop the funder_name and grant_number columns once the funder_id has
 #       been back filled and we're removing the is_other org stuff
+
 class Plan < ActiveRecord::Base
 
   include ConditionalUserMailer

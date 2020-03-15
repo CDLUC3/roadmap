@@ -36,6 +36,7 @@ module Api
       # POST /api/v1/plans
       def create
         dmp = @json.with_indifferent_access.fetch(:items, []).first.fetch(:dmp, {})
+
         now = (Time.now - 1.minute)
         plan = Api::V1::JsonToAttributesService.plan_from_json(json: dmp)
 

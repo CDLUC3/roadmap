@@ -6,7 +6,7 @@ RSpec.describe IdentifierPresenter do
 
   before(:each) do
     @user = create(:user)
-    @user_scheme = create(:identifier_scheme)
+    @user_scheme = create(:identifier_scheme, for_users: true)
     @plan_scheme = create(:identifier_scheme, for_plans: true, for_users: false)
     @org_scheme = create(:identifier_scheme, for_orgs: true, for_users: false)
   end
@@ -66,19 +66,20 @@ RSpec.describe IdentifierPresenter do
       rslt = @presenter.id_for_display(scheme: @user_scheme, id: id)
       expect(rslt).to eql(@none)
     end
-    it "returns the value when the scheme has no user_landing_url" do
+    it "returns the value when the scheme has no identifier_prefix" do
       val = Faker::Lorem.word
-      @user_scheme.update(user_landing_url: nil)
+      @user_scheme.update(identifier_prefix: nil)
       id = create(:identifier, identifiable: @user, value: val,
                                identifier_scheme: @user_scheme)
       rslt = @presenter.id_for_display(scheme: @user_scheme, id: id)
       expect(rslt).to eql(val)
     end
-    it "returns the value as a link when the scheme has a user_landing_url" do
+    it "returns the value as a link when the scheme has a identifier_prefix" do
       val = Faker::Lorem.word
+      @user_scheme.update(identifier_prefix: Faker::Internet.url)
       id = create(:identifier, identifiable: @user, value: val)
       rslt = @presenter.id_for_display(scheme: @user_scheme, id: id)
-      expected = "#{@user_scheme.user_landing_url}/#{val}"
+      expected = "#{@user_scheme.identifier_prefix}/#{val}"
       expect(rslt.include?(expected)).to eql(true)
     end
   end

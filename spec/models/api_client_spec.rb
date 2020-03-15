@@ -8,8 +8,6 @@ RSpec.describe ApiClient, type: :model do
 
     it { is_expected.to validate_presence_of(:name) }
     it { is_expected.to validate_presence_of(:contact_email) }
-    it { is_expected.to validate_presence_of(:client_id) }
-    it { is_expected.to validate_presence_of(:client_secret) }
 
     # Uniqueness validation
     it {

@@ -26,19 +26,13 @@
 #  ethical_issues_report             :string
 #  org_id                            :integer
 #  funder_id                         :integer
-<<<<<<< HEAD
-=======
 #  grant_id                          :integer
->>>>>>> 48d563fd88bb67697e2b99692e50d54dd707bed9
 #
 # Indexes
 #
 #  index_plans_on_template_id  (template_id)
 #  index_plans_on_funder_id    (funder_id)
-<<<<<<< HEAD
-=======
 #  index_plans_on_grant_id     (grant_id)
->>>>>>> 48d563fd88bb67697e2b99692e50d54dd707bed9
 #
 # Foreign Keys
 #
@@ -52,11 +46,8 @@ FactoryBot.define do
     template
     org
     #funder
-<<<<<<< HEAD
-=======
     # TODO: Drop this column once the funder_id has been back filled
     #       and we're removing the is_other org stuff
->>>>>>> 48d563fd88bb67697e2b99692e50d54dd707bed9
     grant_number { SecureRandom.rand(1_000) }
     identifier { SecureRandom.hex }
     description { Faker::Lorem.paragraph }

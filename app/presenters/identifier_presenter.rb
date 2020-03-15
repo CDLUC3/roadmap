@@ -25,9 +25,10 @@ class IdentifierPresenter
 
   def id_for_display(scheme:, id:)
     return _("None defined") if id.new_record? || id.value.blank?
-    return id.value unless scheme.user_landing_url.present?
 
-    base = scheme.user_landing_url
+    base = scheme.identifier_prefix
+    return id.value unless base.present? && !id.value.starts_with?(base)
+
     base += "/" unless base.ends_with?("/")
     "<a href=\"#{base}#{id.value}\" class=\"has-new-window-popup-info\"> " +
       "#{scheme.description}: #{id.value}</a>"
