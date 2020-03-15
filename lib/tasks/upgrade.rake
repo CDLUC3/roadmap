@@ -754,6 +754,7 @@ namespace :upgrade do
     orcid.for_users = true
     orcid.for_contributors = true
     orcid.for_authentication = true
+    orcid.identifier_prefix = "https://orcid.org/"
     orcid.save
 
     # Org identifier schemes
