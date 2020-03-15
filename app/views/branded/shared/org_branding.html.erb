@@ -1,0 +1,15 @@
+<h2><%= _("Sign in for %{org_name}") % { org_name: @user.org.name } %></h2>
+<br />
+
+<div class="form-group">
+  <div class="col-md-6">
+    <% if @user.org.logo.present? %>
+      <%= image_tag(@user.org.logo.thumb('100x100%').url,
+                    alt: @user.org.name,
+                    class: "org-logo",
+                    title: @user.org.name) %>
+    <% end %>
+
+    <%= render partial: "shared/sign_in_form", resource: @user %>
+  </div>
+</div>

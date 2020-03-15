@@ -67,7 +67,7 @@ module Dmptool
           rss = RSS::Parser.parse(xml, false).items.first(5)
           cache_content("rss", rss)
 
-        rescue Exception
+        rescue Exception => e
           # If we were unable to connect to the blog rss
           rss = [] if rss.nil?
           logger.error("Caught exception RSS parse: #{e}.")

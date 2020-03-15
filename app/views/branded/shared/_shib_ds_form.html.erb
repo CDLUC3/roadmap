@@ -42,15 +42,13 @@
                   <li class="bg-primary"><%= current %></li>
                 <% end %>
                 <% target = presenter.sign_in_url(org: org) %>
-                <% if target.include?("shib-ds") %>
+                <% if target.present? && target.include?("shib-ds") %>
                   <li>
                     <%= link_to org.name, target, data: { content: org.id } %>
                   </li>
                 <% else %>
                   <li>
-                    <%= link_to org.name, target, class: "org-sign-in",
-                                data: { content: org.id, toggle: "modal",
-                                        target: "#org-sign-in" } %>
+                    <%= link_to org.name, target, class: "org-sign-in" %>
                   </li>
                 <% end %>
               <% end %>

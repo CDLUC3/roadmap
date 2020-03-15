@@ -11,7 +11,8 @@ RSpec.describe 'DMPTool custom handler for Omniauth callbacks', type: :controlle
     let!(:orcid) { create(:identifier_scheme, name: "orcid") }
 
     before do
-      OrgIdentifier.create( org: org, identifier_scheme: shibboleth, identifier: "test-org")
+      Identifier.create(identifiable: org, identifier_scheme: shibboleth,
+                        value: "test-org")
       @controller = Users::OmniauthCallbacksController.new
       request.env["devise.mapping"] = Devise.mappings[:user]
     end
@@ -22,6 +23,10 @@ RSpec.describe 'DMPTool custom handler for Omniauth callbacks', type: :controlle
 
       before do
         sign_in(user)
+        create(:identifier, identifier_scheme: shibboleth, identifiable: user,
+                            value: "foo")
+        create(:identifier, identifier_scheme: orcid, identifiable: user,
+                            value: "foo")
       end
 
       context "linking account to shibboleth" do
@@ -37,11 +42,10 @@ RSpec.describe 'DMPTool custom handler for Omniauth callbacks', type: :controlle
         end
 
         it "should update the identifier and display success message" do
-          UserIdentifier.create(identifier_scheme: shibboleth, user: user, identifier: "foo")
           get :shibboleth
           expect(flash[:notice]).to eql("Your account has been successfully linked to your institutional credentials.")
           expect(response).to redirect_to("/users/edit")
-          expect(user.reload.user_identifiers.first.identifier).not_to eql("foo")
+          expect(user.reload.identifiers.first.value).not_to eql("foo")
         end
       end
 
@@ -58,11 +62,10 @@ RSpec.describe 'DMPTool custom handler for Omniauth callbacks', type: :controlle
         end
 
         it "should update the identifier and display success message" do
-          UserIdentifier.create(identifier_scheme: orcid, user: user, identifier: "foo")
           get :orcid
           expect(flash[:notice]).to eql("Your account has been successfully linked to #{orcid.description}.")
           expect(response).to redirect_to("/users/edit")
-          expect(user.reload.user_identifiers.first.identifier).not_to eql("foo")
+          expect(user.reload.identifiers.last.value).not_to eql("foo")
         end
 
       end
@@ -72,8 +75,9 @@ RSpec.describe 'DMPTool custom handler for Omniauth callbacks', type: :controlle
     context "user is NOT signed in but omniauth uid is already registered" do
 
       let!(:existing_user) { create(:user, org: org) }
-      let!(:existing_uid) { create(:user_identifier, user: existing_user,
-                                    identifier_scheme: shibboleth, identifier: "123ABC") }
+      let!(:existing_uid) { create(:identifier, identifier_scheme: shibboleth,
+                                                identifiable: existing_user,
+                                                value: "123ABC") }
       before do
         request.env["omniauth.auth"] = mock_omniauth_call("shibboleth", existing_user)
       end
@@ -102,7 +106,7 @@ RSpec.describe 'DMPTool custom handler for Omniauth callbacks', type: :controlle
             get :shibboleth
             expect(flash[:notice]).to eql("Successfully signed in with your institutional credentials.")
             expect(response).to redirect_to("/")
-            expect(existing_user.user_identifiers.first.identifier).to eql("123ABC")
+            expect(existing_user.reload.identifiers.first.value).to eql("123ABC")
           end
 
         end
@@ -117,7 +121,7 @@ RSpec.describe 'DMPTool custom handler for Omniauth callbacks', type: :controlle
             get :shibboleth
             expect(flash[:notice]).to eql("It looks like this is your first time logging in. Please verify and complete the information below to finish creating an account.")
             expect(response).to render_template(:new) #"/users/sign_up")
-            expect(existing_user.user_identifiers.length).to eql(0)
+            expect(existing_user.identifiers.length).to eql(0)
           end
 
         end

@@ -54,7 +54,7 @@ module Dmptool
           else
             # Otherwise attempt to locate the user via the email provided in
             # the omniauth creds
-            new_user = omniauth_hash_to_new_user(omniauth)
+            new_user = omniauth_hash_to_new_user(scheme, omniauth)
             @user = User.where_case_insensitive("email", new_user.email).first
 
             # If we found the user by email
@@ -73,20 +73,15 @@ module Dmptool
                 }
                 session["devise.#{scheme.name.downcase}_data"] = omniauth
                 flash[:notice] = _('It looks like this is your first time logging in. Please verify and complete the information below to finish creating an account.')
-                render 'devise/registrations/new', locals: {
-                  user: @user,
-                  orgs: Org.participating
-                }
+                render template: 'devise/registrations/new'
               end
 
             # If we could not find a match take them to the account setup page
             else
               session["devise.#{scheme.name.downcase}_data"] = omniauth
               flash[:notice] = _('It looks like this is your first time logging in. Please verify and complete the information below to finish creating an account.')
-              render 'devise/registrations/new', locals: {
-                user: new_user,
-                orgs: Org.participating
-              }
+              @user =  new_user
+              render template: 'devise/registrations/new'
             end
           end
         end
@@ -96,26 +91,26 @@ module Dmptool
 
       def attach_omniauth_credentials(user, scheme, omniauth)
         # Attempt to find or attach the omniauth creds
-        ui = UserIdentifier.where(identifier_scheme: scheme, user: user).first
+        ui = Identifier.where(identifier_scheme: scheme, identifiable: user).first
         if ui.present?
-          if ui.identifier != omniauth[:uid]
-            ui.update(identifier: omniauth[:uid])
+          if ui.value != omniauth[:uid]
+            ui.update(value: omniauth[:uid])
           end
           true
         else
-          UserIdentifier.create(identifier_scheme: scheme, user: user,
-                                identifier: omniauth[:uid])
+          Identifier.create(identifier_scheme: scheme, identifiable: user,
+                            value: omniauth[:uid])
         end
       end
 
-      def omniauth_hash_to_new_user(omniauth)
+      def omniauth_hash_to_new_user(scheme, omniauth)
         omniauth_info = omniauth.fetch(:info, {})
         names = extract_omniauth_names(omniauth_info)
         User.new(
           email: extract_omniauth_email(omniauth_info),
           firstname: names.fetch(:firstname, ""),
           surname: names.fetch(:surname, ""),
-          org: extract_omniauth_org(omniauth_info)
+          org: extract_omniauth_org(scheme, omniauth_info)
         )
       end
 
@@ -137,15 +132,16 @@ module Dmptool
         { firstname: firstname, surname: surname }
       end
 
-      def extract_omniauth_org(hash)
+      def extract_omniauth_org(scheme, hash)
         idp_name = hash.fetch(:identity_provider, "").downcase
         if idp_name.present?
-          idp = OrgIdentifier.where("LOWER(identifier) = ?", idp_name).first
+          idp = Identifier.where(identifier_scheme: scheme)
+                          .where("LOWER(value) = ?", idp_name).first
           if idp.present?
-            org = Org.find_by(id: idp.org_id)
+            org = idp.identifiable
           end
         end
-        (org.present? ? org : Org.find_by(is_other: true))
+        org.present? ? org : Org.where(is_other: true).first
       end
 
     end

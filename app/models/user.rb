@@ -62,8 +62,6 @@ class User < ActiveRecord::Base
 
   extend UniqueRandom
 
-  include Dmptool::Models::User
-
   ##
   # Devise
   #   Include default devise modules. Others available are:

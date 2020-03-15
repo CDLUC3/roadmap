@@ -538,7 +538,7 @@ RSpec.describe User, type: :model do
   end
 
   describe ".from_omniauth" do
-    let!(:user) { create(:user) }
+    let!(:user) { create(:user, org: create(:org)) }
     let!(:auth) do
       OpenStruct.new(provider: Faker::Lorem.word, uid: Faker::Lorem.word)
     end
@@ -546,7 +546,7 @@ RSpec.describe User, type: :model do
 
     subject { User.from_omniauth(auth) }
 
-    context "when User has UserIdentifier, with different ID" do
+    context "when User has Identifier, with different ID" do
       let!(:identifier) do
         create(:identifier, :for_user, identifiable: user,
                                        identifier_scheme: scheme,

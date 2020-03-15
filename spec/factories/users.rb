@@ -65,20 +65,6 @@ FactoryBot.define do
     password     { "password" }
     accept_terms { true }
 
-    # ---------------------------------------------------
-    # start DMPTool customization
-    # DMPTool uses the is_other Org as a default. If the
-    # user doesn't have an org defined then attach them to
-    # the is_other Org.
-    # ---------------------------------------------------
-#    before(:create) do |user, evaluator|
-#      init_other_org
-#      user.org = Org.find_by(is_other: true) unless user.org.present?
-#    end
-    # ---------------------------------------------------
-    # end DMPTool customization
-    # ---------------------------------------------------
-
     trait :org_admin do
       after(:create) do |user, evaluator|
         %w[modify_templates modify_guidance

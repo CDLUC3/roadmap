@@ -13,7 +13,7 @@ module Dmptool
         # DMPTool participating institution helpers
         def participating
           self.includes(identifiers: :identifier_scheme)
-              .where(is_other: false).order(:name)
+              .where(managed: true).order(:name)
         end
 
       end
@@ -21,9 +21,7 @@ module Dmptool
       included do
 
         def shibbolized?
-          shib_scheme = IdentifierScheme.by_name("shibboleth")
-
-          identifiers.select { |id| id.identifier_scheme == shib_scheme }.any?
+          identifier_for_scheme(scheme: "shibboleth").present?
         end
 
       end

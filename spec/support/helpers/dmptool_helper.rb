@@ -29,6 +29,14 @@ module DmptoolHelper
     end
   end
 
+  def select_shib_ds_org(org)
+    find("#org_org_name").set(org.name)
+    sleep(0.2)
+
+    # Click the Org from the dropdown autocomplete
+    first("#ui-id-#{org.id}").click
+  end
+
   def mock_omniauth_call(scheme, user)
 
     case scheme
@@ -41,7 +49,7 @@ module DmptoolHelper
           email: user.email,
           givenname: user.firstname,
           sn: user.surname,
-          identity_provider: user.org.org_identifiers.first.identifier
+          identity_provider: user.org.identifier_for_scheme(scheme: "shibboleth")&.value
         }
       }
 

@@ -15,7 +15,10 @@ Rails.application.routes.draw do
   delete '/users/identifiers/:id', to: 'identifiers#destroy', as: 'destroy_user_identifier'
 
   get '/orgs/shibboleth', to: 'orgs#shibboleth_ds', as: 'shibboleth_ds'
-  get '/orgs/shibboleth/:org_name', to: 'orgs#shibboleth_ds_passthru'
+  # GET is triggered by user clicking an org in the list
+  get '/orgs/shibboleth/:id', to: 'orgs#shibboleth_ds_passthru'
+  # POST is triggered by user selecting an org from autocomplete
+  post '/orgs/shibboleth/:id', to: 'orgs#shibboleth_ds_passthru'
   post '/orgs/shibboleth', to: 'orgs#shibboleth_ds_passthru'
   get '/users/ldap_username', to: 'users#ldap_username'
   post '/users/ldap_account', to: 'users#ldap_account'

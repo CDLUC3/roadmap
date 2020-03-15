@@ -90,18 +90,6 @@ $(() => {
     $('#access-control-tabs a[data-target="#sign-in-form"]').tab('show');
   };
 
-  $('.org-sign-in').click((e) => {
-    const target = $(e.target);
-    $('#org-sign-in').html('');
-    $.ajax({
-      method: 'GET',
-      url: target.attr('href'),
-    }).done((data) => {
-      logoSuccess(data);
-    }, logoError);
-    e.preventDefault();
-  });
-
   // Toggles the full Org list on/off
   $('#show_list').click((e) => {
     e.preventDefault();
@@ -121,6 +109,7 @@ $(() => {
     const id = $(e.target);
     const json = JSON.parse(id.val());
     const button = $('#org-select-go');
+    clearLogo();
     if (json !== undefined) {
       if (json.id !== undefined) {
         button.prop('disabled', false);
@@ -128,20 +117,20 @@ $(() => {
         button.prop('disable', true);
       }
     }
+  }).on('ajax:success', (e, data) => {
+    logoSuccess(data);
+  }).on('ajax:error', () => {
+    logoError();
   });
 
   // When the user selects an Org from the autocomplete and clicks 'Go'
-  // click the matching link in the hidden full list of participating orgs
+  // Update the form's target with the selected org id before submission
   $('#org-select-go').on('click', (e) => {
     const json = JSON.parse($('#shib-ds-org-controls #org_id').val());
     if (json !== undefined && json.id !== undefined) {
-      const link = $(`#full_list li a[data-content="${json.id}"]`);
-      // If its not shibbolized click the link to open the modal otherwise
-      // just let the form submit
-      if (link.attr('data-toggle') !== undefined) {
-        e.preventDefault();
-        link.click();
-      }
+      const go = $(e.target);
+      const form = go.closest('form');
+      form.attr('action', `${form.attr('action')}/${json.id}`);
     } else {
       e.preventDefault();
     }

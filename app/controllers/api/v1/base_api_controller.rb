@@ -84,7 +84,8 @@ module Api
           errors.empty?
 
         rescue JSON::ParserError => pe
-          p pe.full_message
+          Rails.logger.error "JSON Parser: #{pe.message}"
+          Rails.logger.error request.body
           render_error(errors: _("Invalid JSON format"), status: :bad_request)
           return false
         end

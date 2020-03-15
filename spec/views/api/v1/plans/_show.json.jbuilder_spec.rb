@@ -58,7 +58,8 @@ describe "api/v1/plans/_show.json.jbuilder" do
       expect(@json[:contact][:mbox]).to eql(@data_contact.email)
     end
     it "includes the :contributors" do
-      expect(@json[:contributor].first[:mbox]).to eql(@pi.email)
+      emails = @json[:contributor].collect { |c| c[:mbox] }
+      expect(emails.include?(@pi.email)).to eql(true)
     end
 
     # TODO: make sure this is working once the new Cost theme and Currency

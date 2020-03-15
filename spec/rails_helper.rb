@@ -61,6 +61,10 @@ RSpec.configure do |config|
   config.include Devise::Test::ControllerHelpers, type: :controller
   config.include Pundit::Matchers, type: :policy
 
+  config.append_after(:each) do
+    DatabaseCleaner.clean
+  end
+
   # ------------------------------------------------------
   # start DMPTool customizations
   # ------------------------------------------------------
@@ -74,10 +78,13 @@ RSpec.configure do |config|
   # Mock omniauth calls
   OmniAuth.config.test_mode = true
 
-  # Create the default is_other Org (required to display the login forms)
-  config.before :each do
-    create(:org, is_other: true) unless Org.find_by(is_other: true).present?
+  # Mock calls to the Blog
+  config.before(:each) do
+    stub_request(:get, "https://blog.dmptool.org/feed").to_return(
+      status: 200, body: "", headers: {}
+    )
   end
+
   # ------------------------------------------------------
   # end DMPTool customization
   # ------------------------------------------------------
