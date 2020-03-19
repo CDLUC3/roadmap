@@ -30,15 +30,15 @@ FactoryBot.define do
     org
     name { Faker::Movies::StarWars.character }
     email { Faker::Internet.email }
-    phone { Faker::PhoneNumber.phone_number }
+    phone { Faker::PhoneNumber.phone_number_with_country_code }
 
     transient do
       roles_count { 1 }
     end
 
-    after(:create) do |contributor, evaluator|
+    before(:create) do |contributor, evaluator|
       (0..evaluator.roles_count - 1).each do |idx|
-        contributor.update("#{contributor.all_roles[idx]}": true)
+        contributor.send(:"#{contributor.all_roles[idx]}=", true)
       end
     end
   end

@@ -4,6 +4,10 @@ module Identifiable
 
   included do
 
+    # ================
+    # = Associations =
+    # ================
+
     has_many :identifiers, as: :identifiable, dependent: :destroy
 
     # =====================

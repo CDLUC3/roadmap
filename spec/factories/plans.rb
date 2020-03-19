@@ -59,9 +59,6 @@ FactoryBot.define do
     principal_investigator_email { Faker::Internet.safe_email }
     feedback_requested { false }
     complete { false }
-    ethical_issues { [0, 1, nil].sample }
-    ethical_issues_description { Faker::Lorem.sentence }
-    ethical_issues_report { Faker::Internet.url }
     start_date { Time.now }
     end_date { start_date + 2.years }
 

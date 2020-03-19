@@ -24,15 +24,6 @@ RSpec.describe Api::V1::JsonToAttributesService do
       json = { type: @scheme.name.downcase, identifier: id.value }
       expect(described_class.identifier_from_json(json: json)).to eql(id)
     end
-    it "appends the identifier_scheme.identifier_prefix to the value" do
-      id = create(:identifier, identifier_scheme: @scheme,
-                               value: Faker::Lorem.word,
-                               identifiable: create(:org))
-      json = { type: @scheme.name.downcase, identifier: id.value }
-      expected = "#{@scheme.identifier_prefix}#{id.value}"
-      rslt = described_class.identifier_from_json(json: json)
-      expect(expected).to eql(rslt.value)
-    end
     it "initializes a new identifier" do
       json = { type: @scheme.name.downcase, identifier: Faker::Lorem.word }
       expected = described_class.identifier_from_json(json: json)
@@ -51,7 +42,7 @@ RSpec.describe Api::V1::JsonToAttributesService do
     it "sets the value" do
       json = { type: @scheme.name.downcase, identifier: Faker::Lorem.word }
       result = described_class.identifier_from_json(json: json)
-      expect(result.value).to eql("#{@scheme.identifier_prefix}#{json[:identifier]}")
+      expect(result.value).to eql(json[:identifier])
     end
   end
 
@@ -239,19 +230,6 @@ RSpec.describe Api::V1::JsonToAttributesService do
     it "sets the end_date" do
       result = described_class.plan_from_json(json: @json)
       expect(result.end_date.present?).to eql(true)
-    end
-    it "sets the ethical_issues flag" do
-      @json[:ethical_issues_exist] = "Yes"
-      result = described_class.plan_from_json(json: @json)
-      expect(result.ethical_issues?).to eql(true)
-    end
-    it "sets the ethical_issues_description" do
-      result = described_class.plan_from_json(json: @json)
-      expect(result.ethical_issues_description.present?).to eql(true)
-    end
-    it "sets the ethical_issues_report" do
-      result = described_class.plan_from_json(json: @json)
-      expect(result.ethical_issues_report.present?).to eql(true)
     end
   end
 

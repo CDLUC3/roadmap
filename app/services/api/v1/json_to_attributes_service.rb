@@ -19,15 +19,8 @@ module Api
           return nil unless json[:identifier].present? && json[:type].present?
 
           scheme = IdentifierScheme.by_name(json[:type].downcase).first
-
-          # Append the URL prefix if its not there. For example:
-          #  0000-0000-0000-0001  ->  https://orcid.org/0000-0000-0000-0001
-          landing = scheme&.identifier_prefix&.downcase
-          identifier = json[:identifier].to_s
-          value = identifier if landing.present? && identifier.starts_with?(landing)
-          value = "#{landing}#{URI.escape(identifier)}" unless value.present?
-
-          Identifier.find_or_initialize_by(identifier_scheme: scheme, value: value)
+          Identifier.find_or_initialize_by(identifier_scheme: scheme,
+                                           value: json[:identifier].to_s)
         end
 
         # Convert the incoming JSON into an Org
@@ -184,10 +177,7 @@ module Api
           plan.start_date = project[:start]
           plan.end_date = project[:end]
 
-          plan.ethical_issues = Api::V1::ConversionService.yes_no_unknown_to_boolean(
-            json[:ethical_issues_exist])
-          plan.ethical_issues_description = json[:ethical_issues_description]
-          plan.ethical_issues_report = json[:ethical_issues_report]
+          # TODO: Handle ethical issues when question is in place
 
           # Process Contributors and Data Contact
           contact = contributor_from_json(plan: plan, json: json[:contact])

@@ -4,8 +4,7 @@ require "rails_helper"
 
 describe "api/v1/plans/_show.json.jbuilder" do
 
-  before(:each) do
-    @plan = create(:plan, ethical_issues: true)
+    @plan = create(:plan)
     @data_contact = create(:contributor, writing_original_draft: true,
                                          data_curation: true, plan: @plan)
     @pi = create(:contributor, investigation: true, plan: @plan)
@@ -36,16 +35,6 @@ describe "api/v1/plans/_show.json.jbuilder" do
     end
     it "includes the :modified" do
       expect(@json[:modified]).to eql(@plan.updated_at.utc.to_s)
-    end
-    it "includes the :ethical_issues_exist" do
-      expect(@json[:ethical_issues_exist]).to eql("yes")
-    end
-    it "includes the :ethical_issues_description" do
-      expect(@json[:ethical_issues_description]).to eql(
-        @plan.ethical_issues_description)
-    end
-    it "includes the :ethical_issues_report" do
-      expect(@json[:ethical_issues_report]).to eql(@plan.ethical_issues_report)
     end
 
     it "returns the URL of the plan as the :dmp_id if no DOI is defined" do
