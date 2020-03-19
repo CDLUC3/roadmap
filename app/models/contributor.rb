@@ -54,6 +54,10 @@ class Contributor < ActiveRecord::Base
 
   validates :roles, presence: { message: PRESENCE_MESSAGE }
 
+  validate :name_or_email_presence
+
+  ONTOLOGY_NAME = "CRediT - Contributor Roles Taxonomy".freeze
+  ONTOLOGY_LANDING_PAGE = "https://casrai.org/credit/".freeze
   ONTOLOGY_BASE_URL = "https://dictionary.casrai.org/Contributor_Roles".freeze
 
   ##
@@ -74,5 +78,14 @@ class Contributor < ActiveRecord::Base
             13 => :writing_original_draft,
             14 => :writing_review_editing,
             column: "roles"
+
+  private
+
+  def name_or_email_presence
+    if name.blank? && email.blank?
+      errors.add(:name, _("can't be blank if no email is provided"))
+      errors.add(:email, _("can't be blank if no name is provided"))
+    end
+  end
 
 end

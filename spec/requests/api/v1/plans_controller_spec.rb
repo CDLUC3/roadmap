@@ -131,15 +131,6 @@ RSpec.describe Api::V1::PlansController, type: :request do
           it "set the Plan description" do
             expect(@plan.title).to eql(@original[:title])
           end
-          it "set the Plan ethical_issues flag" do
-            expect(@plan.title).to eql(@original[:title])
-          end
-          it "set the Plan ethical_issues_description" do
-            expect(@plan.title).to eql(@original[:title])
-          end
-          it "set the Plan ethical_issues_report" do
-            expect(@plan.title).to eql(@original[:title])
-          end
           it "set the Plan start_date" do
             expect(@plan.title).to eql(@original[:title])
           end

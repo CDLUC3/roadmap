@@ -142,11 +142,13 @@ class Plan < ActiveRecord::Base
 
   validates :complete, inclusion: { in: BOOLEAN_VALUES }
 
+  validate :end_date_after_start_date
+
   # =============
   # = Callbacks =
   # =============
 
-  before_validation :set_creation_defaults
+  before_validation :set_creation_default
 
   # ==========
   # = Scopes =
@@ -565,17 +567,36 @@ class Plan < ActiveRecord::Base
     identifiers.select { |identifier| identifier.id == grant_id }.first
   end
 
+  # Returns the plan's identifier (either a DOI/ARK or the URL)
+  def landing_page
+    doi = identifiers.select { |i| %w[doi ark].include?(i.identifier_format) }.first
+    return doi if doi.present?
+
+    Identifier.new(value: Rails.application.routes.url_helpers.landing_plan_url(id),
+                   identifiable: self)
+  end
+
   private
 
   # Initialize the title for new templates
   #
   # Returns nil
   # Returns String
-  def set_creation_defaults
+  def set_creation_default
     # Only run this before_validation because rails fires this before
     # save/create
     return if id?
     self.title = "My plan (#{template.title})" if title.nil? && !template.nil?
+  end
+
+  # Validation to prevent end date from coming before the start date
+  def end_date_after_start_date
+    # allow nil values
+    return true if end_date.blank? || start_date.blank?
+
+    if end_date < start_date
+      errors.add(:end_date, _("must be after the start date"))
+    end
   end
 
 end

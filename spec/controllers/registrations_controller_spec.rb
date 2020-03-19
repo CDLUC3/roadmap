@@ -46,6 +46,7 @@ RSpec.describe RegistrationsController, type: :controller do
       end
       it "saved the org if it was a new record" do
         count = Org.all.length
+        @controller.stubs(:org_from_params).returns(create(:org))
         rslt = @controller.send(:handle_org, attrs: @params)
         expect(Org.all.length).to eql(count + 1)
       end

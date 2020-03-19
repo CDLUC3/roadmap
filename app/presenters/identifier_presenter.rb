@@ -23,15 +23,14 @@ class IdentifierPresenter
     schemes.select { |scheme| scheme.name.downcase == name.downcase }
   end
 
-  def id_for_display(scheme:, id:)
+  def id_for_display(id:, with_scheme_name: true)
     return _("None defined") if id.new_record? || id.value.blank?
 
-    base = scheme.identifier_prefix
-    return id.value unless base.present? && !id.value.starts_with?(base)
+    without = id.value_without_scheme_prefix
+    return id.value unless without != id.value && !without.starts_with?("http")
 
-    base += "/" unless base.ends_with?("/")
-    "<a href=\"#{base}#{id.value}\" class=\"has-new-window-popup-info\"> " +
-      "#{scheme.description}: #{id.value}</a>"
+    "<a href=\"#{id.value}\" class=\"has-new-window-popup-info\"> " +
+      "#{with_scheme_name ? id.identifier_scheme.description : ""}: #{without}</a>"
   end
 
   private

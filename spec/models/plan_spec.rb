@@ -17,6 +17,28 @@ describe Plan do
     it { is_expected.to allow_values(true, false).for(:complete) }
 
     it { is_expected.not_to allow_value(nil).for(:complete) }
+
+    describe "dates" do
+      before(:each) do
+        @plan = build(:plan)
+      end
+
+      it "allows start_date to be nil" do
+        @plan.start_date = nil
+        @plan.end_date = Time.now + 3.days
+        expect(@plan.valid?).to eql(true)
+      end
+      it "allows end_date to be nil" do
+        @plan.start_date = Time.now + 3.days
+        @plan.end_date = nil
+        expect(@plan.valid?).to eql(true)
+      end
+      it "does not allow end_date to come before start_date" do
+        @plan.start_date = Time.now + 3.days
+        @plan.end_date = Time.now
+        expect(@plan.valid?).to eql(false)
+      end
+    end
   end
 
   context "associations" do
@@ -1436,6 +1458,25 @@ describe Plan do
       plan.update(grant_id: grant.id)
       plan.reload
       expect(plan.grant).to eql(grant)
+    end
+  end
+
+  describe "#landing_page" do
+    let!(:plan) { create(:plan, :creator) }
+
+    it "returns the DOI if available" do
+      id = create(:identifier, identifiable: plan, value: "10.9999/123erge/45f")
+      plan.reload
+      expect(plan.landing_page).to eql(id)
+    end
+    it "returns the ARK if available" do
+      id = create(:identifier, identifiable: plan, value: "ark:10.9999/123")
+      plan.reload
+      expect(plan.landing_page).to eql(id)
+    end
+    it "returns the URL if no DOI or ARK are available" do
+      expected = Rails.application.routes.url_helpers.landing_plan_url(plan)
+      expect(plan.landing_page.value).to eql(expected)
     end
   end
 

@@ -276,9 +276,6 @@ ActiveRecord::Schema.define(version: 20200224190747) do
     t.string   "principal_investigator_phone"
     t.boolean  "feedback_requested",                default: false
     t.boolean  "complete",                          default: false
-    t.integer  "ethical_issues"
-    t.text     "ethical_issues_description"
-    t.string   "ethical_issues_report"
     t.datetime "start_date"
     t.datetime "end_date"
     t.integer  "org_id"

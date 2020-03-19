@@ -139,10 +139,13 @@ Rails.application.routes.draw do
 
     resource :export, only: [:show], controller: "plan_exports"
 
+    resources :contributors, except: %i[show]
+
     member do
       get 'answer'
       get 'share'
       get 'request_feedback'
+      get 'landing'
       get 'download'
       post 'duplicate'
       post 'visibility', constraints: {format: [:json]}
@@ -201,6 +204,10 @@ Rails.application.routes.draw do
     resources :orgs, only: [] do
       get 'index/:page', action: :index, on: :collection, as: :index
       get 'public/:page', action: :public, on: :collection, as: :public
+    end
+    # Paginable actions for contributors
+    resources :contributors, only: %i[index] do
+      get "index/:page", action: :index, on: :collection, as: :index
     end
     # Paginable actions for plans
     resources :plans, only: [] do

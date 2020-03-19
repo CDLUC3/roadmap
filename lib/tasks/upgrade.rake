@@ -767,14 +767,6 @@ namespace :upgrade do
     fundref.for_orgs = true
     fundref.identifier_prefix = "https://api.crossref.org/funders/"
     fundref.save
-
-    # Catchall scheme for non OAuth and non external API generated ids
-    orcid = IdentifierScheme.find_or_initialize_by(name: "other")
-    orcid.for_users = true
-    orcid.for_contributors = true
-    orcid.for_orgs = true
-    orcid.for_plans = true
-    orcid.save
   end
 
   desc "migrate the old user_identifiers over to the polymorphic identifiers table"

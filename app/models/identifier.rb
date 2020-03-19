@@ -38,6 +38,15 @@ class Identifier < ActiveRecord::Base
 
   validates :identifiable, presence: { message: PRESENCE_MESSAGE }
 
+  validates :identifiable_id, uniqueness: { scope: :identifier_scheme_id },
+                              unless: Proc.new { |a| a.identifier_scheme_id.nil? }
+
+  # =============
+  # = Callbacks =
+  # =============
+
+  before_save :append_scheme_prefix
+
   # ===============
   # = Scopes =
   # ===============
@@ -68,6 +77,32 @@ class Identifier < ActiveRecord::Base
     return "url" if value.starts_with?("http")
 
     "other"
+  end
+
+  # Returns the value sans the identifier scheme's prefix.
+  # For example:
+  #   value   'https://orcid.org/0000-0000-0000-0001'
+  #   becomes '0000-0000-0000-0001'
+  def value_without_scheme_prefix
+    return value unless identifier_scheme.present? &&
+                        identifier_scheme.identifier_prefix.present?
+
+    base = identifier_scheme.identifier_prefix
+    value.gsub(base, "").sub(/^\//, "")
+  end
+
+  # Appends the identifier scheme's prefix to the identifier if necessary
+  # For example:
+  #   value   '0000-0000-0000-0001'
+  #   becomes 'https://orcid.org/0000-0000-0000-0001'
+  def append_scheme_prefix
+    return self.value unless identifier_scheme.present? &&
+                             identifier_scheme.identifier_prefix.present? &&
+                             !self.value.starts_with?(identifier_scheme.identifier_prefix)
+
+    base = identifier_scheme.identifier_prefix
+    base += "/" unless base.ends_with?("/")
+    self.value = "#{base}#{value}"
   end
 
 end

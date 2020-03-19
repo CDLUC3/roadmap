@@ -85,7 +85,8 @@ RSpec.describe Identifiable do
         scheme3 = create(:identifier_scheme)
         array = [build(:identifier, identifier_scheme: scheme3, value: "Foo")]
         @org.consolidate_identifiers!(array: array)
-        expect(@org.identifier_for_scheme(scheme: scheme3).value).to eql("Foo")
+        expected = @org.identifier_for_scheme(scheme: scheme3).value
+        expect(expected.ends_with?("Foo")).to eql(true)
       end
     end
 
