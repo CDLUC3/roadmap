@@ -15,7 +15,13 @@ class ApplicationService
     def application_name
       name = Rails.application.config.branding[:application]
                   .fetch(:name, Rails.application.class.name.split('::').first)
+
+      # -------------------------------------
+      # Start DMPTool Customization
+      # removes our dash character for dev and stage envs
       name.split("-").first.downcase
+      # End DMPTool Customization
+      # -------------------------------------
     end
 
   end
