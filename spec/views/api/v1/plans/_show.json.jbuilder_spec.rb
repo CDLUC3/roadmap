@@ -4,6 +4,7 @@ require "rails_helper"
 
 describe "api/v1/plans/_show.json.jbuilder" do
 
+  before(:each) do
     @plan = create(:plan)
     @data_contact = create(:contributor, writing_original_draft: true,
                                          data_curation: true, plan: @plan)

@@ -209,6 +209,10 @@ Rails.application.routes.draw do
     resources :contributors, only: %i[index] do
       get "index/:page", action: :index, on: :collection, as: :index
     end
+    # Paginable actions for contributors
+    resources :contributors, only: %i[index] do
+      get "index/:page", action: :index, on: :collection, as: :index
+    end
     # Paginable actions for plans
     resources :plans, only: [] do
       get 'privately_visible/:page', action: :privately_visible, on: :collection, as: :privately_visible

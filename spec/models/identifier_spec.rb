@@ -30,6 +30,24 @@ RSpec.describe Identifier, type: :model do
         expect(id.valid?).to eql(false)
         expect(id.errors[:identifiable_id].present?).to eql(true)
       end
+      it "does not prevent identifiers for same scheme but different identifiables" do
+        scheme = create(:identifier_scheme)
+        create(:identifier, identifiable: @org, identifier_scheme: scheme,
+                            value: Faker::Lorem.word)
+        id = build(:identifier, identifiable: create(:org),
+                                identifier_scheme: scheme,
+                                value: Faker::Number.number.to_s)
+        expect(id.valid?).to eql(true)
+      end
+      it "does not prevent same value for different schemes" do
+        scheme = create(:identifier_scheme)
+        create(:identifier, identifiable: @org, identifier_scheme: scheme,
+                            value: "foo")
+        id = build(:identifier, identifiable: create(:org),
+                                identifier_scheme: scheme,
+                                value: "foo")
+        expect(id.valid?).to eql(true)
+      end
     end
   end
 
