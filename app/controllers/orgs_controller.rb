@@ -52,7 +52,6 @@ class OrgsController < ApplicationController
 
         if shib.present? && attrs.fetch(:identifiers_attributes, {}).any?
           entity_id = attrs[:identifiers_attributes].first[1][:value]
-
           identifier = Identifier.find_or_initialize_by(identifiable: @org,
                                                         identifier_scheme: shib)
           if entity_id.present? && identifier.present?

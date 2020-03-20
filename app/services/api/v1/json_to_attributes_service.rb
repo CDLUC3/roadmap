@@ -137,7 +137,7 @@ module Api
                 )
 
                 if grant_id.present? && !grant_id.identifiable.present? &&
-                  grant_id.value.present?
+                   grant_id.value.present?
                   grant_id.identifiable = plan
                   grant_id.save
                   plan.grant_id = grant_id.id
@@ -204,6 +204,7 @@ module Api
 
           # Attach the Contact's org
           plan.org = contact.org
+
           plan.save
           plan = funding_from_json(plan: plan, json: json)
           plan
@@ -270,6 +271,7 @@ module Api
           url = Contributor::ONTOLOGY_BASE_URL
           # Strip off the URL if present
           role = role.gsub("#{url}/", "").downcase if role.include?(url)
+
           # Return the role if its a valid one otherwise defualt
           return role if Contributor.new.respond_to?(role.downcase.to_sym)
 

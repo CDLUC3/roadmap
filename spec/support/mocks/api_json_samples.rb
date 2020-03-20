@@ -5,8 +5,7 @@ module Mocks
 
   module ApiJsonSamples
 
-    ROLES = %w[Investigation Project_administration Writing_original_draft]
-
+    ROLES = %w[Investigation Project_administration Writing_original_draft].freeze
 
     def mock_identifier_schemes
       create(:identifier_scheme, name: "ror")

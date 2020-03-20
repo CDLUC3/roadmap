@@ -881,6 +881,7 @@ namespace :upgrade do
 
           ror_id = rslt[:ror]
           fundref_id = rslt[:fundref]
+
           if ror_id.present?
             ror_ident = Identifier.find_or_initialize_by(identifiable: org,
                                                          identifier_scheme: ror)
