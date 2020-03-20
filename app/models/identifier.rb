@@ -38,8 +38,9 @@ class Identifier < ActiveRecord::Base
 
   validates :identifiable, presence: { message: PRESENCE_MESSAGE }
 
-  validates :identifiable_id, uniqueness: { scope: :identifier_scheme_id },
-                              unless: Proc.new { |a| a.identifier_scheme_id.nil? }
+  validate :value_uniqueness_with_scheme, if: :has_scheme?
+
+  validate :value_uniqueness_without_scheme, unless: :has_scheme?
 
   # =============
   # = Callbacks =
@@ -103,6 +104,31 @@ class Identifier < ActiveRecord::Base
     base = identifier_scheme.identifier_prefix
     base += "/" unless base.ends_with?("/")
     self.value = "#{base}#{value}"
+  end
+
+  private
+
+  # ==============
+  # = VALIDATION =
+  # ==============
+
+  # Simple check used by :validate methods above
+  def has_scheme?
+    self.identifier_scheme.present?
+  end
+
+  # Verify the uniqueness of :value across :identifiable
+  def value_uniqueness_without_scheme
+    # if scheme is nil, then just unique for identifiable
+    Identifier.where(identifiable: self.identifiable, value: self.value).empty?
+  end
+
+  # Verify the uniqueness of :value across :identifier_scheme
+  def value_uniqueness_with_scheme
+    Identifier.where(identifier_scheme: self.identifier_scheme,
+                     value: self.value).empty? &&
+    Identifier.where(identifier_scheme: self.identifier_scheme,
+                     identifiable: self.identifiable).empty?
   end
 
 end

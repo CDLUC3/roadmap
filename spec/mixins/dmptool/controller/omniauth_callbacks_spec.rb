@@ -7,7 +7,8 @@ RSpec.describe 'DMPTool custom handler for Omniauth callbacks', type: :controlle
   describe '#process_omniauth_callback' do
 
     let!(:org) { create(:org, is_other: false) }
-    let!(:shibboleth) { create(:identifier_scheme, name: "shibboleth") }
+    let!(:shibboleth) { create(:identifier_scheme, name: "shibboleth",
+                                                   identifier_prefix: nil) }
     let!(:orcid) { create(:identifier_scheme, name: "orcid") }
 
     before do
@@ -23,8 +24,6 @@ RSpec.describe 'DMPTool custom handler for Omniauth callbacks', type: :controlle
 
       before do
         sign_in(user)
-        create(:identifier, identifier_scheme: shibboleth, identifiable: user,
-                            value: "foo")
         create(:identifier, identifier_scheme: orcid, identifiable: user,
                             value: "foo")
       end
@@ -75,16 +74,14 @@ RSpec.describe 'DMPTool custom handler for Omniauth callbacks', type: :controlle
     context "user is NOT signed in but omniauth uid is already registered" do
 
       let!(:existing_user) { create(:user, org: org) }
-      let!(:existing_uid) { create(:identifier, identifier_scheme: shibboleth,
-                                                identifiable: existing_user,
-                                                value: "123ABC") }
+
       before do
         request.env["omniauth.auth"] = mock_omniauth_call("shibboleth", existing_user)
       end
 
       it "should display a success message and sign in" do
         get :shibboleth
-        expect(flash[:notice]).to eql("Successfully signed in")
+        expect(flash[:notice].starts_with?("Successfully signed in")).to eql(true)
         expect(response).to redirect_to("/")
       end
 
@@ -120,7 +117,7 @@ RSpec.describe 'DMPTool custom handler for Omniauth callbacks', type: :controlle
           it "should display a warning message and load the finish account creation page" do
             get :shibboleth
             expect(flash[:notice]).to eql("It looks like this is your first time logging in. Please verify and complete the information below to finish creating an account.")
-            expect(response).to render_template(:new) #"/users/sign_up")
+            expect(response).to redirect_to("/users/sign_up")
             expect(existing_user.identifiers.length).to eql(0)
           end
 

@@ -72,16 +72,16 @@ module Dmptool
                   scheme: provider
                 }
                 session["devise.#{scheme.name.downcase}_data"] = omniauth
-                flash[:notice] = _('It looks like this is your first time logging in. Please verify and complete the information below to finish creating an account.')
-                render template: 'devise/registrations/new'
+                redirect_to new_user_registration_path,
+                          notice: _('It looks like this is your first time logging in. Please verify and complete the information below to finish creating an account.')
               end
 
             # If we could not find a match take them to the account setup page
             else
               session["devise.#{scheme.name.downcase}_data"] = omniauth
-              flash[:notice] = _('It looks like this is your first time logging in. Please verify and complete the information below to finish creating an account.')
-              @user =  new_user
-              render template: 'devise/registrations/new'
+              #render template: 'views/devise/registrations/new'
+              redirect_to new_user_registration_path,
+                          notice: _('It looks like this is your first time logging in. Please verify and complete the information below to finish creating an account.')
             end
           end
         end
@@ -92,14 +92,16 @@ module Dmptool
       def attach_omniauth_credentials(user, scheme, omniauth)
         # Attempt to find or attach the omniauth creds
         ui = Identifier.where(identifier_scheme: scheme, identifiable: user).first
+
         if ui.present?
           if ui.value != omniauth[:uid]
             ui.update(value: omniauth[:uid])
           end
           true
         else
-          Identifier.create(identifier_scheme: scheme, identifiable: user,
+          id = Identifier.create(identifier_scheme: scheme, identifiable: user,
                             value: omniauth[:uid])
+          id
         end
       end
 
