@@ -58,7 +58,7 @@ module Api
         end
 
         # Convert the incoming JSON into a Contributor
-        def contributor_from_json(plan:, json: {})
+        def contributor_from_json(plan:, json: {}, is_contact: false)
           return nil unless json.present? && plan.present?
 
           json = json.with_indifferent_access
@@ -86,7 +86,7 @@ module Api
           contrib.org = org unless contrib.org.present?
 
           # Add the role
-          if json[:contact_id].present?
+          if is_contact
             # Contact is an author and curator
             contrib.data_curation = true
             contrib.writing_original_draft = true
@@ -187,7 +187,8 @@ module Api
           # TODO: Handle ethical issues when question is in place
 
           # Process Contributors and Data Contact
-          contact = contributor_from_json(plan: plan, json: json[:contact])
+          contact = contributor_from_json(plan: plan, json: json[:contact],
+                                          is_contact: true)
           return nil unless contact.present?
 
           # Attach the default roles to the contact

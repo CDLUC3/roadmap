@@ -170,3 +170,4 @@ git branch -D [my-branch]
 * Did you update the corresponding controller?
 * Did you manually test the change in multiple browsers?
 * Did your change require modifications to the CSS, JS or image files? If so did you include them in your branded file locations or in the core system files? For example: lib/assets/javascripts is the default javascript directory. app/assets/javascripts are specific to your local installation. (See [Branding](https://github.com/DMPRoadmap/roadmap/wiki/Branding) for more information)
+

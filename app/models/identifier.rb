@@ -120,15 +120,21 @@ class Identifier < ActiveRecord::Base
   # Verify the uniqueness of :value across :identifiable
   def value_uniqueness_without_scheme
     # if scheme is nil, then just unique for identifiable
-    Identifier.where(identifiable: self.identifiable, value: self.value).empty?
+    if Identifier.where(identifiable: self.identifiable, value: self.value).any?
+      errors.add(:value, _("must be unique"))
+    end
   end
 
   # Verify the uniqueness of :value across :identifier_scheme
   def value_uniqueness_with_scheme
-    Identifier.where(identifier_scheme: self.identifier_scheme,
-                     value: self.value).empty? &&
-    Identifier.where(identifier_scheme: self.identifier_scheme,
-                     identifiable: self.identifiable).empty?
+    if Identifier.where(identifier_scheme: self.identifier_scheme,
+                        value: self.append_scheme_prefix).any?
+      errors.add(:value, _("already assigned"))
+    end
+    if Identifier.where(identifier_scheme: self.identifier_scheme,
+                        identifiable: self.identifiable).any?
+      errors.add(:identifier_scheme, _("already assigned a value"))
+    end
   end
 
 end

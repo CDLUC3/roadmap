@@ -79,14 +79,14 @@ module Api
 # ========================================
 # End DMPTool Customization
 # ========================================
-
-                # Attach the role
-                role = Role.new(user: user, plan: plan)
-                role.creator = true if author.data_curation?
-                role.administrator = true if author.writing_original_draft? &&
-                                            !author.data_curation?
-                role.save
               end
+
+              # Attach the role
+              role = Role.new(user: user, plan: plan)
+              role.creator = true if author.data_curation?
+              role.administrator = true if author.writing_original_draft? &&
+                                          !author.data_curation?
+              role.save
 
 # ========================================
 # Start DMPTool Customization
