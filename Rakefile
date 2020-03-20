@@ -19,3 +19,4 @@ RDoc::Task.new :rdoc do |rdoc|
 end
 
 task default: :test
+

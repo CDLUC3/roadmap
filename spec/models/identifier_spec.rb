@@ -9,17 +9,28 @@ RSpec.describe Identifier, type: :model do
 
     it { is_expected.to validate_presence_of(:identifiable) }
 
-    describe "uniqueness per identifier_scheme" do
+    describe "uniqueness" do
       before(:each) do
         @org = create(:org)
       end
 
-      it "does not apply to nil identifier_scheme" do
+      it "prevents dupliicate value when identifier_scheme is nil" do
+        scheme = create(:identifier_scheme)
         create(:identifier, identifiable: @org, identifier_scheme: nil,
-                            value: Faker::Lorem.word)
+                            value: "foo")
         id = build(:identifier, identifiable: @org, identifier_scheme: nil,
-                                value: Faker::Number.number.to_s)
-        expect(id.valid?).to eql(true)
+                                value: "foo")
+        expect(id.valid?).to eql(false)
+        expect(id.errors[:value].present?).to eql(true)
+      end
+      it "prevents duplicate value for the identifier_scheme" do
+        scheme = create(:identifier_scheme)
+        create(:identifier, identifiable: @org, identifier_scheme: scheme,
+                            value: "foo")
+        id = build(:identifier, identifiable: create(:org),
+                                identifier_scheme: scheme, value: "foo")
+        expect(id.valid?).to eql(false)
+        expect(id.errors[:value].present?).to eql(true)
       end
       it "prevents multiple identifiers per identifier_scheme" do
         scheme = create(:identifier_scheme)
@@ -28,7 +39,14 @@ RSpec.describe Identifier, type: :model do
         id = build(:identifier, identifiable: @org, identifier_scheme: scheme,
                                 value: Faker::Number.number.to_s)
         expect(id.valid?).to eql(false)
-        expect(id.errors[:identifiable_id].present?).to eql(true)
+        expect(id.errors[:identifier_scheme].present?).to eql(true)
+      end
+      it "does not apply if the value is unique and identifier_scheme is nil" do
+        create(:identifier, identifiable: @org, identifier_scheme: nil,
+                            value: Faker::Lorem.word)
+        id = build(:identifier, identifiable: @org, identifier_scheme: nil,
+                                value: Faker::Number.number.to_s)
+        expect(id.valid?).to eql(true)
       end
       it "does not prevent identifiers for same scheme but different identifiables" do
         scheme = create(:identifier_scheme)
@@ -39,12 +57,12 @@ RSpec.describe Identifier, type: :model do
                                 value: Faker::Number.number.to_s)
         expect(id.valid?).to eql(true)
       end
-      it "does not prevent same value for different schemes" do
+      it "does not prevent same value for different schemes and identifiables" do
         scheme = create(:identifier_scheme)
         create(:identifier, identifiable: @org, identifier_scheme: scheme,
                             value: "foo")
         id = build(:identifier, identifiable: create(:org),
-                                identifier_scheme: scheme,
+                                identifier_scheme: create(:identifier_scheme),
                                 value: "foo")
         expect(id.valid?).to eql(true)
       end

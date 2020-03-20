@@ -137,7 +137,6 @@ class UserMailer < ActionMailer::Base
     end
   end
 
-
 # =====================================
 # Start DMPTool Customization
 #   DMPTool custom mailer for testing

@@ -4,6 +4,10 @@ require "rails_helper"
 
 RSpec.describe Api::V1::JsonToAttributesService do
 
+  before(:each) do
+    create(:language, default_language: true)
+  end
+
   describe "#identifier_from_json(json: {})" do
     before(:each) do
       @scheme = create(:identifier_scheme, identifier_prefix: "#{Faker::Internet.url}/")
@@ -90,7 +94,7 @@ RSpec.describe Api::V1::JsonToAttributesService do
       @json = {
         name: @contributor.name,
         mbox: @contributor.email,
-        role: ["#{Contributor::ONTOLOGY_BASE_URL}/#{@contributor.all_roles.last}"]
+        roles: ["#{Contributor::ONTOLOGY_BASE_URL}/#{@contributor.all_roles.last}"]
       }
     end
 
@@ -117,10 +121,16 @@ RSpec.describe Api::V1::JsonToAttributesService do
       result = described_class.contributor_from_json(plan: @plan, json: @json)
       expect(result).to eql(@contributor)
     end
-    it "initializes a Contributor if one is not found by identifier or email" do
-      json = { name: Faker::Movies::StarWars.character, mbox: Faker::Internet.email }
+    it "creates a Contributor if one is not found by identifier or email" do
+      json = {
+        name: Faker::Movies::StarWars.character,
+        mbox: Faker::Internet.email,
+        roles: [
+          "#{Contributor::ONTOLOGY_BASE_URL}/#{@contributor.all_roles[2]}",
+          "#{Contributor::ONTOLOGY_BASE_URL}/#{@contributor.all_roles[1]}"
+        ]
+      }
       result = described_class.contributor_from_json(plan: @plan, json: json)
-      expect(result.new_record?).to eql(true)
       expect(result.email).to eql(json[:mbox])
     end
     it "attaches the Org if an affiliation was in the json" do
@@ -130,14 +140,12 @@ RSpec.describe Api::V1::JsonToAttributesService do
       expect(result.org).to eql(@contributor.org)
     end
     it "sets the name" do
-      json = { name: Faker::Lorem.word, mbox: Faker::Internet.email }
-      result = described_class.contributor_from_json(plan: @plan, json: json)
-      expect(result.name).to eql(json[:name])
+      result = described_class.contributor_from_json(plan: @plan, json: @json)
+      expect(result.name).to eql(@json[:name])
     end
     it "sets the email" do
-      json = { name: Faker::Lorem.word, mbox: Faker::Internet.email }
-      result = described_class.contributor_from_json(plan: @plan, json: json)
-      expect(result.email).to eql(json[:mbox])
+      result = described_class.contributor_from_json(plan: @plan, json: @json)
+      expect(result.email).to eql(@json[:mbox])
     end
     it "adds the new role" do
       result = described_class.contributor_from_json(plan: @plan, json: @json)
@@ -150,7 +158,6 @@ RSpec.describe Api::V1::JsonToAttributesService do
     include Mocks::ApiJsonSamples
 
     before(:each) do
-      create(:language, default_language: true)
       create(:template, is_default: true, published: true)
       @org = create(:org)
       described_class.stubs(:org_search_by_name).returns(@org)

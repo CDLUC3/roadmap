@@ -25,9 +25,9 @@ module Mocks
                 "name": Faker::TvShows::Simpsons.character,
                 "mbox": Faker::Internet.email
               },
-              "dataset": {
+              "dataset": [{
                 "title": Faker::Lorem.sentence
-              },
+              }],
               "dmp_id": {
                 "type": "doi",
                 "identifier": SecureRandom.uuid
@@ -49,9 +49,9 @@ module Mocks
                 "name": Faker::TvShows::Simpsons.character,
                 "mbox": Faker::Internet.email
               },
-              "dataset": {
+              "dataset": [{
                 "title": Faker::Lorem.sentence
-              },
+              }],
               "extension": [
                 "#{ApplicationService.application_name.split("-").first}": {
                   "template": {
@@ -103,7 +103,7 @@ module Mocks
                 }
               },
               "contributor": [{
-                "role": [
+                "roles": [
                   "https://dictionary.casrai.org/Contributor_Roles/Project_administration",
                   "https://dictionary.casrai.org/Contributor_Roles/Investigation"
                 ],
@@ -122,7 +122,7 @@ module Mocks
                   "identifier": SecureRandom.uuid
                 }
               }, {
-                "role": [
+                "roles": [
                   "https://dictionary.casrai.org/Contributor_Roles/Investigation"
                 ],
                 "name": contact[:name],
