@@ -35,7 +35,8 @@ module Identifiable
         next unless scheme.present?
 
         # Look for the Identifier and finish up once found
-        id = Identifier.where(identifier_scheme: scheme, value: hash[:value]).first
+        id = Identifier.where(identifier_scheme: scheme, value: hash[:value],
+                              identifiable_type: name).first
         break if id.present?
       end
       id.present? ? id.identifiable : nil

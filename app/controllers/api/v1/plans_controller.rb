@@ -59,14 +59,13 @@ module Api
               user = User.from_identifiers(array: identifiers) if identifiers.any?
               user = User.find_by(email: author.email) unless user.present?
 
-              # Only do this step in production!
-              # If the user was not found, invite them and attach any know identifiers
-              if Rails.env.production? && user.blank?
-
 # ========================================
 # Start DMPTool Customization
 #   commenting out user invite for testing
 # ========================================
+              # Only do this step in production!
+              # If the user was not found, invite them and attach any know identifiers
+              #if Rails.env.production? && user.blank?
                 # Handle any new user invitations
                 #user = User.invite!(email: author.email,
                 #                    firstname: author.firstname,
@@ -76,10 +75,11 @@ module Api
                 #  user.identifiers << Identifier.new(
                 #    identifier_scheme: id.identifier_scheme, value: id.value)
                 #end
+              #end
 # ========================================
 # End DMPTool Customization
 # ========================================
-              end
+              next unless user.present?
 
               # Attach the role
               role = Role.new(user: user, plan: plan)

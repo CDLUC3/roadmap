@@ -34,6 +34,10 @@ RSpec.describe Identifiable do
         array = [{ name: @scheme1.name, value: @id1.value }]
         expect(Org.from_identifiers(array: array)).to eql(@org)
       end
+      it "does not return matching identifiable from another object" do
+        array = [{ name: @scheme1.name, value: @id1.value }]
+        expect(Contributor.from_identifiers(array: array)).to eql(nil)
+      end
       it "returns the first identifiable object if multiple matches" do
         array = [
           { name: @scheme2.name, value: @id2.value },
