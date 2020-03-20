@@ -248,6 +248,10 @@ gem "rswag"
 # End DMPTool customization
 # ------------------------------------------------
 
+# -------------------------------------------------
+# UTILITIES
+gem 'parallel'
+
 # ------------------------------------------------
 # ENVIRONMENT SPECIFIC DEPENDENCIES
 group :development, :test do
