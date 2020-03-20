@@ -62,6 +62,7 @@ module Api
               # Only do this step in production!
               # If the user was not found, invite them and attach any know identifiers
               if Rails.env.production? && user.blank?
+
 # ========================================
 # Start DMPTool Customization
 #   commenting out user invite for testing
@@ -104,6 +105,7 @@ module Api
 # ========================================
 # End DMPTool Customization
 # ========================================
+
             end
 
             # Kaminari Pagination requires an ActiveRecord result set :/
