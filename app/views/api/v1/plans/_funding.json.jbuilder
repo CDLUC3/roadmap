@@ -19,4 +19,5 @@ if plan.grant_id.present? && plan.grant.present?
     json.partial! 'api/v1/identifiers/show', identifier: plan.grant
   end
 end
+
 json.funding_status plan.grant.present? ? "granted" : "planned"

@@ -80,7 +80,7 @@ RSpec.describe IdentifierPresenter do
       expect(rslt).to eql(@none)
     end
     it "returns the value when the scheme has no identifier_prefix" do
-      val = Faker::Lorem.wor
+      val = Faker::Lorem.word
       @user_scheme.identifier_prefix = nil
       @identifier.value = val
       rslt = @presenter.id_for_display(id: @identifier)

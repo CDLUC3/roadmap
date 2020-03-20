@@ -5,6 +5,7 @@ require 'rails_helper'
 RSpec.describe Contributor, type: :model do
 
   context "validations" do
+
     it { is_expected.to validate_presence_of(:roles) }
 
     describe "#name_or_email_presence" do

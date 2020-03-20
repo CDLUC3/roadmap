@@ -969,6 +969,7 @@ namespace :upgrade do
                                    owner.email, nil,
                                    owner.identifier_for(orcid)&.first&.value,
                                    owner.org_id)
+
         if user.present?
           user.save
           user.writing_original_draft = true

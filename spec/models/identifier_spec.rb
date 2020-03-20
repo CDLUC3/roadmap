@@ -43,8 +43,8 @@ RSpec.describe Identifier, type: :model do
         scheme = create(:identifier_scheme)
         create(:identifier, identifiable: @org, identifier_scheme: scheme,
                             value: "foo")
-        id = build(:identifier, identifiable: @org,
-                                identifier_scheme: create(:identifier_scheme),
+        id = build(:identifier, identifiable: create(:org),
+                                identifier_scheme: scheme,
                                 value: "foo")
         expect(id.valid?).to eql(true)
       end
