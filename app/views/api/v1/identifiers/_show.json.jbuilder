@@ -2,5 +2,5 @@
 
 # locals: identifier
 
-json.type identifier.identifier_format
-json.identifier identifier.value
+json.type identifier&.identifier_format
+json.identifier identifier&.value

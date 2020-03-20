@@ -62,7 +62,7 @@ module Api
           return nil unless json.present? && plan.present?
 
           json = json.with_indifferent_access
-          return nil unless json[:mbox].present? && json[:name].present?
+          return nil unless json[:mbox].present? || json[:name].present?
 
           # Retrieve the Org
           org = org_from_json(json: json[:affiliation]) if json[:affiliation].present?
@@ -91,7 +91,7 @@ module Api
             contrib.data_curation = true
             contrib.writing_original_draft = true
           else
-            json.fetch(:role, []).each do |url|
+            json.fetch(:roles, []).each do |url|
               role = translate_role(role: url)
               contrib.send(:"#{role}=", true) if role.present?
             end
@@ -99,6 +99,7 @@ module Api
 
           contrib.plan = plan
           contrib.save
+          return nil unless contrib.valid?
 
           # If found combine existing identifiers with new ones
           identifier = identifier_from_json(json: id)
@@ -130,7 +131,13 @@ module Api
               if funder_affil[:grant_id].present?
                 grant_id = identifier_from_json(json: funder_affil[:grant_id])
 
-                if grant_id.present? && !grant_id.identifiable.present?
+                # If the grant had no matcing identifier, add it anyway
+                grant_id = Identifier.new(
+                  value: funder_affil[:grant_id][:identifier]
+                )
+
+                if grant_id.present? && !grant_id.identifiable.present? &&
+                  grant_id.value.present?
                   grant_id.identifiable = plan
                   grant_id.save
                   plan.grant_id = grant_id.id
@@ -197,7 +204,6 @@ module Api
 
           # Attach the Contact's org
           plan.org = contact.org
-
           plan.save
           plan = funding_from_json(plan: plan, json: json)
           plan
@@ -264,7 +270,6 @@ module Api
           url = Contributor::ONTOLOGY_BASE_URL
           # Strip off the URL if present
           role = role.gsub("#{url}/", "").downcase if role.include?(url)
-
           # Return the role if its a valid one otherwise defualt
           return role if Contributor.new.respond_to?(role.downcase.to_sym)
 

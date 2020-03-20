@@ -100,7 +100,7 @@ module Api
               end
 
               contact = plan.contributors.select(&:data_curation?).first
-              UserMailer.api_plan_creation(plan, contact).deliver_now
+              #UserMailer.api_plan_creation(plan, contact).deliver_now
 # ========================================
 # End DMPTool Customization
 # ========================================
