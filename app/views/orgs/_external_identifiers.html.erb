@@ -40,6 +40,19 @@
         </div>
       </div>
     <% end %>
+
+  <% else %>
+    <div class="row">
+       <div id="org-details-org-controls" class="form-group col-xs-10">
+         <%= render partial: "shared/org_selectors/external_only",
+                locals: {
+                  form: form,
+                  label: _("Organisation Lookup"),
+                  default_org: nil,
+                  required: false
+                } %>
+       </div>
+     </div>
   <% end %>
 
 <%# Otherwise this is an Org Admin so just display the identifiers %>
