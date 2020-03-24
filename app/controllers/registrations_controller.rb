@@ -38,7 +38,7 @@ class RegistrationsController < Devise::RegistrationsController
           application_name: Rails.configuration.branding[:application][:name]
         }
         # rubocop:enable Metrics/LineLength
-        scheme = IdentifierScheme.by_name(oauth["provider"].downcase)
+        scheme = IdentifierScheme.by_name(oauth["provider"].downcase).first
         Identifier.create(identifier_scheme: scheme,
                           value: oauth["uid"],
                           attrs: oauth,

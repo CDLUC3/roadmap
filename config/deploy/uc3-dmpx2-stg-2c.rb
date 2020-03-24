@@ -15,7 +15,7 @@ set :rails_env, 'stage'
 namespace :deploy do
   after :deploy, 'swagger:build'
 end
-
+=begin
 namespace :swagger do
   desc 'Build the Swagger API docs'
   task :build do
@@ -24,3 +24,4 @@ namespace :swagger do
     end
   end
 end
+=end
