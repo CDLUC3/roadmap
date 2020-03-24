@@ -34,6 +34,7 @@ class OrgsController < ApplicationController
 
     # Only allow super admins to change the org types and shib info
     if current_user.can_super_admin?
+      identifiers = []
       attrs[:managed] = attrs[:managed] == "1"
 
       # Handle Shibboleth identifier if that is enabled
