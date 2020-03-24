@@ -53,15 +53,9 @@ class OrgsController < ApplicationController
         if shib.present? && attrs.fetch(:identifiers_attributes, {}).any?
           entity_id = attrs[:identifiers_attributes].first[1][:value]
           identifier = Identifier.find_or_initialize_by(identifiable: @org,
-                                                        identifier_scheme: shib)
-          if entity_id.present? && identifier.present?
-            identifier.value = entity_id
-            identifier.save
-            @org.reload
-          else
-            # Otherwise it was blanked out, so delete it
-            identifier.destroy unless identifier.new_record?
-          end
+            identifier_scheme: shib, value: entity_id)
+
+          @org = process_identifier_change(org: @org, identifier: identifier)
         end
         attrs.delete(:identifiers_attributes)
       end
@@ -79,9 +73,12 @@ class OrgsController < ApplicationController
     if @org.update(attrs)
       # Save any identifiers that were found
       if current_user.can_super_admin? && lookup.present?
-        @org.identifiers = identifiers
+        # Loop through the identifiers and then replace the existing
+        # identifier and save the new one
+        identifiers.each do |id|
+          @org = process_identifier_change(org: @org, identifier: id)
+        end
         @org.save
-        @org.reload
       end
 
       redirect_to "#{admin_edit_org_path(@org)}\##{tab}",
@@ -194,5 +191,28 @@ class OrgsController < ApplicationController
   def search_params
     params.require(:org).permit(:name, :type)
   end
+
+  # Destroy the identifier if it exists and was blanked out, replace the
+  # identifier if it was updated, create the identifier if its new, or
+  # ignore it
+  def process_identifier_change(org:, identifier:)
+    return org unless identifier.is_a?(Identifier)
+
+
+    if !identifier.new_record? && identifier.value.blank?
+      # Remove the identifier if it has been blanked out
+      identifier.destroy
+    else
+      # If the identifier already exists then remove it
+      current = org.identifier_for_scheme(scheme: identifier.identifier_scheme)
+      current.destroy if current.present? && current.value != identifier.value
+
+      identifier.identifiable = org
+      org.identifiers << identifier
+    end
+
+    org
+  end
+
 
 end

@@ -445,7 +445,7 @@ class PlansController < ApplicationController
     params.require(:plan)
           .permit(:template_id, :title, :visibility, :grant_number,
                   :description, :guidance_group_ids, :start_date, :end_date,
-                  :org_id, :org_name, :org_crosswalk,
+                  :org_id, :org_name, :org_crosswalk, :identifier,
                   org: [:org_id, :org_name, :org_sources, :org_crosswalk],
                   funder: [:org_id, :org_name, :org_sources, :org_crosswalk])
   end
