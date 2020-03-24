@@ -2,7 +2,7 @@
 
 <%
 phone_tooltip = _("Phone numbers should only include numbers and dashes ('-').")
-roles_tooltip = _("Select each role that applies to the contributor.<br/>See %{link_to_ontology} for descriptions of each role type.") % { link_to_ontology: link_to(Contributor::ONTOLOGY_NAME, Contributor::ONTOLOGY_LANDING_PAGE) }
+roles_tooltip = _("Select each role that applies to the contributor.")
 %>
 
 <div class="form-group row"><!-- name -->
@@ -70,26 +70,18 @@ roles_tooltip = _("Select each role that applies to the contributor.<br/>See %{l
       </legend>
       <p><%= roles_tooltip.html_safe %></p>
 
-      <%
-      roles = ContributorPresenter.roles_for_radio(contributor: contributor)
-      counter = 0
-      col_size = (roles.length / MAX_NUMBER_THEMES_PER_COLUMN.to_f).ceil
-      %>
-      <div class="col-md-<%= col_size %>">
-        <% roles.each do |hash| %>
-          <% if counter >= MAX_NUMBER_THEMES_PER_COLUMN %>
-            </div>
-            <div class="col-md-<%= col_size %>">
-            <% counter = 0 %>
-          <% end %>
-
+      <% roles = ContributorPresenter.roles_for_radio(contributor: contributor) %>
+      <% roles.each do |hash| %>
+        <div class="col-md-4">
           <div class="checkbox">
-            <%= form.check_box hash.keys.first.to_sym, value: hash.values.first %>
+            <%= form.check_box hash.keys.first.to_sym,
+                               value: hash.values.first,
+                               data: { toggle: "tooltip" },
+                               title: ContributorPresenter.role_tooltip(symbol: hash.keys.first) %>
             <%= ContributorPresenter.role_symbol_to_string(symbol: hash.keys.first) %>
           </div>
-          <% counter += 1 %>
-        <% end %>
-      </div>
+        </div>
+      <% end %>
     </fieldset>
   </div>
 </div>

@@ -10,6 +10,6 @@ class CreateIdentifiers < ActiveRecord::Migration
 
     add_index :identifiers, [:identifiable_type, :identifiable_id]
     add_index :identifiers, [:identifier_scheme, :value]
-    add_index :identifiers, [:identifiable_type, :identifiable_id, :identifiable_type]
+    add_index :identifiers, [:identifier_scheme, :identifiable_id, :identifiable_type]
   end
 end

@@ -8,7 +8,7 @@ describe "api/v1/contributors/_show.json.jbuilder" do
     @plan = create(:plan)
     scheme = create(:identifier_scheme, name: "orcid")
     @contact = create(:contributor, org: create(:org), plan: @plan, roles_count: 0,
-                                    writing_original_draft: true)
+                                    data_curation: true)
     @ident = create(:identifier, identifiable: @contact, value: Faker::Lorem.word,
                                  identifier_scheme: scheme)
     @contact.reload
@@ -28,7 +28,7 @@ describe "api/v1/contributors/_show.json.jbuilder" do
     end
 
     it "includes the :role" do
-      expect(@json[:role].first.ends_with?("Writing_original_draft")).to eql(true)
+      expect(@json[:role].first.ends_with?("Data_curation")).to eql(true)
     end
 
     it "includes :affiliation" do

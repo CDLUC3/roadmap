@@ -63,20 +63,9 @@ class Contributor < ActiveRecord::Base
   ##
   # Define Bit Field values for roles
   # Derived from the CASRAI CRediT Taxonomy: https://casrai.org/credit/
-  has_flags 1 =>  :conceptualization,
-            2 =>  :data_curation,
-            3 =>  :formal_analysis,
-            4 =>  :funding_acquisition,
-            5 =>  :investigation,
-            6 =>  :methodology,
-            7 =>  :project_administration,
-            8 =>  :resources,
-            9 =>  :software,
-            10 => :supervision,
-            11 => :validation,
-            12 => :visualization,
-            13 => :writing_original_draft,
-            14 => :writing_review_editing,
+  has_flags 1 =>  :data_curation,
+            2 =>  :investigation,
+            3 =>  :project_administration,
             column: "roles"
 
   private

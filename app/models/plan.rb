@@ -32,6 +32,7 @@
 #  org_id                            :integer
 #  funder_id                         :integer
 #  grant_id                          :integer
+#  api_client_id                     :integer
 #
 # Indexes
 #
@@ -569,11 +570,7 @@ class Plan < ActiveRecord::Base
 
   # Returns the plan's identifier (either a DOI/ARK or the URL)
   def landing_page
-    doi = identifiers.select { |i| %w[doi ark].include?(i.identifier_format) }.first
-    return doi if doi.present?
-
-    Identifier.new(value: Rails.application.routes.url_helpers.landing_plan_url(id),
-                   identifiable: self)
+    identifiers.select { |i| %w[doi ark].include?(i.identifier_format) }.first
   end
 
   private

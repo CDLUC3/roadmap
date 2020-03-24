@@ -27,6 +27,7 @@
 #  org_id                            :integer
 #  funder_id                         :integer
 #  grant_id                          :integer
+#  api_client_id                     :integer
 #
 # Indexes
 #

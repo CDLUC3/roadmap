@@ -927,19 +927,16 @@ namespace :upgrade do
       p "--------------------------------------------------"
       p "Processing Plan: '#{plan.id} - #{plan.title}'"
 
-      owners = plan.owner_and_coowners.includes(:identifiers).order(:created_at)
+      owner = plan.owner
 
       # Either use the Data Contact specified on the plan
       if plan.data_contact_email.present? || plan.data_contact.present?
         contact, contact_id = to_contributor(plan, plan.data_contact,
                                              plan.data_contact_email,
                                              plan.data_contact_phone, nil, nil)
-
-      elsif owners.first.present?
-        usr = owners.first
-        contact, contact_id = to_contributor(plan, usr.name(false), usr.email, nil,
-                                             usr.identifier_for(orcid)&.first&.value,
-                                             usr.org_id)
+      elsif owner.present?
+        contact, contact_id = to_contributor(plan, owner.name(false),
+          owner.email, nil, owner.identifier_for(orcid)&.first&.value, owner.org_id)
       end
       # Add the DMP Data Contact
       if contact.present?
@@ -965,15 +962,13 @@ namespace :upgrade do
       end
 
       # Add the authors
-      owners.each do |owner|
+      unless owner == contact
         user, id = to_contributor(plan, owner.name(false),
-                                   owner.email, nil,
-                                   owner.identifier_for(orcid)&.first&.value,
-                                   owner.org_id)
+          owner.email, nil, owner.identifier_for(orcid)&.first&.value, owner.org_id)
 
         if user.present?
           user.save
-          user.writing_original_draft = true
+          user.data_curation = true
           p "    adding author:  #{user.name} #{user.email} (#{id&.value})"
           user.save
           id.save if id.present?

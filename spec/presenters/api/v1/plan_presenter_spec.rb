@@ -7,8 +7,7 @@ RSpec.describe Api::V1::PlanPresenter do
   describe "#initialize(plan:)" do
     before(:each) do
       plan = build(:plan)
-      @data_contact = build(:contributor, writing_original_draft: true,
-                                          data_curation: true)
+      @data_contact = build(:contributor, data_curation: true)
       @pi = build(:contributor, investigation: true)
       plan.contributors = [@data_contact, @pi]
       @presenter = described_class.new(plan: plan)
