@@ -859,7 +859,7 @@ namespace :upgrade do
         p "You can use the ROR search page to find the correct match for any organizations that need to be corrected: https://ror.org/search"
         p ""
         Org.includes(identifiers: :identifier_scheme)
-           .where(is_other: false).each do |org|
+           .where(is_other: false).order(:name).each do |org|
 
           # If the Org already has a ROR identifier skip it
           next if org.identifiers.select { |id| id.identifier_scheme_id == ror.id }.any?
@@ -880,7 +880,6 @@ namespace :upgrade do
           if ror_id.present?
             ror_ident = Identifier.find_or_initialize_by(identifiable: org,
                                                          identifier_scheme: ror)
-            ror_ident.url!
             ror_ident.value = "#{ror.identifier_prefix}#{ror_id}"
             ror_ident.save
             p "    #{org.name} -> ROR: #{ror_ident.value}, #{rslt[:name]}"
@@ -888,14 +887,13 @@ namespace :upgrade do
           if fundref_id.present?
             fr_ident = Identifier.find_or_initialize_by(identifiable: org,
                                                          identifier_scheme: fundref)
-            fr_ident.url!
             fr_ident.value = "#{fundref.identifier_prefix}#{fundref_id}"
             fr_ident.save
             p "    #{org.name} -> FUNDRF: #{fr_ident.value}, #{rslt[:name]}"
           end
 
           if ror_id.present? || fundref_id.present?
-            csv << [org.id, org.name, rslt[:name], ror_ident&.value, fundref_ident&.value]
+            csv << [org.id, org.name, rslt[:name], ror_ident&.value, fr_ident&.value]
           end
         end
       else
@@ -916,7 +914,7 @@ namespace :upgrade do
 
     # Loop through the plans and convert the Data Contact, owners and PI
     # into Contributors
-    Plan.includes(:contributors, roles: :user).joins(roles: :user).each do |plan|
+    Plan.includes(:contributors, roles: :user).joins(roles: :user).where("plans.id > 31883").each do |plan|
       next if plan.contributors.any?
 
       p "--------------------------------------------------"
@@ -958,7 +956,7 @@ namespace :upgrade do
       end
 
       # Add the authors
-      unless owner == contact
+      if owner.present? && owner == contact
         user, id = to_contributor(plan, owner.name(false),
           owner.email, nil, owner.identifier_for(orcid)&.first&.value, owner.org_id)
 
@@ -992,7 +990,7 @@ namespace :upgrade do
   # Converts the names, email and phone into a Contributor and an
   # Identifier model
   def to_contributor(plan, name, email, phone, identifier, org)
-    return nil, nil unless names.present? || email.present?
+    return nil, nil unless name.present? || email.present?
 
     # If the name is not an array already split it up
     orcid = IdentifierScheme.find_by(name: "orcid")
@@ -1008,7 +1006,7 @@ namespace :upgrade do
       end
     end
 
-    contributor = Contributor.where("plan_id = ? AND (LOWER(email) = LOWER(?) OR (LOWER(surname) = LOWER(?) AND LOWER(firstname) = LOWER(?)))", plan.id, email, names&.last, names&.first).first
+    contributor = Contributor.where("plan_id = ? AND (LOWER(email) = LOWER(?) OR LOWER(name) = LOWER(?))", plan.id, email, name).first
     unless contributor.present?
       contributor = Contributor.new(email: email, plan: plan)
       contributor.name = name

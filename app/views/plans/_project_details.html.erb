@@ -55,23 +55,20 @@
   </div>
 </div>
 
-<fieldset class="project-details">
-  <legend class="project-details"><%= _("Project dates") %></legend>
-  <div class="form-group"><!-- start / end dates -->
-    <div class="col-md-6">
-      <%= form.label(:start_date, _("Start"), class: "control-label") %>
-      <%= form.date_field :start_date, class: "form-control",
-                                       data: { toggle: "tooltip" },
-                                       title: _("The estimated date on which you will begin this project.") %>
-    </div>
-    <div class="col-md-6">
-      <%= form.label(:end_date, _("End"), class: "control-label") %>
-      <%= form.date_field :end_date, class: "form-control",
+<div class="form-group"><!-- start / end dates -->
+  <div class="col-md-4">
+    <%= form.label(:start_date, _("Project Start"), class: "control-label") %>
+    <%= form.date_field :start_date, class: "form-control",
                                      data: { toggle: "tooltip" },
-                                     title: _("The estimated date on which you will complete this project.") %>
-    </div>
+                                     title: _("The estimated date on which you will begin this project.") %>
   </div>
-</fieldset>
+  <div class="col-md-4">
+    <%= form.label(:end_date, _("Project End"), class: "control-label") %>
+    <%= form.date_field :end_date, class: "form-control",
+                                   data: { toggle: "tooltip" },
+                                   title: _("The estimated date on which you will complete this project.") %>
+  </div>
+</div>
 
 <div class="form-group"><!-- description -->
   <div class="col-md-12">
