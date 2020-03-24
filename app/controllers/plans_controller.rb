@@ -245,21 +245,8 @@ class PlansController < ApplicationController
 
         # TODO: For some reason the `fields_for` isn't adding the
         #       appropriate namespace, so org_id represents our funder
-        if attrs[:org_id].present?
-          funder = org_from_params(params_in: attrs)
-          if funder.new_record?
-            funder.save
-            funder.reload
-            identifiers_from_params(params_in: attrs).each do |identifier|
-              next unless identifier.value.present?
-
-              identifier.identifiable = funder
-              identifier.save
-            end
-
-          end
-          @plan.funder = funder
-        end
+        process_funder(hash: attrs[:org_id])
+        process_grant(hash: params[:grant])
         attrs = remove_org_selection_params(params_in: attrs)
 
         #@plan.save
@@ -514,6 +501,46 @@ class PlansController < ApplicationController
       answers: answers,
       guidance_presenter: GuidancePresenter.new(plan)
     })
+  end
+
+  # Update the funder affiliation
+  def process_funder(hash:)
+    if hash.present?
+      funder = org_from_params(params_in: attrs)
+      if funder.new_record?
+        funder.save
+        funder.reload
+        identifiers_from_params(params_in: attrs).each do |identifier|
+          next unless identifier.value.present?
+
+          identifier.identifiable = funder
+          identifier.save
+        end
+
+      end
+      @plan.funder_id = funder.id
+    end
+  end
+
+  # Update, destroy or add the grant
+  def process_grant(hash:)
+    if hash.present?
+      if hash[:id].present?
+        grant = @plan.grant
+        # delete it if it has been blanked out
+        if hash[:value].blank?
+          grant.destroy
+          @plan.grant_id = nil
+        elsif hash[:value] != grant.value
+          # update it iif iit has changed
+          grant.update(value: hash[:value])
+        end
+      else
+        identifier = Identifier.create(identifier_scheme: nil,
+                                       identifiable: @plan, value: hash[:value])
+        @plan.grant_id = identifier.id
+      end
+    end
   end
 
 end
