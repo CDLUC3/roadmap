@@ -932,6 +932,7 @@ namespace :upgrade do
         contact, contact_id = to_contributor(plan, plan.data_contact,
                                              plan.data_contact_email,
                                              plan.data_contact_phone, nil, nil)
+
       elsif owner.present?
         contact, contact_id = to_contributor(plan, owner.name(false),
           owner.email, nil, owner.identifier_for(orcid)&.first&.value, owner.org_id)
