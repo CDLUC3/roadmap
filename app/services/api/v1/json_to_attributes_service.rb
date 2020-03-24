@@ -89,7 +89,6 @@ module Api
           if is_contact
             # Contact is an author and curator
             contrib.data_curation = true
-            contrib.writing_original_draft = true
           else
             json.fetch(:roles, []).each do |url|
               role = translate_role(role: url)
@@ -191,9 +190,6 @@ module Api
                                           is_contact: true)
           return nil unless contact.present?
 
-          # Attach the default roles to the contact
-          contact.data_curation = true
-          contact.writing_original_draft = true
           contact.save
 
           contributors = json.fetch(:contributor, []).map do |hash|
@@ -266,7 +262,7 @@ module Api
 
         # Translates the role in the json to a PlansContributor role
         def translate_role(role:)
-          default = "writing_original_draft"
+          default = "investigation"
           return default unless role.present?
 
           url = Contributor::ONTOLOGY_BASE_URL

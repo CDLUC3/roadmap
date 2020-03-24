@@ -38,7 +38,27 @@ class ContributorPresenter
     end
 
     def role_symbol_to_string(symbol:)
-      symbol.to_s.capitalize.gsub("_", " ")
+      case symbol
+      when :data_curation
+        "Data Manager"
+      when :project_administration
+        "Project Administrator"
+      else
+        "Principal Investigator"
+      end
+    end
+
+    def role_tooltip(symbol:)
+      case symbol
+      when :data_curation
+        _("Management activities to annotate (produce metadata), scrub data and maintain research data (including software code, where it is necessary for interpreting the data itself) for initial use and later re-use.")
+      when :investigation
+        _("Conducting a research and investigation process, specifically performing the experiments, or data/evidence collection.")
+      when :project_administration
+        _("Management and coordination responsibility for the research activity planning and execution.")
+      else
+        ""
+      end
     end
 
   end

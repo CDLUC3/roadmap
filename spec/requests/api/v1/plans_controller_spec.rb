@@ -17,11 +17,17 @@ RSpec.describe Api::V1::PlansController, type: :request do
 
     describe "GET /api/v1/plan/:id - show" do
       it "returns the plan" do
-        plan = create(:plan)
+        plan = create(:plan, api_client_id: ApiClient.first&.id)
         get api_v1_plan_path(plan)
         expect(response.code).to eql("200")
         expect(response).to render_template("api/v1/plans/index")
         expect(assigns(:items).length).to eql(1)
+      end
+      it "returns a 404 if the ApiClient did not create the plan" do
+        plan = create(:plan, api_client_id: create(:api_client))
+        get api_v1_plan_path(plan)
+        expect(response.code).to eql("404")
+        expect(response).to render_template("api/v1/error")
       end
       it "returns a 404 if not found" do
         get api_v1_plan_path(9999)
@@ -52,14 +58,15 @@ RSpec.describe Api::V1::PlansController, type: :request do
           expect(response).to render_template("api/v1/error")
         end
         it "returns a 400 if the incoming DMP is invalid" do
-          plan = create(:plan)
+          plan = create(:plan, api_client_id: ApiClient.first.id)
           @json[:items].first[:dmp][:title] = ""
           post api_v1_plans_path, @json.to_json
           expect(response.code).to eql("400")
           expect(response).to render_template("api/v1/error")
         end
         it "returns a 400 if the plan already exists" do
-          plan = create(:plan, created_at: (Time.now - 3.days))
+          plan = create(:plan, created_at: (Time.now - 3.days),
+                               api_client_id: ApiClient.first.id)
           @json[:items].first[:dmp][:dmp_id] = {
             type: "url",
             identifier: Rails.application.routes.url_helpers.api_v1_plan_url(plan)
@@ -95,7 +102,6 @@ RSpec.describe Api::V1::PlansController, type: :request do
           it "set the Contact roles" do
             expected = @plan.contributors.first
             expect(expected.data_curation?).to eql(true)
-            expect(expected.writing_original_draft?).to eql(true)
           end
           it "set the Template id" do
             app = ApplicationService.application_name.split("-").first
@@ -166,7 +172,6 @@ RSpec.describe Api::V1::PlansController, type: :request do
             end
             it "set the Contact roles" do
               expect(@contact.data_curation?).to eql(true)
-              expect(@contact.writing_original_draft?).to eql(true)
             end
             it "Contact identifiers includes the orcid" do
               expect(@contact.identifiers.length).to eql(1)

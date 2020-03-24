@@ -22,6 +22,7 @@
 
 class ApiClient < ActiveRecord::Base
 
+  include DeviseInvitable::Inviter
   include ValidationMessages
 
   # If the Client_id or client_secret are nil generate them

@@ -31,8 +31,7 @@ module Api
         doi = @plan.identifiers.select { |id| %w[ark doi].include?(id.identifier_format) }.first
         return doi if doi.present?
 
-        # if no DOI then use the URL for the DMP
-        #scheme = IdentifierScheme.new(name: ApplicationService.application_name)
+        # if no DOI then use the URL for the API's 'show' method
         Identifier.new(value: Rails.application.routes.url_helpers.api_v1_plan_url(@plan))
       end
 
