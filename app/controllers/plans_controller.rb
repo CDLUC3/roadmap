@@ -4,6 +4,7 @@ class PlansController < ApplicationController
 
   include ConditionalUserMailer
   include OrgSelectable
+
   helper PaginableHelper
   helper SettingsTemplateHelper
 
@@ -245,7 +246,8 @@ class PlansController < ApplicationController
 
         # TODO: For some reason the `fields_for` isn't adding the
         #       appropriate namespace, so org_id represents our funder
-        process_funder(hash: attrs[:org_id])
+        funder = org_from_params(params_in: attrs, allow_create: true)
+        @plan.funder_id = funder.id if funder.present?
         process_grant(hash: params[:grant])
         attrs = remove_org_selection_params(params_in: attrs)
 
@@ -272,7 +274,8 @@ class PlansController < ApplicationController
       rescue Exception => e
         flash[:alert] = failure_message(@plan, _("save"))
         format.html do
-          render_phases_edit(@plan, @plan.phases.first, @plan.guidance_groups)
+          Rails.logger.error "Unable to save plan #{@plan&.id} - #{e.message}"
+          redirect_to "#{plan_path(@plan)}", alert: failure_message(@plan, _("save"))
         end
         format.json do
           render json: { code: 0, msg: flash[:alert] }
@@ -501,25 +504,6 @@ class PlansController < ApplicationController
       answers: answers,
       guidance_presenter: GuidancePresenter.new(plan)
     })
-  end
-
-  # Update the funder affiliation
-  def process_funder(hash:)
-    if hash.present?
-      funder = org_from_params(params_in: attrs)
-      if funder.new_record?
-        funder.save
-        funder.reload
-        identifiers_from_params(params_in: attrs).each do |identifier|
-          next unless identifier.value.present?
-
-          identifier.identifiable = funder
-          identifier.save
-        end
-
-      end
-      @plan.funder_id = funder.id
-    end
   end
 
   # Update, destroy or add the grant

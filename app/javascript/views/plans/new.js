@@ -37,6 +37,7 @@ $(() => {
         if (data.templates.length === 1) {
           $('#plan_template_id option').attr('selected', 'true');
           $('#multiple-templates').hide();
+          $('#available-templates').fadeOut();
         } else {
           $('#multiple-templates').show();
           $('#available-templates').fadeIn();
@@ -123,6 +124,7 @@ $(() => {
     const checked = checkbox.prop('checked');
     autocomplete.val('');
     autocomplete.prop('disabled', checked);
+    autocomplete.siblings('.autocomplete-result').val('');
     autocomplete.siblings('.autocomplete-warning').hide();
 
     handleComboboxChange();
