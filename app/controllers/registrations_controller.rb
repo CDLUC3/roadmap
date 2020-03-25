@@ -32,6 +32,22 @@ class RegistrationsController < Devise::RegistrationsController
     unless oauth.nil?
       # The OAuth provider could not be determined or there was no unique UID!
       if !oauth["provider"].nil? && !oauth["uid"].nil?
+
+        # ---------------------------------------
+        # Start DMPTool Customization
+        # Determine which Org Idp we came from and make it available to form
+        # ---------------------------------------
+        omniauth.fetch(:info, {})
+        entity_id = oauth.fetch("info", {})["identity_provider"]
+
+        if entity_id.present?
+          identifier = Identifier.by_scheme_name(entity_id.downcase, "Org")
+          @user.org = identifier.identifiable if identifier.present?
+        end
+        # ---------------------------------------
+        # End DMPTool Customization
+        # ---------------------------------------
+
         # Connect the new user with the identifier sent back by the OAuth provider
         # rubocop:disable Metrics/LineLength
         flash[:notice] = _("Please make a choice below. After linking your details to a %{application_name} account, you will be able to sign in directly with your institutional credentials.") % {

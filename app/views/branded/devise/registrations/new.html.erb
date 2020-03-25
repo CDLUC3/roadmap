@@ -52,8 +52,8 @@
               <%# This is the only change to this Devise page! %>
               <%# Add the org info so that JS hides the Org selector %>
               <%# --------------------------------------------------- %>
-              <%= hidden_field_tag "default_org_id", @user.org.id %>
-              <%= hidden_field_tag "default_org_name", @user.org.name %>
+              <%= hidden_field_tag "default_org_id", @user&.org&.id %>
+              <%= hidden_field_tag "default_org_name", @user&.org&.name %>
               <%# --------------------------------------------------- %>
               <%# End DMPTool Customization %>
               <%# --------------------------------------------------- %>
