@@ -37,7 +37,6 @@ class RegistrationsController < Devise::RegistrationsController
         # Start DMPTool Customization
         # Determine which Org Idp we came from and make it available to form
         # ---------------------------------------
-        omniauth.fetch(:info, {})
         entity_id = oauth.fetch("info", {})["identity_provider"]
 
         if entity_id.present?
