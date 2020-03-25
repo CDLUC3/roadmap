@@ -39,8 +39,16 @@ class RegistrationsController < Devise::RegistrationsController
         # ---------------------------------------
         entity_id = oauth.fetch("info", {})["identity_provider"]
 
+p "NEW OAUTH USER"
+p oauth["info"]
+p "ENTITY ID: #{entity_id}"
+
         if entity_id.present?
           identifier = Identifier.by_scheme_name(entity_id.downcase, "Org")
+
+p identifier.inspect
+p identifier.identifiable.inspect
+
           @user.org = identifier.identifiable if identifier.present?
         end
         # ---------------------------------------

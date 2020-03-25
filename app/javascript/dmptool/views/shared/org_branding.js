@@ -12,9 +12,11 @@ $(() => {
       const name = $('#default_org_name');
 
       if (id.length > 0 && name.length > 0) {
-        orgId.val(JSON.stringify({ id: id.val(), name: name.val() }));
+        if (id.val().length > 0 && name.val().length > 0) {
+          orgId.val(JSON.stringify({ id: id.val(), name: name.val() }));
+          orgControls.hide();
+        }
       }
     }
-    orgControls.hide();
   }
 });
