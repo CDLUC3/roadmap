@@ -38,16 +38,9 @@ class RegistrationsController < Devise::RegistrationsController
         # Determine which Org Idp we came from and make it available to form
         # ---------------------------------------
         entity_id = oauth.fetch("info", {})["identity_provider"]
-
-Rails.logger.warn "NEW OAUTH USER #{oauth["uid"]} - ENTITY ID: #{entity_id}"
-
         if entity_id.present?
           identifier = Identifier.where(identifiable_type: "Org",
-                                        identifiable_id: entity_id).first
-
-Rails.logger.warn identifier.inspect
-Rails.logger.warn identifier&.identifiable.inspect
-
+                                        value: entity_id).first
           @user.org = identifier.identifiable if identifier.present?
         end
         # ---------------------------------------
