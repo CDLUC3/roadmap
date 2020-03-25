@@ -84,6 +84,9 @@ config/initializers/fingerprint.rb
 # ignore yard doc files
 .yardoc/*
 
+# ignore .version files created by capistrano
+.version
+
 # ignore yard generated documents
 /doc/*
 !/doc/README_FOR_APP

@@ -45,6 +45,7 @@ namespace :deploy do
   after :deploy, 'cleanup:copy_logo'
   after :deploy, 'cleanup:copy_favicon'
   after :deploy, 'cleanup:remove_example_configs'
+  after :deploy, 'git:version'
   after :deploy, 'cleanup:restart_passenger'
 end
 
@@ -54,6 +55,15 @@ namespace :config do
     on roles(:app), wait: 1 do
       execute "if [ ! -d '#{deploy_path}/shared/' ]; then cd #{deploy_path}/ && git clone #{fetch :config_repo} shared; fi"
       execute "cd #{deploy_path}/shared/ && git checkout #{fetch :config_branch} && git pull origin #{fetch :config_branch}"
+    end
+  end
+end
+
+namespace :git do
+  desc 'Add the version file so that we can display the git version in the footer'
+  task :version do
+    on roles(:app), wait: 1 do
+      execute "cd #{repo_path} && git describe --tags >> #{release_path}/.version"
     end
   end
 end
