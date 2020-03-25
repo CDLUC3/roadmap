@@ -1,6 +1,6 @@
 // This is the branded Org sign in/create account page
 $(() => {
-  const orgControls = $('#org-branding #create-account-org-controls');
+  const orgControls = $('#create-account-org-controls');
 
   // We already know what org to use, so hide the selector and pre-populate
   // the field with the org id the user selected in the prior page
