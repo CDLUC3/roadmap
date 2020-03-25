@@ -39,16 +39,14 @@ class RegistrationsController < Devise::RegistrationsController
         # ---------------------------------------
         entity_id = oauth.fetch("info", {})["identity_provider"]
 
-p "NEW OAUTH USER"
-p oauth["info"]
-p "ENTITY ID: #{entity_id}"
+Rails.logger.warn "NEW OAUTH USER #{oauth["uid"]} - ENTITY ID: #{entity_id}"
 
         if entity_id.present?
           identifier = Identifier.where(identifiable_type: "Org",
                                         identifiable_id: entity_id).first
 
-p identifier.inspect
-p identifier.identifiable.inspect
+Rails.logger.warn identifier.inspect
+Rails.logger.warn identifier&.identifiable.inspect
 
           @user.org = identifier.identifiable if identifier.present?
         end
