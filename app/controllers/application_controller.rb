@@ -64,6 +64,7 @@ class ApplicationController < ActionController::Base
     referer_path = URI(request.referer).path unless request.referer.nil? or nil
     if from_external_domain? || referer_path.eql?(new_user_session_path) ||
          referer_path.eql?(get_started_path) ||
+         referer_path.eql?(new_user_registration_path) ||
          referer_path.nil?
       root_path
     # ---------------------------------------------------------
@@ -84,6 +85,7 @@ class ApplicationController < ActionController::Base
     referer_path = URI(request.referer).path unless request.referer.nil?
     if from_external_domain? ||
          referer_path.eql?(new_user_session_path) ||
+         referer_path.eql?(new_user_registration_path) ||
          referer_path.nil?
       root_path
     # ---------------------------------------------------------
