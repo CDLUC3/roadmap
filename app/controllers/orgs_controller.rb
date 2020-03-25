@@ -202,7 +202,7 @@ class OrgsController < ApplicationController
     if !identifier.new_record? && identifier.value.blank?
       # Remove the identifier if it has been blanked out
       identifier.destroy
-    else
+    elsif identifier.value.present?
       # If the identifier already exists then remove it
       current = org.identifier_for_scheme(scheme: identifier.identifier_scheme)
       current.destroy if current.present? && current.value != identifier.value

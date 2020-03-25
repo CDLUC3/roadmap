@@ -919,7 +919,7 @@ namespace :upgrade do
 
     # Loop through the plans and convert the Data Contact, owners and PI
     # into Contributors
-    Plan.includes(:contributors, roles: :user).joins(roles: :user).where("plans.id > 31883").each do |plan|
+    Plan.includes(:contributors, roles: :user).joins(roles: :user).each do |plan|
       next if plan.contributors.any?
 
       p "--------------------------------------------------"
