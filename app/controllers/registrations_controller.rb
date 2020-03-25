@@ -121,11 +121,11 @@ class RegistrationsController < Devise::RegistrationsController
             unless oauth["provider"].nil? || oauth["uid"].nil?
               prov = IdentifierScheme.find_by(name: oauth["provider"].downcase)
               # Until we enable ORCID signups
-              if prov.name == "shibboleth"
+              if prov.present? && prov.name == "shibboleth"
                 Identifier.create(identifier_scheme: prov,
                                   value: oauth["uid"],
                                   attrs: oauth,
-                                  identifiable: @user)
+                                  identifiable: resource)
                 # rubocop:disable Metrics/LineLength
                 flash[:notice] = _("Welcome! You have signed up successfully with your institutional credentials. You will now be able to access your account with them.")
                 # rubocop:enable Metrics/LineLength
