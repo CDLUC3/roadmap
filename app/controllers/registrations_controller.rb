@@ -44,7 +44,8 @@ p oauth["info"]
 p "ENTITY ID: #{entity_id}"
 
         if entity_id.present?
-          identifier = Identifier.by_scheme_name(entity_id.downcase, "Org")
+          identifier = Identifier.where(identifiable_type: "Org",
+                                        identifiable_id: entity_id).first
 
 p identifier.inspect
 p identifier.identifiable.inspect
