@@ -62,18 +62,19 @@ class ApplicationController < ActionController::Base
 
   def after_sign_in_path_for(resource)
     referer_path = URI(request.referer).path unless request.referer.nil? or nil
-    # ---------------------------------------------------------
-    # Start DMPTool Customization
-    # Added `users_ldap_username_path` and `get_started_path` to if statement below
-    # ---------------------------------------------------------
     if from_external_domain? || referer_path.eql?(new_user_session_path) ||
-         referer_path.eql?(new_user_registration_path) ||
-         referer_path.eql?(users_ldap_username_path) ||
          referer_path.eql?(get_started_path) ||
          referer_path.nil?
-      # End DMPTool Customization
-      # ---------------------------------------------------------
       root_path
+    # ---------------------------------------------------------
+    # Start DMPTool Customization
+    # Catch user's coming in from the Org branded sign in /create page
+    # ---------------------------------------------------------
+    elsif referer_path =~ /#{shibboleth_ds_path}\/[0-9]+/
+      root_path
+    # ---------------------------------------------------------
+    # End DMPTool Customization
+    # ---------------------------------------------------------
     else
       request.referer
     end
@@ -85,6 +86,15 @@ class ApplicationController < ActionController::Base
          referer_path.eql?(new_user_session_path) ||
          referer_path.nil?
       root_path
+    # ---------------------------------------------------------
+    # Start DMPTool Customization
+    # Catch user's coming in from the Org branded sign in /create page
+    # ---------------------------------------------------------
+    elsif referer_path =~ /#{shibboleth_ds_path}\/[0-9]+/
+      root_path
+    # ---------------------------------------------------------
+    # End DMPTool Customization
+    # ---------------------------------------------------------
     else
       request.referer
     end

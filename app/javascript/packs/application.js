@@ -64,6 +64,7 @@ import '../views/public_templates/show';
 // ----------------------------------------
 import '../dmptool/views/home/index';
 import '../dmptool/views/shared/signin_create_form';
+import '../dmptool/views/shared/org_branding';
 // ----------------------------------------
 // END DMPTool customization
 // ----------------------------------------

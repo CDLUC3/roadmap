@@ -13,7 +13,7 @@ set :config_branch, 'uc3-dmpx2-stg'
 set :rails_env, 'stage'
 
 namespace :deploy do
-  after :deploy, 'swagger:build'
+  #after :deploy, 'swagger:build'
 end
 =begin
 namespace :swagger do

@@ -198,11 +198,10 @@ class OrgsController < ApplicationController
   def process_identifier_change(org:, identifier:)
     return org unless identifier.is_a?(Identifier)
 
-
     if !identifier.new_record? && identifier.value.blank?
       # Remove the identifier if it has been blanked out
       identifier.destroy
-    else
+    elsif identifier.value.present?
       # If the identifier already exists then remove it
       current = org.identifier_for_scheme(scheme: identifier.identifier_scheme)
       current.destroy if current.present? && current.value != identifier.value
@@ -213,6 +212,5 @@ class OrgsController < ApplicationController
 
     org
   end
-
 
 end
