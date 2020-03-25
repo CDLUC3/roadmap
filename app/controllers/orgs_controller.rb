@@ -198,6 +198,7 @@ class OrgsController < ApplicationController
   def process_identifier_change(org:, identifier:)
     return org unless identifier.is_a?(Identifier)
 
+
     if !identifier.new_record? && identifier.value.blank?
       # Remove the identifier if it has been blanked out
       identifier.destroy
@@ -212,5 +213,6 @@ class OrgsController < ApplicationController
 
     org
   end
+
 
 end
